@@ -1,188 +1,202 @@
 # Fuentes de datos
 
-Este documento define **de dónde procede cada tipo de dato y qué fuente tiene prioridad**.
+Este documento fija de dónde procede cada tipo de dato y qué fuente tiene prioridad.
 
-Fecha de última verificación documental: **2026-09-26**.
+## Regla general
 
-## Principio general
+**Pokémon Showdown es la fuente principal y autoritativa para todo lo relacionado con combate, legalidad y datos competitivos.**
 
-No existe una única fuente para todo.
+**PokéAPI es únicamente una fuente complementaria para información de Pokédex que no interviene en la resolución del combate.**
 
-La aplicación separa:
+Ante cualquier conflicto funcional entre ambas, gana Pokémon Showdown.
 
-1. **mecánicas y legalidad**;
-2. **datos competitivos**;
-3. **metadatos de presentación**;
-4. **assets**.
+## Matriz definitiva
 
-Una fuente auxiliar nunca puede sobreescribir silenciosamente al motor en una decisión de combate.
-
-## Prioridad
-
-| Dominio | Fuente de verdad |
+| Información | Fuente |
 | --- | --- |
-| Resultado del combate | Pokémon Showdown engine |
-| Legalidad del equipo | Pokémon Showdown `TeamValidator` |
-| Import/export de equipo | Pokémon Showdown `Teams` |
-| Formatos/reglas | versión fijada de Pokémon Showdown |
-| Stats/tipos/moves usados por motor | `Dex` de la versión fijada |
-| Random teams | motor/generador de Pokémon Showdown |
-| Datos puramente presentacionales | dataset interno normalizado |
-| Assets | manifiesto interno + `ASSET-INVENTORY.md` |
+| Especies y formas competitivas | Pokémon Showdown `Dex` |
+| Stats base | Pokémon Showdown `Dex` |
+| Tipos | Pokémon Showdown `Dex` |
+| Movimientos | Pokémon Showdown `Dex` |
+| Habilidades | Pokémon Showdown `Dex` |
+| Objetos | Pokémon Showdown `Dex` |
+| Naturalezas | Pokémon Showdown `Dex` |
+| Learnsets | Pokémon Showdown |
+| Type chart | Pokémon Showdown |
+| Formatos | Pokémon Showdown |
+| Rulesets | Pokémon Showdown |
+| Clauses | Pokémon Showdown |
+| Bans | Pokémon Showdown |
+| Legalidad de equipos | Pokémon Showdown `TeamValidator` |
+| Import/export/packing | Pokémon Showdown `Teams` |
+| Random Battles | Pokémon Showdown |
+| Resolución de battle | Pokémon Showdown `BattleStream` |
+| Mecánicas por generación | Pokémon Showdown mods Gen 1–9 |
+| Evoluciones | PokéAPI, complemento |
+| Número Pokédex | PokéAPI, complemento |
+| Flavor text/descripciones | PokéAPI, complemento |
+| Species metadata | PokéAPI, complemento |
+| Localizaciones/nombres | PokéAPI, complemento |
+| Assets | ver `ASSET-INVENTORY.md` |
 
 ## Pokémon Showdown
 
-Repositorio oficial:
+Repositorio:
 
 https://github.com/smogon/pokemon-showdown
 
-### Qué aporta
-
-El repositorio oficial se describe como:
-
-- simulador de battles;
-- librería JavaScript para simulación y datos de Pokédex;
-- herramientas de línea de comandos;
-- game server.
-
-A fecha de verificación declara soporte de simulación para generaciones 1 a 9.
-
-### APIs que nos interesan
+### APIs principales
 
 - `BattleStream`
 - `Dex`
 - `Teams`
 - `TeamValidator`
 
-Documentación relevante:
+### Qué debe salir de Showdown
 
-- https://github.com/smogon/pokemon-showdown/blob/master/sim/SIMULATOR.md
-- https://github.com/smogon/pokemon-showdown/blob/master/sim/TEAMS.md
-- https://github.com/smogon/pokemon-showdown/blob/master/PROTOCOL.md
-- https://github.com/smogon/pokemon-showdown/blob/master/sim/SIM-PROTOCOL.md
+La aplicación debe utilizar Showdown para:
 
-### Licencia
+- Pokedex competitiva;
+- Moves;
+- Abilities;
+- Items;
+- Natures;
+- Learnsets;
+- Conditions;
+- TypeChart;
+- Formats;
+- Rulesets;
+- FormatsData;
+- datos/mods por generación;
+- legalidad;
+- equipos;
+- Random Battles;
+- simulación.
 
-El servidor/motor se distribuye bajo MIT.
-
-La versión del motor debe fijarse en lockfile y registrarse también en battles/replays cuando afecte a reproducibilidad.
-
-## Cliente oficial de Pokémon Showdown
-
-Repositorio:
-
-https://github.com/smogon/pokemon-showdown-client
-
-No se usará como base de nuestro frontend.
-
-Motivos:
-
-- queremos una arquitectura/UI propia;
-- el cliente oficial se distribuye bajo AGPLv3, distinta de la licencia del servidor;
-- evitar acoplar nuestro producto a su estado/UI/protocolo interno más de lo necesario.
-
-Puede consultarse como documentación de comportamiento/protocolo, pero no se copiará código sin revisar previamente obligaciones de licencia.
+No crear una segunda implementación de estas reglas.
 
 ## PokéAPI
 
-Web:
-
 https://pokeapi.co/
 
-Uso previsto: **complementario**, no autoridad de combate.
+Uso: enriquecer presentación/Pokédex.
 
-Puede ser útil para:
+Ejemplos:
 
-- nombres/metadatos;
-- cadenas evolutivas;
-- flavor/presentation data;
-- referencias de sprites;
-- enriquecer una Pokédex.
+- evolution chains;
+- species metadata;
+- flavor text;
+- capture rate;
+- habitat cuando exista;
+- datos de género/especie;
+- números/relaciones Pokédex;
+- traducciones o nombres adicionales.
 
-Reglas:
+### Regla crítica
 
-- la aplicación no debe requerir una petición a PokéAPI para resolver un turno;
-- los datos necesarios en runtime se sincronizarán/normalizarán cuando sea razonable;
-- conflictos con la versión del motor se resuelven a favor del motor para funcionalidad competitiva.
+Una petición a PokéAPI nunca debe ser necesaria para:
 
-## Assets
+- iniciar una battle;
+- calcular un turno;
+- validar un equipo;
+- resolver un movimiento;
+- generar un Random Team.
 
-Las fuentes visuales se documentan por separado en `ASSET-INVENTORY.md`.
+El juego debe seguir funcionando competitivamente aunque PokéAPI no esté disponible.
 
-Importante: licencia del código de un repositorio, licencia declarada del repositorio y copyright de los archivos gráficos pueden ser cosas distintas.
+## Normalización de IDs
 
-## Normalización interna
-
-No queremos que componentes React conozcan IDs específicos de varias fuentes.
-
-Crear una capa interna con IDs estables.
+El ID interno base debe favorecer compatibilidad con Showdown.
 
 Ejemplo conceptual:
 
 ```ts
 type SpeciesRecord = {
-  id: string;          // canonical internal id
+  id: string;
   showdownId: string;
   pokeApiId?: number;
   displayName: string;
-  types: string[];
 };
 ```
 
-Los adapters convierten datos externos a modelos propios.
+Mantener una tabla/adapter explícito solo cuando los IDs difieran.
+
+No usar nombres visuales como clave técnica si existe un ID estable.
 
 ## Sincronización
 
-Los scripts de sincronización deben:
+### Datos Showdown
 
-1. usar una versión/tag/commit identificable;
-2. validar schema;
-3. producir salida determinista;
-4. registrar procedencia;
-5. generar diff/reporte;
-6. fallar ante inconsistencias críticas;
-7. no publicar automáticamente cambios sin revisión.
+Preferir lectura desde la misma versión del paquete/motor fijada en el proyecto.
 
-## Datos que NO deben duplicarse manualmente
+Esto evita que:
 
-Evitar mantener listas manuales paralelas de:
+- el Team Builder use datos de una versión;
+- el motor ejecute otra;
+- los formatos se desincronicen.
 
-- movimientos legales;
+### PokéAPI
+
+Los datos complementarios pueden:
+
+- consultarse con caché;
+- sincronizarse a un dataset local;
+- persistirse si aporta valor.
+
+No es necesario copiar toda PokéAPI.
+
+## Versionado
+
+Registrar la versión/commit del motor usado en:
+
+- battles;
+- replays;
+- equipos cuando sea relevante para validación histórica.
+
+Los datos competitivos no deben actualizarse independientemente del motor sin motivo.
+
+## Caché
+
+Se puede cachear:
+
+- Pokédex;
+- moves;
+- abilities;
+- items;
+- species metadata;
+- datos complementarios de PokéAPI.
+
+No usar una caché externa como autoridad de estado de una battle activa.
+
+## Fallbacks
+
+Si PokéAPI falla:
+
+- ocultar/degradar datos de presentación no esenciales;
+- mantener Team Builder funcional con Showdown;
+- mantener battles completamente funcionales.
+
+Si falta un dato competitivo esperado de Showdown:
+
+- tratarlo como error/incompatibilidad;
+- no inventar el dato desde otra fuente.
+
+## Prohibido duplicar manualmente
+
 - learnsets;
 - bans;
 - clauses;
 - fórmulas de daño;
 - prioridades;
-- reglas de estados;
-- interacciones de abilities/items;
-- mecánicas por generación.
+- status mechanics;
+- interacciones de items;
+- interacciones de abilities;
+- reglas específicas por generación.
 
-La UI puede tener datos derivados para presentación, pero nunca otra implementación autoritativa de estas reglas.
+La UI puede derivar datos para presentación, pero no convertirse en autoridad paralela.
 
-## Caché
+## Assets
 
-Los datos estáticos se pueden cachear agresivamente si incluyen versión.
+Los datos y los assets son pipelines diferentes.
 
-Los datos de battle activos no se cachean en CDN como fuente de verdad.
-
-## Fallbacks
-
-Si una fuente presentacional auxiliar falla:
-
-- Team Builder debe seguir pudiendo operar con datos esenciales del motor;
-- una battle en curso no debe verse afectada;
-- la UI puede degradar artwork/flavor text;
-- nunca cambiar reglas para “adaptarse” a un dato faltante.
-
-## Checklist al añadir una fuente
-
-- [ ] Qué problema resuelve.
-- [ ] Es realmente necesaria.
-- [ ] Qué campos consumimos.
-- [ ] Cuál es su licencia.
-- [ ] Qué derechos tienen sus assets.
-- [ ] Cómo versionamos.
-- [ ] Qué ocurre si cae.
-- [ ] Cómo se actualiza.
-- [ ] Qué fuente gana ante conflicto.
-- [ ] Existe test/validación del adaptador.
+Consultar `ASSET-INVENTORY.md`.

@@ -1,231 +1,244 @@
 # Inventario de assets
 
-Este documento controla qué assets visuales/sonoros necesita el producto, de dónde proceden, qué cobertura tienen y si su uso está aprobado.
+Este documento fija las fuentes y el pipeline de assets del proyecto.
 
-## Regla principal
+El proyecto es personal y de uso propio. El objetivo de este documento es técnico: saber de dónde se obtiene cada recurso, cómo se sincroniza y qué fallback se utiliza.
 
-**Que un archivo pueda descargarse públicamente no significa que tengamos permiso para redistribuirlo.**
+## Fuentes fijadas
 
-Ningún asset debe marcarse como `approved` solo porque su repositorio sea open source.
+### Principal: Pokémon Showdown
 
-## Estados
+Base:
 
-- `missing`: no localizado.
-- `candidate`: existe una fuente candidata.
-- `review`: pendiente de revisar derechos/atribución/calidad.
-- `approved`: aprobado para el uso definido.
-- `generated`: asset propio generado/creado para el proyecto con procedencia registrada.
-- `blocked`: no usar.
-- `fallback`: sustituto temporal.
+https://play.pokemonshowdown.com/sprites/
 
-## Fuentes candidatas verificadas
+Usaremos los assets de Showdown como primera opción porque sus IDs encajan naturalmente con el `Dex` que utilizará el motor.
 
-### Smogon Sprites
+Categorías principales:
 
-https://github.com/smogon/sprites
+| Categoría | Ruta/fuente principal |
+| --- | --- |
+| Front animated | `/sprites/ani/` |
+| Back animated | `/sprites/ani-back/` |
+| Shiny front | `/sprites/ani-shiny/` |
+| Shiny back | `/sprites/ani-back-shiny/` |
+| Sprites por generación | `/sprites/gen*/` |
+| HOME renders | `/sprites/home/` |
+| HOME centered | `/sprites/home-centered/` |
+| HOME shiny | `/sprites/home-shiny/` |
+| Mini icons | spritesheets/iconos de Showdown |
+| Items | `/sprites/itemicons/` + spritesheet |
+| Types | `/sprites/types/` |
+| Type icons | `/sprites/typeicons/` |
+| Trainers | `/sprites/trainers/` |
+| Substitutes | `/sprites/substitutes/` |
+| Misc | `/sprites/misc/` |
+| Battle backgrounds | `/sprites/gen6bgs/` |
+| Battle FX | `/fx/` |
 
-El repositorio indica:
+### Fallback: PokéAPI Sprites
 
-- el **código** del repositorio está bajo MIT;
-- los sprites oficiales son propiedad de Nintendo / Game Freak / The Pokémon Company;
-- ciertos sprites comunitarios tienen condiciones todavía no completamente determinadas;
-- para algunos assets comunitarios recomiendan contactar antes de usarlos.
-
-Conclusión interna: **fuente técnica excelente para inventario/referencia, pero los sprites no se consideran automáticamente aprobados para redistribución.**
-
-### PokéAPI Sprites
+Repositorio:
 
 https://github.com/PokeAPI/sprites
 
-El repositorio incluye:
+Se utilizará cuando falte un asset concreto de la fuente principal o cuando resulte más adecuado para una vista de Pokédex/Team Builder.
 
-- sprites por generaciones;
-- front/back;
-- shiny;
-- icons;
-- official artwork;
-- Pokémon HOME renders;
-- assets de Showdown.
+No añadir una tercera fuente sin una necesidad concreta.
 
-Su `LICENCE.txt` declara CC0 para el repositorio, pero también declara que el contenido de las imágenes tiene copyright de The Pokémon Company.
+## Política de consumo
 
-Conclusión interna: **no interpretar CC0 como cesión de derechos sobre personajes/imágenes de terceros. Revisar antes de redistribuir.**
+No introducir URLs externas directamente en componentes.
 
-## Matriz inicial
+Incorrecto:
 
-| Categoría | Necesidad MVP | Fuente candidata | Estado inicial |
-| --- | --- | --- | --- |
-| Pokémon battle front | Sí | Smogon / PokéAPI | review |
-| Pokémon battle back | Sí | Smogon / PokéAPI | review |
-| Pokémon shiny front | Sí | Smogon / PokéAPI | review |
-| Pokémon shiny back | Sí | Smogon / PokéAPI | review |
-| Mini icons | Sí | Smogon / PokéAPI | review |
-| Items | Sí | PokéAPI / fuente alternativa | review |
-| Iconos de tipos | Sí | propios | generated |
-| Iconos UI | Sí | librería compatible / propios | candidate |
-| Battle backgrounds | Sí para polish; no para vertical slice | propios | generated |
-| Weather overlays | Sí para polish | propios | generated |
-| Terrain overlays | Sí para polish | propios | generated |
-| Move VFX genéricos | Sí para polish | propios | generated |
-| Move VFX 1:1 oficiales | No | — | blocked |
-| Sonidos UI | Futuro | propios/licenciados | missing |
-| Música oficial | No | — | blocked |
-| Logo | Sí antes de lanzamiento | propio | missing |
-| Avatares | Sí | propios/licenciados | missing |
+```tsx
+<img src="https://play.pokemonshowdown.com/sprites/ani/pikachu.gif" />
+```
 
-`generated` en esta tabla significa **estrategia prevista: crear assets propios**, no que el archivo ya exista.
+Correcto conceptualmente:
 
-## Cobertura Pokémon
+```tsx
+<PokemonSprite speciesId="pikachu" side="front" />
+```
 
-El manifiesto debe distinguir al menos:
+El componente resuelve un manifest interno generado por el pipeline.
 
-- especie base;
-- formas;
-- diferencias por género cuando existan;
-- shiny;
-- front;
-- back;
-- icon.
+## Estrategia local
 
-No asumir que todos los formatos de asset existen para todas las especies/formas.
+Los assets sincronizados se almacenan en:
+
+```text
+public/assets/generated/
+├── pokemon/
+│   ├── animated/
+│   ├── animated-back/
+│   ├── shiny/
+│   ├── shiny-back/
+│   ├── home/
+│   └── icons/
+├── items/
+├── types/
+├── trainers/
+├── battle/
+│   ├── backgrounds/
+│   └── fx/
+├── misc/
+└── manifest.json
+```
+
+Assets creados específicamente para el proyecto:
+
+```text
+public/assets/custom/
+```
+
+`public/assets/generated/` no se versiona en Git.
+
+Debe ser reconstruible mediante scripts.
+
+## Scripts previstos
+
+### `sync-assets`
+
+Responsabilidades:
+
+- descargar assets necesarios;
+- usar Showdown como fuente principal;
+- usar PokéAPI como fallback;
+- normalizar nombres;
+- mapear formas;
+- conservar transparencias;
+- generar hashes;
+- generar manifest;
+- evitar descargas repetidas cuando no cambien;
+- generar un resumen de sincronización.
+
+Comando objetivo:
+
+```bash
+pnpm sync:assets
+```
+
+### `audit-assets`
+
+Responsabilidades:
+
+- recorrer especies/formas soportadas;
+- comprobar front/back;
+- comprobar shiny;
+- comprobar icon;
+- comprobar HOME cuando corresponda;
+- detectar archivos faltantes;
+- detectar archivos huérfanos;
+- validar manifest;
+- generar reporte.
+
+Comando objetivo:
+
+```bash
+pnpm audit:assets
+```
 
 ## Manifest
 
-Objetivo:
+Ejemplo conceptual:
 
 ```json
 {
   "version": 1,
-  "sourceRevision": "example",
+  "showdownRevision": "pinned-revision",
   "species": {
     "pikachu": {
-      "battleFront": {
-        "path": "/assets/pokemon/pikachu/front.webp",
-        "status": "approved",
-        "source": "source-id"
-      }
+      "front": "/assets/generated/pokemon/animated/pikachu.gif",
+      "back": "/assets/generated/pokemon/animated-back/pikachu.gif",
+      "shinyFront": "/assets/generated/pokemon/shiny/pikachu.gif",
+      "shinyBack": "/assets/generated/pokemon/shiny-back/pikachu.gif",
+      "home": "/assets/generated/pokemon/home/pikachu.png"
     }
   }
 }
 ```
 
-El schema real se definirá al implementar el pipeline.
+El schema definitivo se crea al implementar el pipeline.
 
-## Estructura objetivo
+## Cobertura necesaria
 
-```text
-public/assets/
-├── pokemon/
-│   ├── battle/
-│   └── icons/
-├── items/
-├── types/
-├── battle/
-│   ├── backgrounds/
-│   ├── weather/
-│   ├── terrain/
-│   └── effects/
-└── brand/
-```
+Para cada especie/forma relevante comprobar:
 
-No introducir carpetas con miles de assets en Git sin decidir antes estrategia de almacenamiento/CDN y tamaño del repositorio.
+- front;
+- back;
+- shiny front;
+- shiny back;
+- mini icon;
+- HOME render cuando se use en UI grande.
 
-## Pipeline de assets
+No asumir que todas las formas tienen todos los formatos.
 
-`scripts/sync-assets` deberá:
+## Fallback visual
 
-- leer una lista de fuentes aprobadas;
-- descargar/copiar únicamente categorías autorizadas;
-- normalizar nombres;
-- evitar duplicados;
-- convertir a formatos web cuando proceda;
-- conservar transparencia;
-- no degradar pixel art;
-- generar hash;
-- registrar fuente;
-- generar manifest.
+Orden:
 
-`scripts/audit-assets` deberá:
+1. asset exacto de Showdown;
+2. variante compatible/base;
+3. PokéAPI Sprites;
+4. icon;
+5. placeholder neutral.
 
-- recorrer especies/formas soportadas;
-- comparar contra manifest;
-- comprobar front/back/shiny/icon;
-- validar existencia;
-- validar dimensiones;
-- detectar archivos huérfanos;
-- detectar duplicados exactos;
-- generar reporte Markdown/JSON;
-- fallar CI solo en categorías obligatorias del alcance actual.
+El fallback no debe revelar información que el jugador no conozca.
 
-## Política de formatos
+## Pixel art
 
-### Pixel art
+- evitar escalado fraccional cuando produzca blur;
+- preservar transparencia;
+- preferir renderizado pixel-perfect cuando el asset lo requiera;
+- no convertir por convertir;
+- medir tamaño final antes de decidir PNG/WebP/GIF.
 
-Preferencias:
+## Artwork/HOME
 
-- PNG cuando preservar pixel-perfect/alpha sea prioritario;
-- WebP lossless si se valida que no introduce degradación y compensa en tamaño;
-- GIF solo si la fuente animada lo requiere inicialmente; preferir pipeline moderno cuando exista alternativa legal/técnica.
+Se puede optimizar para web durante la sincronización:
 
-### Artwork
+- resize por uso;
+- WebP/AVIF cuando aporte una mejora real;
+- conservar el original en caché de sincronización si hace falta;
+- no servir imágenes 512x512 en componentes de 32px.
 
-- WebP/AVIF derivados solo cuando el derecho de transformación/uso esté claro;
-- dimensiones acordes al componente;
-- no servir originales gigantes en listas.
+## Backgrounds y FX
 
-### UI
+Usar Showdown como base inicial:
 
-- SVG para iconografía propia o de librerías compatibles;
-- evitar rasterizar iconos innecesariamente.
+- `gen6bgs`;
+- `fx`.
 
-## Fallback
+Más adelante pueden añadirse fondos o efectos propios en `public/assets/custom/`.
 
-Una ausencia de sprite nunca debe impedir una battle.
+## Iconos de UI
 
-Orden conceptual:
+Los iconos genéricos de interfaz no tienen por qué provenir de Pokémon Showdown.
 
-1. asset exacto;
-2. asset de forma base compatible;
-3. icon;
-4. placeholder neutral.
+Usar una única librería/vector set elegida por el frontend y mantener estilo consistente.
 
-El fallback no puede revelar información oculta.
+## Datos que no pertenecen aquí
 
-## Requisitos de metadata
+Este documento no decide:
 
-Para cada fuente/asset aprobado registrar:
+- stats;
+- movimientos;
+- learnsets;
+- legalidad;
+- formatos;
+- reglas.
 
-- source name;
-- source URL;
-- source revision;
-- author cuando aplique;
-- license;
-- copyright/trademark notes;
-- attribution requirement;
-- modification allowed;
-- redistribution allowed;
-- commercial-use status;
-- date reviewed;
-- reviewer/decision notes.
+Eso se define en `DATA-SOURCES.md`.
 
-## Lo que no se debe hacer
+## Criterio de completitud
 
-- hotlink permanente a repositorios externos desde UI de producción;
-- descargar imágenes “de Google”;
-- mezclar assets sin procedencia;
-- asumir que una API concede derechos sobre sus imágenes;
-- copiar música/sonidos oficiales;
-- crear versiones modificadas de assets si no está claro que se pueden modificar;
-- marcar una fuente completa como aprobada cuando solo se revisó una categoría.
+El pipeline de assets se considera preparado cuando:
 
-## Checklist antes de lanzamiento público
-
-- [ ] Logo y nombre revisados.
-- [ ] Cada categoría de asset tiene fuente registrada.
-- [ ] No hay assets con estado `review` usados en producción pública sin decisión.
-- [ ] Atribuciones incluidas cuando correspondan.
-- [ ] No se distribuyen música/sonidos oficiales no autorizados.
-- [ ] Se puede reconstruir el manifest.
-- [ ] El audit de cobertura pasa para formatos publicados.
-- [ ] Los fallbacks funcionan.
-- [ ] Se ha hecho una revisión específica de propiedad intelectual/licencias.
+- puede reconstruir `generated/` desde cero;
+- genera manifest;
+- muestra assets faltantes;
+- Battle UI no usa URLs externas;
+- Team Builder no usa URLs externas;
+- un asset faltante no rompe la aplicación.

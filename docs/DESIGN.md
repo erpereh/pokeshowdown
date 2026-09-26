@@ -262,7 +262,7 @@ Fallback:
 
 No deformar sprites pixel art mediante filtros o escalado fraccional cuando el estilo requiera pixel-perfect.
 
-La procedencia y derechos se gestionan en `ASSET-INVENTORY.md`.
+La procedencia, fuente, cobertura y fallback se gestionan en `ASSET-INVENTORY.md`.
 
 ## Escenarios
 
@@ -307,7 +307,7 @@ Si se añade:
 - mute global;
 - volumen;
 - no autoplay agresivo;
-- assets con derechos claros;
+- assets integrados mediante el pipeline definido;
 - señales útiles, no ruido constante.
 
 ## Feedback de red
