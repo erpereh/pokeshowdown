@@ -44,7 +44,7 @@ Un mismo concepto debe verse y comportarse igual en Battle, Team Builder y Poké
 
 ### Velocidad percibida
 
-La UI debe responder inmediatamente a clicks/teclado aunque el servidor aún esté procesando, diferenciando claramente estado “seleccionado/enviado” de “confirmado por servidor”.
+La UI debe responder inmediatamente a clicks/teclado aunque la resolución del turno aún esté procesándose, diferenciando claramente estado “seleccionado/enviado” de “confirmado por el resolver autoritativo”.
 
 ## Temas
 
@@ -174,7 +174,7 @@ La UI jamás debe inferir o enseñar:
 - objeto no revelado;
 - habilidad no revelada;
 - stats internos no permitidos;
-- cualquier dato que el servidor haya clasificado como privado.
+- cualquier dato que el estado autoritativo marque como privado.
 
 ## Team Builder
 
@@ -292,7 +292,7 @@ Reglas:
 
 - duración corta;
 - nunca bloquear decisiones más tiempo del necesario;
-- los datos confirmados por servidor tienen prioridad sobre la animación;
+- los datos confirmados por el resolver autoritativo tienen prioridad sobre la animación;
 - respetar `prefers-reduced-motion`;
 - ofrecer una experiencia coherente con animaciones reducidas.
 
@@ -314,11 +314,11 @@ Si se añade:
 
 Estados obligatorios:
 
-- conectado;
-- reconectando;
-- desconectado;
-- decisión pendiente de envío;
-- decisión aceptada/rechazada.
+- sincronizado;
+- resincronizando;
+- offline;
+- decisión pendiente de envío/procesamiento;
+- decisión aceptada/rechazada o pendiente del rival.
 
 Una pérdida de conexión nunca debe parecer que el botón simplemente “no funciona”.
 

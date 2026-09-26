@@ -1,50 +1,47 @@
 # Producto
 
-Este documento define **qué es el producto, para quién existe, qué debe hacer y cuál es su alcance**.
+Este documento define qué es el producto, qué modos incluye y cómo debe comportarse desde el punto de vista del jugador.
 
-Los detalles de implementación pertenecen a `ARCHITECTURE.md` y la dirección visual a `DESIGN.md`.
+## Estado
 
-## Estado actual
+El proyecto todavía no tiene una versión jugable implementada.
 
-El proyecto está en **Fase 0: definición y documentación**.
-
-No existe todavía una versión jugable. Lo descrito como MVP representa el alcance aprobado para la primera implementación.
-
-**Nombre de trabajo:** PokeShowdown. Es provisional y no debe tratarse como marca definitiva.
+**Nombre de trabajo:** PokeShowdown.
 
 ## Resumen
 
-PokeShowdown será una aplicación web para construir equipos y disputar combates Pokémon en dos modos: partidas individuales contra CPU y partidas privadas entre dos amigos.
+PokeShowdown será una aplicación web para construir equipos y disputar combates Pokémon con dos modos:
 
-La experiencia busca conservar la profundidad y fidelidad competitiva de Pokémon Showdown, pero con una interfaz propia, más moderna, visual, accesible y cómoda tanto en escritorio como en móvil.
+1. **Single Player** contra CPU.
+2. **Private Battle** 1v1 entre dos amigos mediante código o enlace.
 
-## Propósito
+La simulación y legalidad se basan en Pokémon Showdown.
 
-El producto existe para ofrecer una experiencia de simulación competitiva que:
+## Principios
 
-- permita entrar a jugar con poca fricción;
-- facilite entender el estado de la batalla;
-- haga más agradable construir y gestionar equipos;
-- mantenga reglas y legalidad fiables;
-- permita evolucionar la UI y las funciones sociales sin estar acoplados al cliente oficial de Pokémon Showdown.
+### Fidelidad
 
-## Principios de producto
+Pokémon Showdown es la referencia para mecánicas, RNG, legalidad y formatos.
 
-### Fidelidad antes que espectacularidad
+### Persistencia
 
-Una animación o decisión visual nunca puede ocultar información necesaria ni alterar la lógica del combate.
+Una partida activa no debe depender de mantener una pestaña abierta.
 
-### El servidor decide
+Single Player se guarda después de cada turno resuelto.
 
-El cliente presenta opciones y envía decisiones. El resultado de turnos, daño, estados, velocidad, prioridad, RNG, victoria y validación se determina en servidor.
+Private Battle persiste cada decisión necesaria y cada turno resuelto.
 
-### Competitivo, pero accesible
+### Información privada
 
-Un jugador experimentado debe poder actuar rápido. Un jugador nuevo debe poder comprender tipos, estados, movimientos y decisiones sin necesitar conocer la implementación interna.
+Cada jugador recibe únicamente la información que puede conocer.
 
-### Información progresiva
+Las elecciones pendientes de un jugador nunca se muestran al rival antes de resolver el turno.
 
-La pantalla debe mostrar primero lo necesario para decidir y permitir consultar detalles sin saturar la batalla.
+### Reanudación
+
+Cerrar el navegador no debe destruir una partida activa.
+
+El sistema debe reconstruirla desde los datos persistidos y continuar desde el último estado confirmado.
 
 ## Usuarios
 
@@ -52,89 +49,53 @@ La pantalla debe mostrar primero lo necesario para decidir y permitir consultar 
 
 Puede:
 
-- ver la página de entrada;
-- consultar información pública;
-- explorar una Pokédex o contenido público si existe en esa fase;
-- registrarse o iniciar sesión.
-
-No puede guardar progreso persistente ni participar en partidas privadas que requieran cuenta.
+- ver la entrada;
+- consultar contenido público si existe;
+- registrarse;
+- iniciar sesión.
 
 ### Jugador
 
 Puede:
 
-- gestionar su cuenta y perfil;
-- crear, editar, duplicar, importar y exportar equipos;
-- validar equipos para un formato;
-- iniciar combates soportados;
-- iniciar partidas individuales contra CPU;
-- crear una sala privada;
-- unirse a la sala privada de un amigo mediante código o enlace;
-- jugar y reconectarse a una batalla activa;
-- consultar su historial y replays;
-- abandonar una batalla;
-- reportar problemas o usuarios cuando exista moderación.
+- gestionar su perfil;
+- crear y guardar equipos;
+- importar/exportar equipos;
+- validar equipos;
+- iniciar Single Player;
+- crear Private Battle;
+- entrar en una Private Battle mediante invitación;
+- reanudar partidas activas;
+- consultar historial;
+- abrir replays.
 
-### Espectador
+## Autenticación
 
-En las fases que lo soporten puede:
-
-- observar combates públicos;
-- consultar el log y estado visible del combate;
-- no puede enviar decisiones por los jugadores.
-
-### Administrador/moderador
-
-Fuera del MVP inicial salvo las capacidades mínimas operativas.
-
-En fases posteriores podrá:
-
-- revisar reportes;
-- aplicar acciones de moderación;
-- consultar información operativa;
-- gestionar contenido o incidencias sin alterar resultados históricos de combate.
-
-## Áreas funcionales
-
-### Autenticación
-
-MVP:
+Supabase Auth gestiona:
 
 - registro;
-- inicio de sesión;
-- cierre de sesión;
+- login;
+- logout;
 - recuperación de contraseña;
 - sesión persistente.
 
-Posterior:
-
-- proveedores OAuth;
-- 2FA si el riesgo/uso lo justifica.
-
-### Perfil
+## Perfil
 
 MVP:
 
 - nombre visible;
-- avatar configurable dentro de las opciones permitidas;
+- avatar;
 - fecha de alta;
 - estadísticas básicas;
 - historial reciente.
 
-Posterior:
-
-- personalización ampliada;
-- amigos;
-- estado/presencia;
-- logros cosméticos.
-
-### Team Builder
+## Team Builder
 
 MVP:
 
-- crear y eliminar equipos;
-- editar los seis slots;
-- seleccionar especie y forma legal;
+- crear, editar, duplicar y eliminar equipos;
+- seis slots;
+- especie/forma;
 - nivel;
 - género cuando aplique;
 - objeto;
@@ -143,219 +104,217 @@ MVP:
 - movimientos;
 - EVs;
 - IVs;
-- variante shiny cuando sea visualmente soportada;
-- formato asociado;
+- shiny cuando aplique;
+- formato;
 - validación;
-- duplicación;
-- importación/exportación en formato de texto compatible;
-- mensajes de error de legalidad comprensibles.
+- import/export compatible con Showdown.
 
-Reglas:
+La UI puede permitir edición temporalmente inválida, pero una battle que requiera equipo solo puede empezar con un equipo válido.
 
-- el Team Builder puede permitir editar temporalmente un equipo inválido;
-- un equipo inválido no puede entrar en un formato que exija validación;
-- la validación final debe provenir del validador del motor, no de reglas duplicadas en el frontend.
+La validación final proviene de Pokémon Showdown.
 
-### Formatos
+## Formatos iniciales
 
-MVP:
-
-- Gen 9 OU;
+- Gen 9 OU.
 - Gen 9 Random Battle.
 
-La arquitectura debe permitir añadir nuevos formatos sin modificar la UI base del combate.
+"Random Battle" describe la generación aleatoria de equipos del formato.
 
-Los formatos disponibles en producto se configuran explícitamente. Que el motor soporte un formato no implica que el producto lo publique automáticamente.
-
-### Combate
+## Combate
 
 MVP:
 
-- 1v1 singles;
-- selección de movimientos;
-- selección de cambio;
+- singles 1v1;
+- movimientos;
+- cambios;
 - turnos;
 - estados;
-- clima/campo cuando aplique;
-- información de HP permitida por el formato;
-- log de batalla;
-- temporizador básico si se habilita para el formato;
+- clima/campo;
+- HP visible según corresponda;
+- boosts;
+- log;
 - rendición;
-- reconexión;
-- final de batalla;
+- reanudación;
+- final de battle;
 - replay.
 
-La interfaz nunca debe revelar información que el jugador no debería conocer según el estado del combate.
+## Single Player
 
-### Single Player
+### Flujo
 
-MVP:
+1. el jugador elige formato;
+2. para OU selecciona un equipo válido;
+3. para Random Battle el sistema genera los equipos mediante Showdown;
+4. el jugador envía una elección;
+5. el backend serverless valida la petición;
+6. la CPU genera una elección legal;
+7. Pokémon Showdown resuelve el turno;
+8. el turno y los datos necesarios para reconstruir la battle se guardan en Supabase;
+9. solo después del guardado el turno se considera confirmado para el cliente.
 
-- iniciar una battle contra CPU;
-- elegir formato;
-- usar un equipo propio cuando el formato lo requiera;
-- usar Random Battle sin equipo previo;
-- resolver las decisiones de la CPU en el game server;
-- guardar resultado y replay igual que una battle multijugador.
+### Autosave
 
-La CPU no debe tener acceso a información oculta que un jugador normal no conocería, salvo que una futura dificultad se diseñe explícitamente de otra forma.
+El guardado ocurre después de **cada turno resuelto**.
 
-### Partida privada entre dos amigos
+Debe permitir:
 
-MVP:
+- cerrar la pestaña;
+- cerrar el navegador;
+- iniciar sesión desde otro dispositivo;
+- recuperar la partida;
+- continuar desde el último turno confirmado.
 
-- crear una sala privada;
-- generar un identificador/código no predecible;
-- generar un enlace de invitación;
-- un segundo jugador puede unirse a la sala;
-- seleccionar formato;
-- validar el equipo de ambos cuando corresponda;
-- iniciar la battle solo cuando ambos participantes estén preparados;
-- reconectar a la misma battle si uno pierde la conexión;
-- impedir el acceso de terceros a una sala privada.
+Si una petición se repite por timeout/retry, no debe resolver el mismo turno dos veces.
 
-No existe matchmaking público, cola global ni emparejamiento con jugadores desconocidos.
+### CPU
 
-### Historial y replays
+La CPU genera decisiones válidas a partir del request de battle.
 
-MVP:
+La estrategia debe ser sustituible para poder mejorarla en el futuro sin cambiar el motor.
 
-- registrar participantes;
+## Private Battle
+
+### Sala
+
+El host:
+
+1. crea una sala;
+2. selecciona formato;
+3. recibe un código/enlace de invitación.
+
+El invitado:
+
+1. abre el enlace o introduce el código;
+2. entra en la sala;
+3. selecciona/valida equipo cuando corresponda;
+4. confirma que está preparado.
+
+Solo los dos participantes pueden acceder a datos privados de la battle.
+
+### Turno
+
+1. cada jugador envía su elección al backend;
+2. la elección se valida y se guarda de forma privada;
+3. la elección pendiente no se revela al rival;
+4. al existir ambas elecciones, una única ejecución reclama la resolución del turno;
+5. se reconstruye/carga Pokémon Showdown;
+6. se aplican ambas decisiones;
+7. se resuelve el turno;
+8. el nuevo estado se persiste;
+9. Supabase Realtime Broadcast avisa a ambos clientes;
+10. cada cliente recibe/consulta su vista permitida.
+
+### Concurrencia
+
+Dos peticiones simultáneas no pueden:
+
+- resolver dos veces el mismo turno;
+- crear dos resultados distintos;
+- sobrescribir una elección confirmada de forma accidental.
+
+Las operaciones críticas deben ser idempotentes y atómicas.
+
+## Guardado y reanudación
+
+Una battle activa conserva suficiente información canónica para ser reconstruida.
+
+Conceptualmente:
+
+- battle id;
+- mode;
+- format id;
+- engine version;
+- seed;
+- snapshots/equipos necesarios;
+- input log;
+- turno actual;
+- status;
+- timestamps.
+
+La UI no es fuente de verdad.
+
+## Historial y replays
+
+Guardar:
+
+- participantes;
+- modo;
 - formato;
 - fecha;
 - resultado;
-- identificador de batalla;
-- replay reproducible a partir del log/eventos persistidos.
+- battle id;
+- engine version;
+- replay/input log necesario.
 
-Un replay es de solo lectura. No debe poder modificar el resultado histórico.
-
-## Flujo principal
-
-### Partida individual
-
-1. El usuario entra en la aplicación.
-2. Se registra o inicia sesión.
-3. Elige Single Player y un formato.
-4. Para OU selecciona un equipo válido; para Random Battle no necesita equipo.
-5. El game server crea la battle y el oponente CPU.
-6. El jugador envía sus decisiones.
-7. La CPU genera una decisión legal.
-8. Pokémon Showdown resuelve el turno.
-9. Al terminar se persiste el resultado y el replay.
-
-### Partida privada con un amigo
-
-1. El usuario crea una sala privada.
-2. Selecciona el formato y, cuando aplique, un equipo válido.
-3. La aplicación genera un código/enlace de invitación.
-4. El segundo jugador abre el enlace o introduce el código.
-5. Ambos jugadores confirman que están preparados.
-6. El game server crea la battle.
-7. Cada jugador recibe únicamente la información que le corresponde.
-8. Ambos envían sus decisiones por WebSocket.
-9. Pokémon Showdown resuelve cada turno.
-10. Al terminar se persiste el resultado y el replay.
-
-### Creación de equipo
-
-1. El usuario abre Team Builder.
-2. Crea un equipo y selecciona formato.
-3. Configura cada Pokémon.
-4. La UI ayuda con opciones compatibles, pero no sustituye la validación oficial.
-5. El servidor valida.
-6. Se muestran errores accionables o el estado válido.
-7. El usuario guarda el equipo.
+Los replays son de solo lectura.
 
 ## Reglas de negocio
 
-- Un usuario solo puede modificar sus propios equipos y datos editables.
-- Las decisiones de batalla se aceptan únicamente para el jugador, batalla y turno correspondientes.
-- Una decisión duplicada o atrasada no debe ejecutarse dos veces.
-- El servidor es la única autoridad sobre el estado real de la batalla.
-- El frontend no calcula daño ni legalidad como fuente de verdad.
-- No se inicia una battle que requiera equipo mientras el equipo sea inválido.
-- Random Battle genera el equipo en servidor.
-- No se expone al rival información privada del equipo antes de que las reglas permitan conocerla.
-- El resultado persistido debe coincidir con el resultado emitido por el motor.
-- Una desconexión no equivale automáticamente a derrota; debe existir una ventana de reconexión/timeout definida.
-- Una batalla finalizada es inmutable salvo metadatos administrativos claramente separados.
-- Los cambios de versión del motor no deben reinterpretar replays históricos silenciosamente.
-- Los formatos disponibles se versionan/configuran de forma controlada.
+- un usuario solo modifica sus datos permitidos;
+- una elección pertenece a un usuario, battle y request concretos;
+- una petición obsoleta/repetida no se ejecuta dos veces;
+- el backend resuelve las battles mediante Pokémon Showdown;
+- el frontend no calcula daño como autoridad;
+- no se inicia OU con equipo inválido;
+- Random Battle se genera con Showdown;
+- no se filtra información oculta;
+- el estado persistido debe coincidir con el resultado del motor;
+- cada turno Single Player se persiste;
+- cada turno Private Battle se persiste antes de notificarse;
+- las battles finalizadas no cambian su resultado;
+- engine version queda asociada a battle/replay.
 
 ## Criterios de éxito del MVP
 
-El MVP se considera funcional cuando:
+- registro/login funcional;
+- Team Builder funcional;
+- validación OU correcta;
+- Single Player completo;
+- autosave de Single Player por turno;
+- cierre/reapertura y reanudación correcta;
+- Private Battle mediante código/enlace;
+- dos navegadores completan una battle;
+- ninguna elección privada se filtra;
+- reconexión/reanudación funciona;
+- Gen 9 OU funciona;
+- Gen 9 Random Battle funciona;
+- resultado e historial persisten;
+- replay se puede consultar;
+- experiencia usable en móvil y escritorio;
+- pruebas automáticas cubren flujos críticos.
 
-- un usuario puede completar una battle Single Player contra CPU;
-- dos usuarios pueden iniciar una battle privada desde navegadores separados usando código/enlace;
-- ambos reciben únicamente la información que les corresponde;
-- pueden completar un combate Gen 9 OU y uno Random Battle;
-- el servidor recupera correctamente errores, decisiones inválidas y desconexiones comunes;
-- un equipo OU se puede crear, importar, exportar y validar;
-- el resultado y replay sobreviven a un reinicio del frontend;
-- la experiencia principal es usable en escritorio y móvil;
-- existen pruebas automáticas para los flujos críticos.
-
-## Alcance actual aprobado
-
-### Incluido en el MVP
+## Alcance inicial
 
 - web responsive;
-- cuentas;
-- perfil básico;
+- Supabase Auth;
+- perfiles;
 - Team Builder;
-- Gen 9 OU;
-- Gen 9 Random Battle;
-- singles 1v1;
-- Single Player contra CPU;
-- salas privadas 1v1;
-- invitaciones por código/enlace;
-- reconexión;
+- OU;
+- Random Battle;
+- Single Player;
+- CPU;
+- autosave;
+- Private Battle 1v1;
+- invitaciones;
+- Supabase Realtime;
 - historial;
 - replays;
-- modo claro y oscuro;
-- base de accesibilidad;
-- pruebas unitarias, integración y E2E para rutas críticas.
+- dark/light;
+- tests unitarios, integración y E2E.
 
-### Fuera del MVP
+## Fuera del alcance inicial
 
-- aplicación móvil nativa;
-- modelos 3D;
-- recrear animaciones exactas de los juegos;
+- aplicación nativa;
+- 3D;
 - chat global;
 - clanes;
 - torneos;
 - marketplace;
 - pagos;
-- campañas/PvE;
-- IA de combate avanzada;
-- soporte completo de todas las generaciones el día 1;
-- doubles/VGC el día 1;
-- matchmaking público con desconocidos;
-- ladder/ranked público;
-- sistema de moderación complejo;
-- compatibilidad con el login oficial de Pokémon Showdown;
-- copiar o reutilizar código del cliente oficial de Pokémon Showdown.
-
-## Futuro
-
-Candidatos, no compromisos:
-
-- más generaciones y tiers;
+- campañas;
+- PvE narrativo;
+- soporte completo de todas las generaciones;
 - doubles/VGC;
-- matchmaking público, solo si se decide explícitamente en el futuro;
-- ladder y temporadas, solo si se decide explícitamente en el futuro;
-- rankings públicos;
 - espectadores;
-- torneos;
-- amigos y presencia;
-- estadísticas avanzadas;
-- análisis post-partida;
-- Pokédex integrada;
-- sets sugeridos;
-- internacionalización;
-- PWA;
-- personalización cosmética;
-- formatos custom.
-
-Toda función de esta sección requiere ser movida explícitamente al alcance antes de implementarse.
+- moderación compleja;
+- login oficial de Pokémon Showdown.

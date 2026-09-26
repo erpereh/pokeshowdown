@@ -2,83 +2,132 @@
 
 > Nombre provisional del proyecto. La marca definitiva se decidirá más adelante.
 
-PokeShowdown es un proyecto personal para crear un simulador web de combates Pokémon inspirado en Pokémon Showdown, con frontend propio, Team Builder, partidas individuales contra CPU y multijugador privado entre dos amigos, cuentas, historial y una experiencia visual moderna y responsive.
+PokeShowdown es un proyecto personal para crear un simulador web de combates Pokémon inspirado en Pokémon Showdown, con frontend propio, Team Builder, partidas individuales contra CPU y partidas privadas 1v1 entre dos amigos.
 
 ## Estado
 
 El proyecto está en fase de definición técnica y documentación. Todavía no existe una aplicación implementada.
 
-## Decisiones fijadas
+## Arquitectura fijada
 
-- **Motor de combate:** Pokémon Showdown.
-- **Frontend:** propio, desacoplado del cliente oficial de Pokémon Showdown.
-- **Base de datos y autenticación:** Supabase.
-- **Persistencia:** PostgreSQL de Supabase.
-- **Tiempo real de batalla:** game server propio con WebSockets para salas privadas y sesiones activas.
-- **Datos competitivos:** Pokémon Showdown como fuente principal.
+El proyecto no tendrá un servidor de juego persistente propio.
+
+- **Frontend y backend serverless:** Next.js desplegado en Vercel.
+- **Motor de combate:** Pokémon Showdown ejecutado únicamente en Vercel Functions con runtime Node.js.
+- **Autenticación y base de datos:** Supabase Auth + PostgreSQL.
+- **Sincronización multijugador:** Supabase Realtime Broadcast.
+- **Persistencia:** Supabase.
+- **Datos competitivos:** Pokémon Showdown.
 - **Datos complementarios de Pokédex:** PokéAPI.
-- **Assets principales:** Pokémon Showdown / Play Pokémon Showdown.
+- **Assets principales:** Pokémon Showdown.
 - **Assets fallback:** PokéAPI Sprites.
-- **Assets sincronizados localmente:** no se hará hotlink desde la UI.
 
-## Responsabilidades principales
+Vercel Functions se invocan solo cuando hay trabajo que realizar. No existe un proceso Node propio que deba permanecer encendido.
 
-### Pokémon Showdown
+## Modos de juego
 
-- simulación de combates;
-- formatos;
-- reglas;
-- legalidad;
-- TeamValidator;
-- import/export de equipos;
-- Random Battles;
-- datos competitivos mediante Dex.
+### Single Player
+
+El jugador combate contra una CPU.
+
+Flujo:
+
+1. el navegador envía la decisión del jugador a una Vercel Function;
+2. la Function reconstruye/carga la battle;
+3. la CPU genera una decisión legal;
+4. Pokémon Showdown resuelve el turno;
+5. el estado canónico necesario para continuar se guarda en Supabase;
+6. la respuesta devuelve la vista actualizada al jugador.
+
+**La partida se guarda después de cada turno resuelto.**
+
+Si el navegador se cierra, el usuario puede volver más tarde y continuar desde el último turno persistido.
+
+### Private Battle
+
+Dos usuarios juegan mediante una sala privada con código o enlace.
+
+Flujo:
+
+1. un usuario crea una sala;
+2. el segundo usuario se une;
+3. cada jugador envía su decisión a una Vercel Function;
+4. las decisiones se almacenan de forma privada;
+5. cuando existen ambas decisiones, una única resolución procesa el turno con Pokémon Showdown;
+6. Supabase persiste el resultado del turno;
+7. Supabase Realtime Broadcast notifica a ambos clientes;
+8. cada cliente obtiene únicamente la información que puede ver.
+
+No se utiliza un jugador como host de la partida.
+
+> "Random Battle" se refiere al formato con equipos generados por Pokémon Showdown, no a emparejar jugadores aleatorios.
+
+## Responsabilidades
+
+### Vercel
+
+- servir la aplicación Next.js;
+- ejecutar Route Handlers / Functions;
+- ejecutar Pokémon Showdown;
+- validar equipos;
+- resolver turnos;
+- ejecutar la CPU;
+- aceptar decisiones privadas;
+- reconstruir battles desde su estado persistido;
+- persistir resultados en Supabase.
 
 ### Supabase
 
-- registro e inicio de sesión;
-- sesiones de usuario;
+- Auth y sesiones;
 - perfiles;
 - equipos guardados;
-- historial de combates;
-- resultados;
-- replays persistentes;
-- preferencias;
-- estadísticas personales cuando se implementen.
-
-Supabase **no resuelve los combates ni mantiene el estado vivo de una battle**.
-
-### Game server
-
-- WebSockets;
-- partidas individuales contra CPU;
-- salas privadas para dos jugadores;
-- invitaciones mediante código/enlace;
+- salas privadas;
 - battles activas;
-- reconexión;
-- timeouts;
-- autorización de decisiones;
-- integración con Pokémon Showdown;
-- persistencia hacia Supabase.
+- autosave de Single Player;
+- decisiones privadas multijugador;
+- historial;
+- replays;
+- Realtime Broadcast;
+- RLS y autorización de datos.
+
+### Pokémon Showdown
+
+- simulación;
+- RNG;
+- reglas;
+- formatos;
+- legalidad;
+- TeamValidator;
+- Teams;
+- Random Battles;
+- Dex.
 
 ## Alcance inicial
 
 - cuentas de usuario;
-- perfiles básicos;
+- perfil básico;
 - Team Builder;
 - importación/exportación;
 - validación;
 - Gen 9 OU;
 - Gen 9 Random Battle;
-- combates 1v1;
-- partidas individuales contra CPU;
-- partidas privadas 1v1 entre dos amigos;
-- creación/unión a sala mediante código o enlace;
-- reconexión;
+- Single Player contra CPU;
+- Private Battle 1v1 mediante código/enlace;
+- guardado y reanudación;
 - historial;
 - replays;
 - light/dark;
 - escritorio y móvil.
+
+## Variables de entorno
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
+```
+
+`SUPABASE_SECRET_KEY` es exclusivamente server-side y nunca debe llegar al navegador.
 
 ## Documentación
 
@@ -88,34 +137,11 @@ Supabase **no resuelve los combates ni mantiene el estado vivo de una battle**.
 - [Fuentes de datos](docs/DATA-SOURCES.md)
 - [Inventario de assets](docs/ASSET-INVENTORY.md)
 
-## Fuentes externas fijadas
+## Fuentes fijadas
 
 - Pokémon Showdown: https://github.com/smogon/pokemon-showdown
-- Assets de Showdown: https://play.pokemonshowdown.com/sprites/
+- Assets Showdown: https://play.pokemonshowdown.com/sprites/
 - PokéAPI: https://pokeapi.co/
 - PokéAPI Sprites: https://github.com/PokeAPI/sprites
 - Supabase: https://supabase.com/
-
-## Configuración
-
-Copiar:
-
-```bash
-cp .env.example .env.local
-```
-
-y rellenar las credenciales del proyecto Supabase cuando se cree.
-
-Nunca subir secretos reales al repositorio.
-
-## Modos de juego fijados
-
-### Single Player
-
-El jugador combate contra una CPU controlada por el game server utilizando exactamente el mismo motor de Pokémon Showdown.
-
-### Private Battle
-
-Dos jugadores crean o se unen a una sala privada mediante código o enlace. No existe cola pública ni matchmaking con desconocidos.
-
-> "Random Battle" se refiere al formato/equipo generado aleatoriamente por Pokémon Showdown, no a emparejarse con una persona aleatoria.
+- Vercel: https://vercel.com/
