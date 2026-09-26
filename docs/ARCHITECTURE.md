@@ -1,522 +1,92 @@
-# Arquitectura
+# Arquitectura serverless
 
-Este documento define la arquitectura técnica fijada para PokeShowdown.
+**Estado:** objetivo técnico aprobado; aún no existe aplicación ni esquema desplegado. Meta: funcionar en planes gratuitos mientras el uso encaje en sus cuotas, sin proceso propio encendido 24/7.
 
-## Objetivo
+## Componentes
 
-Ejecutar Single Player y Private Battle sin mantener un servidor propio encendido 24/7.
-
-La arquitectura utiliza:
-
-- Vercel para frontend y compute serverless;
-- Supabase para Auth, PostgreSQL y Realtime;
-- Pokémon Showdown para simulación;
-- PokéAPI solo como fuente complementaria;
-- assets sincronizados desde las fuentes fijadas.
-
-## Decisiones definitivas
-
-1. Next.js + React + TypeScript.
-2. Despliegue en Vercel.
-3. Backend mediante Next.js Route Handlers / Vercel Functions.
-4. Runtime Node.js para toda Function que importe Pokémon Showdown.
-5. Pokémon Showdown no se ejecuta en el navegador.
-6. No existe un backend persistente propio.
-7. Supabase Auth gestiona identidad.
-8. Supabase PostgreSQL conserva datos y battles.
-9. Supabase Realtime Broadcast sincroniza Private Battle.
-10. Single Player se resuelve serverless y se guarda después de cada turno.
-11. Private Battle se resuelve serverless cuando existen ambas elecciones.
-12. Ningún jugador actúa como host.
-13. El estado se reconstruye desde datos canónicos persistidos.
-14. Las decisiones privadas no se emiten mediante Realtime.
-
-## Stack
-
-| Área | Elección |
+| Componente | Responsabilidad |
 | --- | --- |
-| Monorepo | pnpm workspaces |
-| Frontend | Next.js + React + TypeScript |
-| Estilos | Tailwind CSS + design tokens |
-| Hosting | Vercel |
-| Backend | Next.js Route Handlers / Vercel Functions |
-| Runtime backend | Node.js 24.x |
-| Motor | Pokémon Showdown |
-| Auth | Supabase Auth |
-| Base de datos | Supabase PostgreSQL |
-| Tiempo real | Supabase Realtime Broadcast |
-| Autorización DB | RLS + validación backend |
-| Unit/integration | Vitest |
-| E2E | Playwright |
+| Next.js en Vercel | Aplicación y Route Handlers/Functions para operaciones de juego. |
+| `battle-engine` server-only | Adaptador de `BattleStream`, `Dex`, `Teams`, `TeamValidator`, CPU, parseo y reconstrucción. |
+| `battle-contract` | Requests, respuestas, vistas autorizadas, versiones e identificadores de petición. |
+| Supabase Auth/PostgreSQL | Identidad y estado durable: cuentas, equipos, salas, partidas, decisiones y replays. |
+| Supabase Realtime Broadcast | Avisos a canales privados para que los participantes recuperen sus vistas actualizadas. |
+| `pokemon-data` | Adaptadores de IDs y datos complementarios, separados de la simulación. |
 
-Node 24.x se fija para mantener margen sobre el requisito Node actual del paquete Pokémon Showdown.
+La API oficial de Showdown se integra en **Functions con runtime Node.js**, no en el navegador ni Edge. Fijar una versión de Node y de Showdown compatibles. Ninguna Function depende de RAM compartida entre invocaciones.
 
-## Estructura objetivo
+### Estructura prevista, solo cuando se necesite
 
 ```text
-/
-├── apps/
-│   └── web/
-│       ├── app/
-│       │   ├── api/
-│       │   │   ├── battles/
-│       │   │   ├── rooms/
-│       │   │   └── teams/
-│       │   └── ...
-│       └── ...
-├── packages/
-│   ├── battle-engine/
-│   ├── battle-contract/
-│   ├── pokemon-data/
-│   ├── supabase/
-│   ├── ui/
-│   └── shared/
-├── scripts/
-│   ├── sync-data/
-│   ├── sync-assets/
-│   └── audit-assets/
-├── public/
-│   └── assets/
-├── docs/
-└── .env.example
+apps/web/app/api/{battles,rooms,teams}/
+packages/{battle-engine,battle-contract,pokemon-data,supabase}/
+scripts/{sync-data,sync-assets,audit-assets}/
+docs/
 ```
 
-No crear paquetes vacíos preventivamente.
+No crear paquetes vacíos ni infraestructura adicional preventivamente. Las decisiones visuales quedan fuera de este documento.
 
-## Límites de responsabilidad
+## Modelo de datos conceptual
 
-### `apps/web`
+| Tabla | Campos/propósito principales |
+| --- | --- |
+| `profiles` | `user_id`, nombre visible, timestamps. |
+| `teams` | `id`, `owner_id`, `format_id`, equipo canónico, `engine_version`, timestamps. |
+| `battle_rooms` | Host, código de invitación, formato, estado, caducidad. |
+| `battles` | ID, modo (`singleplayer`/`private`), formato, versión de motor, seed, turno, status, ganador, referencia a log canónico, revisión/timestamps. |
+| `battle_players` | Lado, usuario (nullable para CPU) y snapshot de equipo protegido. |
+| `battle_choices` | Battle/turno/lado/request, elección y estado; clave única para evitar duplicación. |
+| `battle_replays` | Log de reproducción, versión y metadatos. |
 
-Cliente:
+Separar datos canónicos privados de vistas accesibles al cliente. Toda tabla expuesta con datos de usuario requiere RLS; la autorización de sala/participación se verifica también en backend.
 
-- UI;
-- navegación;
-- Auth;
-- Team Builder;
-- salas;
-- vistas de battle;
-- historial/replays;
-- suscripciones Realtime.
+## Motor y reconstrucción
 
-Backend serverless dentro de `app/api`:
+El estado durable incluye, como mínimo, `engine_version + seed + equipos iniciales + input log canónico + estado/turno`. La implementación debe comprobar mediante tests que reconstruir una battle con **la misma versión** reproduce exactamente el estado y el request actual. No serializar objetos internos del motor ni prometer compatibilidad de reproducción entre versiones distintas; conservar suficiente log de eventos para ver replays históricos.
 
-- autenticación de operaciones sensibles;
-- validación;
-- llamadas a `battle-engine`;
-- persistencia;
-- resolución de turnos;
-- CPU.
+Ninguna acción se confirma antes de persistirse. Las decisiones incluyen `battleId`, `turn` y `requestId`. Usar versión/revisión de registro, transacciones o compare-and-swap para rechazar actualizaciones obsoletas.
 
-### `packages/battle-engine`
+## Single Player
 
-Paquete **server-only**.
+```text
+Elección → Function Node → autenticar/validar → reconstruir Showdown
+         → elegir acción CPU → resolver → guardar turno → respuesta
+```
 
-Responsable de encapsular:
+Crear la partida en Supabase **antes de jugar el primer turno**. Guardar cada turno resuelto; reanudar desde el último estado confirmado tras cerrar navegador o cambiar de dispositivo. Los retries deben recuperar el resultado ya persistido, no volver a resolver el mismo request.
 
-- `BattleStream`;
-- `Dex`;
-- `Teams`;
-- `TeamValidator`;
-- Random Battles;
-- reconstrucción desde seed/input log;
-- normalización del protocolo del motor;
-- vistas/eventos internos.
+## Private Battle
 
-No debe importarse desde componentes client-side.
+```text
+Crear/unirse por invitación → guardar elecciones privadas
+→ ambas disponibles → reclamar resolución única → Showdown
+→ persistencia durable → aviso Realtime privado → vista por jugador
+```
 
-### `packages/battle-contract`
+Controlar carreras entre las dos peticiones mediante claim atómico por battle/turno. Una operación `RESOLVING` necesita expiración/lease y recuperación idempotente si una Function termina inesperadamente: ninguna batalla puede quedar bloqueada indefinidamente. Broadcast lleva avisos, **nunca elecciones pendientes ni estado canónico secreto**; tras el aviso cada cliente consulta su vista autorizada.
 
-Tipos compartidos seguros:
+Supabase Realtime es un servicio gestionado, no autoridad de simulación. No hay jugador-host ni servidor de batalla propio permanente.
 
-- requests;
-- responses;
-- public battle views;
-- player-specific views;
-- request ids;
-- turn ids;
-- códigos de error;
-- eventos Realtime permitidos.
+## Seguridad y despliegue
 
-No contiene internals de Showdown.
+- Validar sesión/usuario en servidor; no confiar en `userId` del body.
+- Secret key solo backend; RLS en tablas expuestas; canales Realtime privados y autorizados.
+- No filtrar equipos/elecciones ocultos en consultas, respuestas, errores ni logs.
+- Versionar motor/datos y fijar dependencias. Vigilar límites de Functions y quotas de los planes gratuitos.
+- Guardado y reconstrucción deben tolerar reintentos, concurrencia y fallos parciales.
 
-### `packages/pokemon-data`
+## Validación pendiente de implementación
 
-- adaptación de IDs;
-- datos de presentación;
-- PokéAPI complementaria;
-- manifest de assets.
+Unit: contratos, CPU, normalización y filtrado. Integración: motor/reproducción determinista, legalidad, autosave, concurrencia/recuperación de claim y RLS. E2E: login, equipos, Single Player con cierre/reanudación, sala privada con dos sesiones, retries, historial y replay.
 
-### `packages/supabase`
+## Configuración
 
-- cliente browser;
-- cliente server;
-- tipos generados;
-- repositorios;
-- helpers de Auth/RLS.
-
-## Vercel Functions
-
-Las Functions son efímeras.
-
-No se asume memoria compartida entre invocaciones.
-
-Por tanto:
-
-- ningún estado crítico vive solo en RAM;
-- cada invocación carga/reconstruye lo necesario;
-- cada resultado se persiste antes de devolverlo como confirmado;
-- retries deben ser seguros;
-- una instancia reutilizada es una optimización, nunca una dependencia.
-
-Las Functions que importen `pokemon-showdown` usan Node.js runtime, no Edge runtime.
-
-## Supabase
-
-### Variables
-
-Cliente:
+`.env.example` es el único contrato actual:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-```
-
-Servidor:
-
-```env
 SUPABASE_SECRET_KEY=
 ```
 
-La secret key nunca llega al bundle del navegador.
-
-### Auth
-
-Supabase Auth identifica al usuario.
-
-Las Functions verifican la identidad antes de ejecutar operaciones sobre battles, teams o rooms.
-
-Nunca confiar en un `userId` proporcionado por el body como prueba de identidad.
-
-### PostgreSQL
-
-Modelo conceptual:
-
-#### `profiles`
-
-- `user_id`;
-- `display_name`;
-- `avatar_key`;
-- timestamps.
-
-#### `teams`
-
-- `id`;
-- `owner_id`;
-- `name`;
-- `format_id`;
-- `packed_team`;
-- `engine_version`;
-- timestamps.
-
-#### `battle_rooms`
-
-- `id`;
-- `host_user_id`;
-- `invite_code`;
-- `format_id`;
-- `status`;
-- `expires_at`;
-- timestamps.
-
-#### `battles`
-
-- `id`;
-- `mode`: `singleplayer | private`;
-- `format_id`;
-- `engine_version`;
-- `seed`;
-- `current_turn`;
-- `status`;
-- `winner_user_id` nullable;
-- `input_log` o referencia a representación canónica;
-- timestamps.
-
-#### `battle_players`
-
-- `battle_id`;
-- `user_id` nullable para CPU;
-- `side`;
-- snapshot/representación necesaria del team;
-- metadata privada necesaria para reconstrucción.
-
-#### `battle_choices`
-
-- `battle_id`;
-- `turn`;
-- `side`;
-- `request_id`;
-- `choice`;
-- timestamps.
-
-Restricción lógica/única para impedir más de una elección activa por side/request salvo sustitución explícitamente permitida antes de cerrar el turno.
-
-#### `battle_replays`
-
-- `battle_id`;
-- representación canónica del replay;
-- metadata/versiones.
-
-El schema final puede separar información pública y privada en tablas/esquemas distintos cuando se implemente RLS.
-
-## RLS y privacidad
-
-Toda tabla expuesta con datos de usuario debe tener RLS.
-
-Principios:
-
-- usuario modifica solo sus equipos;
-- participantes acceden solo a la información permitida de sus battles;
-- una elección pendiente no es legible por el rival;
-- datos canónicos sensibles de resolución se leen solo desde backend cuando sea necesario;
-- la secret key se usa únicamente tras autorización explícita en backend.
-
-## Supabase Realtime
-
-Usar **Broadcast** para Private Battle.
-
-Realtime se utiliza para:
-
-- turno resuelto;
-- rival unido;
-- ready state;
-- battle finalizada;
-- eventos de reanudación que necesiten refresco.
-
-No se utiliza para enviar al rival una elección pendiente.
-
-Los canales de battle deben ser privados y autorizados.
-
-El cliente que recibe un evento Realtime puede invalidar/refrescar su vista desde el backend/DB en lugar de asumir que el payload contiene todo el estado.
-
-## Single Player
-
-### Resolución
-
-```text
-Browser
-   │ POST choice
-   ▼
-Vercel Function (Node)
-   │
-   ├── autentica usuario
-   ├── carga battle
-   ├── reconstruye BattleStream
-   ├── valida choice
-   ├── calcula choice CPU
-   ├── resuelve turno
-   └── persiste
-           │
-           ▼
-       Supabase
-           │
-           ▼
-      response al browser
-```
-
-### Autosave
-
-Cada turno resuelto debe quedar persistido **antes** de responder como confirmado.
-
-Esto permite recuperar una battle aunque:
-
-- se cierre la pestaña;
-- se cierre el navegador;
-- cambie el dispositivo;
-- una Function desaparezca después de responder.
-
-### Reanudación
-
-1. autenticar usuario;
-2. localizar Single Player activa;
-3. cargar seed, engine version, teams y log canónico;
-4. reconstruir el motor;
-5. verificar el request actual;
-6. enviar snapshot permitido;
-7. continuar.
-
-### Idempotencia
-
-Cada elección incluye identificadores como:
-
-- `battleId`;
-- `turn`;
-- `requestId`.
-
-Un retry de la misma petición devuelve el resultado ya persistido o continúa de forma segura; nunca vuelve a aplicar el turno.
-
-## Private Battle
-
-### Creación de sala
-
-```text
-Host
-  │
-  ▼
-Vercel Function
-  │
-  ├── crea room
-  └── genera invite code
-         │
-         ▼
-      Supabase
-```
-
-### Entrada
-
-El segundo usuario presenta código/enlace.
-
-Backend verifica:
-
-- room existente;
-- no expirada;
-- hueco disponible;
-- identidad;
-- formato/configuración.
-
-### Elecciones
-
-```text
-Player 1 ──POST choice──► Vercel ──► Supabase
-Player 2 ──POST choice──► Vercel ──► Supabase
-                                │
-                         ambas disponibles
-                                ▼
-                      claim atomico del turno
-                                │
-                                ▼
-                      Pokemon Showdown
-                                │
-                                ▼
-                         persist result
-                                │
-                                ▼
-                    Supabase Realtime Broadcast
-                         │                 │
-                         ▼                 ▼
-                     Player 1          Player 2
-```
-
-### Resolución única
-
-La transición:
-
-```text
-WAITING_CHOICES -> RESOLVING -> RESOLVED
-```
-
-debe protegerse con operación transaccional/atómica.
-
-Solo una invocación puede reclamar `RESOLVING`.
-
-Esto evita dobles resoluciones cuando las dos peticiones llegan simultáneamente.
-
-### Hidden information
-
-No almacenar datos privados en payloads Realtime accesibles al rival.
-
-El backend genera una vista por side:
-
-```text
-canonical battle state
-        │
-        ├──► p1 view
-        └──► p2 view
-```
-
-## Reconstrucción de battle
-
-No serializar ciegamente objetos internos del motor como contrato permanente.
-
-Preferencia:
-
-```text
-engine_version
-+ seed
-+ initial teams
-+ canonical input log
-= reconstructable battle
-```
-
-El input log se conserva de forma que no filtre decisiones privadas a clientes no autorizados.
-
-La implementación debe comprobar determinismo y coste mediante tests/benchmarks antes de optimizar con checkpoints.
-
-## Versionado
-
-Cada battle y replay registra `engine_version`.
-
-Actualizar Pokémon Showdown requiere:
-
-1. fijar nueva versión;
-2. ejecutar tests de integración;
-3. verificar reconstrucción;
-4. verificar TeamValidator;
-5. verificar Random Battle;
-6. verificar parser/adaptador;
-7. comprobar replays relevantes.
-
-## Seguridad
-
-- Auth server-side para operaciones sensibles;
-- RLS;
-- secret key solo backend;
-- no confiar en IDs enviados por cliente;
-- validar schemas de requests;
-- request IDs/idempotency;
-- límites de tamaño;
-- rate limiting si se vuelve necesario;
-- no exponer teams/choices privados;
-- no emitir HTML no confiable;
-- logs sin tokens/secrets.
-
-## Testing
-
-### Unit
-
-- normalizadores;
-- battle contract;
-- CPU strategy;
-- idempotency helpers;
-- view filtering.
-
-### Integration
-
-- `battle-engine` con versión fijada;
-- TeamValidator;
-- Teams;
-- Random Battle;
-- reconstrucción desde log;
-- Single Player autosave;
-- resolución atómica de Private Battle;
-- RLS relevante;
-- Realtime authorization.
-
-### E2E
-
-- registro/login;
-- Team Builder;
-- Single Player;
-- cerrar/reabrir y continuar;
-- crear room;
-- entrar por invitación;
-- battle privada con dos contextos;
-- retry de choice;
-- reanudación;
-- historial;
-- replay.
-
-## Variables de entorno
-
-`.env.example` contiene únicamente las variables necesarias actualmente.
-
-No añadir configuración especulativa.
+Las dos primeras claves pueden ir al navegador; la tercera nunca. No introducir más variables hasta que sean necesarias.
