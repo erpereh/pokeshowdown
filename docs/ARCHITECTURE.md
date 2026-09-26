@@ -21,7 +21,7 @@ La arquitectura utiliza:
 3. Backend mediante Next.js Route Handlers / Vercel Functions.
 4. Runtime Node.js para toda Function que importe Pokémon Showdown.
 5. Pokémon Showdown no se ejecuta en el navegador.
-6. No existe un game server persistente.
+6. No existe un backend persistente propio.
 7. Supabase Auth gestiona identidad.
 8. Supabase PostgreSQL conserva datos y battles.
 9. Supabase Realtime Broadcast sincroniza Private Battle.
@@ -514,20 +514,6 @@ Actualizar Pokémon Showdown requiere:
 - reanudación;
 - historial;
 - replay.
-
-## No forma parte de la arquitectura
-
-No introducir para el alcance actual:
-
-- game server persistente;
-- servidor mantenido 24/7;
-- WebSockets propios;
-- Socket.IO;
-- Redis;
-- VPS;
-- Docker para alojar un game server;
-- hosting separado para battles;
-- host P2P en uno de los jugadores.
 
 ## Variables de entorno
 

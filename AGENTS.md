@@ -41,8 +41,8 @@ Estas decisiones no deben cambiarse sin instruccion explicita del usuario.
 ### Infraestructura
 
 - El proyecto se despliega en Vercel.
-- No existe game server persistente propio.
-- No introducir VPS, contenedores de servidor permanentes, Redis, Socket.IO ni WebSockets propios para el flujo actual.
+- No existe backend persistente propio.
+- No introducir infraestructura persistente adicional para el flujo actual.
 - El backend de juego se implementa con Vercel Functions / Next.js Route Handlers.
 - Las funciones que usan Pokemon Showdown deben usar runtime Node.js, no Edge.
 - Fijar una version de Node compatible con la version fijada de Pokemon Showdown.
