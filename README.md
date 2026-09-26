@@ -21,7 +21,9 @@ Proyecto personal de simulación de combates Pokémon. Nombre provisional. **Est
 | Metadatos complementarios | PokéAPI |
 | Archivos Pokémon | Showdown; PokéAPI Sprites como fallback |
 
-No hay servidor propio permanente. Las Functions cargan/reconstruyen el combate, procesan la decisión y persisten el resultado; la base de datos es la referencia durable. No se diseñará la interfaz hasta una decisión posterior.
+No hay servidor propio permanente. Las Functions cargan/reconstruyen el combate, procesan la decisión y persisten el resultado; la base de datos es la referencia durable.
+
+La UI todavía no está definida. `docs/DESIGN.md` es el documento vivo donde se registrarán las decisiones visuales a medida que se implementen.
 
 ## Configuración
 
@@ -31,7 +33,8 @@ Copiar `.env.example` a `.env.local` y completar las claves del proyecto Supabas
 
 - [Producto](docs/PRODUCT.md): funcionalidades y reglas de los dos modos.
 - [Arquitectura](docs/ARCHITECTURE.md): flujo serverless, modelo de datos, concurrencia y pruebas.
+- [Diseño](docs/DESIGN.md): reglas y decisiones UI/UX actuales.
 - [Fuentes de datos](docs/DATA-SOURCES.md): autoridad competitiva y complementos.
 - [Fuentes de assets](docs/ASSET-INVENTORY.md): origen, sincronización y cobertura.
 
-No existe roadmap ni especificación visual en el repositorio.
+Cada documento es vivo: cualquier cambio en su área debe actualizarlo en la misma tarea.
