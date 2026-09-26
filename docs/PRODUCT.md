@@ -14,7 +14,7 @@ No existe todavía una versión jugable. Lo descrito como MVP representa el alca
 
 ## Resumen
 
-PokeShowdown será una aplicación web para construir equipos y disputar combates Pokémon competitivos en tiempo real.
+PokeShowdown será una aplicación web para construir equipos y disputar combates Pokémon en dos modos: partidas individuales contra CPU y partidas privadas entre dos amigos.
 
 La experiencia busca conservar la profundidad y fidelidad competitiva de Pokémon Showdown, pero con una interfaz propia, más moderna, visual, accesible y cómoda tanto en escritorio como en móvil.
 
@@ -57,7 +57,7 @@ Puede:
 - explorar una Pokédex o contenido público si existe en esa fase;
 - registrarse o iniciar sesión.
 
-No puede participar en matchmaking con progreso persistente.
+No puede guardar progreso persistente ni participar en partidas privadas que requieran cuenta.
 
 ### Jugador
 
@@ -67,8 +67,9 @@ Puede:
 - crear, editar, duplicar, importar y exportar equipos;
 - validar equipos para un formato;
 - iniciar combates soportados;
-- buscar rival;
-- desafiar a otro jugador;
+- iniciar partidas individuales contra CPU;
+- crear una sala privada;
+- unirse a la sala privada de un amigo mediante código o enlace;
 - jugar y reconectarse a una batalla activa;
 - consultar su historial y replays;
 - abandonar una batalla;
@@ -186,26 +187,34 @@ MVP:
 
 La interfaz nunca debe revelar información que el jugador no debería conocer según el estado del combate.
 
-### Matchmaking
+### Single Player
 
 MVP:
 
-- entrar en cola por formato;
-- cancelar búsqueda;
-- emparejar solo jugadores compatibles;
-- evitar crear dos partidas simultáneas por la misma entrada de cola;
-- transición directa de match encontrado a sala de batalla.
+- iniciar una battle contra CPU;
+- elegir formato;
+- usar un equipo propio cuando el formato lo requiera;
+- usar Random Battle sin equipo previo;
+- resolver las decisiones de la CPU en el game server;
+- guardar resultado y replay igual que una battle multijugador.
 
-La primera versión de matchmaking puede ser casual. El rating competitivo persistente puede activarse cuando el loop principal sea estable.
+La CPU no debe tener acceso a información oculta que un jugador normal no conocería, salvo que una futura dificultad se diseñe explícitamente de otra forma.
 
-### Desafíos privados
+### Partida privada entre dos amigos
 
 MVP:
 
-- desafiar a un usuario o mediante enlace/código;
+- crear una sala privada;
+- generar un identificador/código no predecible;
+- generar un enlace de invitación;
+- un segundo jugador puede unirse a la sala;
 - seleccionar formato;
-- aceptar o rechazar;
-- impedir que un desafío caducado inicie una batalla.
+- validar el equipo de ambos cuando corresponda;
+- iniciar la battle solo cuando ambos participantes estén preparados;
+- reconectar a la misma battle si uno pierde la conexión;
+- impedir el acceso de terceros a una sala privada.
+
+No existe matchmaking público, cola global ni emparejamiento con jugadores desconocidos.
 
 ### Historial y replays
 
@@ -222,19 +231,30 @@ Un replay es de solo lectura. No debe poder modificar el resultado histórico.
 
 ## Flujo principal
 
-### Primera partida
+### Partida individual
 
 1. El usuario entra en la aplicación.
 2. Se registra o inicia sesión.
-3. Elige un formato.
+3. Elige Single Player y un formato.
 4. Para OU selecciona un equipo válido; para Random Battle no necesita equipo.
-5. Entra en matchmaking o crea un desafío.
-6. Se crea la batalla.
-7. Ambos clientes reciben el estado permitido.
-8. Cada jugador envía sus decisiones.
-9. El servidor resuelve y emite los eventos.
+5. El game server crea la battle y el oponente CPU.
+6. El jugador envía sus decisiones.
+7. La CPU genera una decisión legal.
+8. Pokémon Showdown resuelve el turno.
+9. Al terminar se persiste el resultado y el replay.
+
+### Partida privada con un amigo
+
+1. El usuario crea una sala privada.
+2. Selecciona el formato y, cuando aplique, un equipo válido.
+3. La aplicación genera un código/enlace de invitación.
+4. El segundo jugador abre el enlace o introduce el código.
+5. Ambos jugadores confirman que están preparados.
+6. El game server crea la battle.
+7. Cada jugador recibe únicamente la información que le corresponde.
+8. Ambos envían sus decisiones por WebSocket.
+9. Pokémon Showdown resuelve cada turno.
 10. Al terminar se persiste el resultado y el replay.
-11. El usuario puede volver a jugar o consultar el combate.
 
 ### Creación de equipo
 
@@ -253,7 +273,7 @@ Un replay es de solo lectura. No debe poder modificar el resultado histórico.
 - Una decisión duplicada o atrasada no debe ejecutarse dos veces.
 - El servidor es la única autoridad sobre el estado real de la batalla.
 - El frontend no calcula daño ni legalidad como fuente de verdad.
-- No se inicia matchmaking competitivo con un equipo inválido.
+- No se inicia una battle que requiera equipo mientras el equipo sea inválido.
 - Random Battle genera el equipo en servidor.
 - No se expone al rival información privada del equipo antes de que las reglas permitan conocerla.
 - El resultado persistido debe coincidir con el resultado emitido por el motor.
@@ -266,7 +286,8 @@ Un replay es de solo lectura. No debe poder modificar el resultado histórico.
 
 El MVP se considera funcional cuando:
 
-- dos usuarios pueden iniciar una batalla real desde navegadores separados;
+- un usuario puede completar una battle Single Player contra CPU;
+- dos usuarios pueden iniciar una battle privada desde navegadores separados usando código/enlace;
 - ambos reciben únicamente la información que les corresponde;
 - pueden completar un combate Gen 9 OU y uno Random Battle;
 - el servidor recupera correctamente errores, decisiones inválidas y desconexiones comunes;
@@ -286,8 +307,9 @@ El MVP se considera funcional cuando:
 - Gen 9 OU;
 - Gen 9 Random Battle;
 - singles 1v1;
-- matchmaking;
-- desafíos;
+- Single Player contra CPU;
+- salas privadas 1v1;
+- invitaciones por código/enlace;
 - reconexión;
 - historial;
 - replays;
@@ -309,6 +331,8 @@ El MVP se considera funcional cuando:
 - IA de combate avanzada;
 - soporte completo de todas las generaciones el día 1;
 - doubles/VGC el día 1;
+- matchmaking público con desconocidos;
+- ladder/ranked público;
 - sistema de moderación complejo;
 - compatibilidad con el login oficial de Pokémon Showdown;
 - copiar o reutilizar código del cliente oficial de Pokémon Showdown.
@@ -319,8 +343,9 @@ Candidatos, no compromisos:
 
 - más generaciones y tiers;
 - doubles/VGC;
-- ladder y temporadas;
-- rankings;
+- matchmaking público, solo si se decide explícitamente en el futuro;
+- ladder y temporadas, solo si se decide explícitamente en el futuro;
+- rankings públicos;
 - espectadores;
 - torneos;
 - amigos y presencia;

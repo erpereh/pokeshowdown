@@ -61,9 +61,22 @@ Estas decisiones no deben cambiarse sin una instruccion explicita del usuario.
 - Nunca exponer secretos en variables `NEXT_PUBLIC_*`.
 - Supabase Realtime no sustituye al game server para las battles.
 
+### Modos de juego
+
+El alcance actual tiene solo dos modos:
+
+1. Single Player contra CPU.
+2. Private Battle entre dos jugadores mediante sala privada/codigo/enlace.
+
+No implementar matchmaking publico, cola global, rival aleatorio, ladder o ranked salvo instruccion explicita del usuario.
+
+"Random Battle" describe el formato/equipo aleatorio de Showdown; no significa rival humano aleatorio.
+
 ### Tiempo real
 
-Las battles activas se gestionan en el game server propio mediante WebSockets.
+Las battles privadas activas se gestionan en el game server propio mediante WebSockets.
+
+Single Player reutiliza el mismo battle-engine, con una CPU server-side que genera decisiones legales.
 
 Supabase se utiliza para persistencia, no como motor de estado en tiempo real de la partida.
 

@@ -2,7 +2,7 @@
 
 > Nombre provisional del proyecto. La marca definitiva se decidirá más adelante.
 
-PokeShowdown es un proyecto personal para crear un simulador web de combates Pokémon inspirado en Pokémon Showdown, con frontend propio, Team Builder, matchmaking, cuentas, historial y una experiencia visual moderna y responsive.
+PokeShowdown es un proyecto personal para crear un simulador web de combates Pokémon inspirado en Pokémon Showdown, con frontend propio, Team Builder, partidas individuales contra CPU y multijugador privado entre dos amigos, cuentas, historial y una experiencia visual moderna y responsive.
 
 ## Estado
 
@@ -14,7 +14,7 @@ El proyecto está en fase de definición técnica y documentación. Todavía no 
 - **Frontend:** propio, desacoplado del cliente oficial de Pokémon Showdown.
 - **Base de datos y autenticación:** Supabase.
 - **Persistencia:** PostgreSQL de Supabase.
-- **Tiempo real de batalla:** game server propio con WebSockets.
+- **Tiempo real de batalla:** game server propio con WebSockets para salas privadas y sesiones activas.
 - **Datos competitivos:** Pokémon Showdown como fuente principal.
 - **Datos complementarios de Pokédex:** PokéAPI.
 - **Assets principales:** Pokémon Showdown / Play Pokémon Showdown.
@@ -44,15 +44,16 @@ El proyecto está en fase de definición técnica y documentación. Todavía no 
 - resultados;
 - replays persistentes;
 - preferencias;
-- ratings/estadísticas cuando se implementen.
+- estadísticas personales cuando se implementen.
 
 Supabase **no resuelve los combates ni mantiene el estado vivo de una battle**.
 
 ### Game server
 
 - WebSockets;
-- matchmaking;
-- desafíos;
+- partidas individuales contra CPU;
+- salas privadas para dos jugadores;
+- invitaciones mediante código/enlace;
 - battles activas;
 - reconexión;
 - timeouts;
@@ -70,8 +71,9 @@ Supabase **no resuelve los combates ni mantiene el estado vivo de una battle**.
 - Gen 9 OU;
 - Gen 9 Random Battle;
 - combates 1v1;
-- matchmaking;
-- desafíos privados;
+- partidas individuales contra CPU;
+- partidas privadas 1v1 entre dos amigos;
+- creación/unión a sala mediante código o enlace;
 - reconexión;
 - historial;
 - replays;
@@ -105,3 +107,15 @@ cp .env.example .env.local
 y rellenar las credenciales del proyecto Supabase cuando se cree.
 
 Nunca subir secretos reales al repositorio.
+
+## Modos de juego fijados
+
+### Single Player
+
+El jugador combate contra una CPU controlada por el game server utilizando exactamente el mismo motor de Pokémon Showdown.
+
+### Private Battle
+
+Dos jugadores crean o se unen a una sala privada mediante código o enlace. No existe cola pública ni matchmaking con desconocidos.
+
+> "Random Battle" se refiere al formato/equipo generado aleatoriamente por Pokémon Showdown, no a emparejarse con una persona aleatoria.

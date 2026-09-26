@@ -17,10 +17,12 @@ Las decisiones de este documento son la base para iniciar el desarrollo y deben 
 5. El servidor es autoritativo.
 6. **Supabase es la plataforma definitiva de autenticación y persistencia.**
 7. Las battles activas viven en el game server, no en Supabase.
-8. La comunicación de battle se realiza mediante WebSockets.
-9. Pokémon Showdown es la fuente principal de datos competitivos.
-10. PokéAPI solo complementa datos de Pokédex.
-11. Los assets principales proceden de Showdown y se sincronizan localmente.
+8. Los modos iniciales son Single Player contra CPU y Private Battle entre dos jugadores.
+9. No existe matchmaking público ni cola global.
+10. La comunicación de battle multijugador se realiza mediante WebSockets.
+11. Pokémon Showdown es la fuente principal de datos competitivos.
+12. PokéAPI solo complementa datos de Pokédex.
+13. Los assets principales proceden de Showdown y se sincronizan localmente.
 
 ## Stack
 
@@ -99,8 +101,9 @@ No debe:
 - autenticar conexiones;
 - verificar JWT/sesión de Supabase;
 - WebSockets;
-- matchmaking;
-- desafíos;
+- creación y gestión de salas privadas;
+- invitaciones/códigos;
+- oponente CPU para Single Player;
 - battles activas;
 - timeouts;
 - reconexión;
@@ -160,31 +163,53 @@ No debe contener lógica de combate.
 
 ## Arquitectura de battle
 
+### Single Player
+
 ```text
-Browser
-  │
-  │ WebSocket: choice / reconnect
+Player browser
+  │ choice
   ▼
 Game server
-  │
-  ├── valida sesion Supabase
-  ├── valida battle + jugador + request
-  │
+  ├── valida sesion/request
+  ├── genera decision CPU legal
   ▼
 battle-engine
-  │
   ▼
 Pokémon Showdown BattleStream
-  │
   ▼
-normalizacion + filtro de visibilidad
-  │
-  ├──► Player 1
-  └──► Player 2
-
-Al finalizar / checkpoint necesario:
-  Game server ──► Supabase PostgreSQL
+eventos normalizados
+  ▼
+Player browser
 ```
+
+La CPU vive en el game server. No necesita un segundo navegador ni una segunda conexión WebSocket.
+
+### Private Battle
+
+```text
+Player 1 browser ──┐
+                   │ WebSocket
+                   ▼
+                Game server
+                   ▲
+                   │ WebSocket
+Player 2 browser ──┘
+                   │
+                   ▼
+              battle-engine
+                   │
+                   ▼
+        Pokémon Showdown BattleStream
+```
+
+El game server filtra la vista de cada jugador antes de emitir eventos.
+
+Al finalizar o en checkpoints necesarios:
+
+```text
+Game server ──► Supabase PostgreSQL
+```
+
 
 ## Estado vivo vs persistencia
 
@@ -192,6 +217,8 @@ Al finalizar / checkpoint necesario:
 
 Debe residir en el game server:
 
+- salas privadas pendientes;
+- códigos/invitaciones activos;
 - instancia de battle;
 - request actual;
 - elecciones pendientes;
@@ -212,7 +239,7 @@ Debe almacenar:
 - resultado;
 - replay;
 - preferencias;
-- rating/estadísticas cuando se implementen.
+- estadísticas personales cuando se implementen.
 
 No escribir cada frame/evento visual en PostgreSQL.
 
@@ -403,8 +430,9 @@ Actualizar el motor requiere validar:
 - auth;
 - Team Builder;
 - validación;
-- matchmaking;
-- battle con dos browser contexts;
+- Single Player contra CPU;
+- creación/unión a sala privada;
+- battle privada con dos browser contexts;
 - reconexión;
 - historial;
 - replay.
@@ -421,6 +449,30 @@ Nunca versionar valores reales.
 - proveedor final del game server;
 - ORM/query layer si realmente hace falta;
 - retención exacta de replays;
-- diseño del rating;
 - estrategia final de deploy;
 - marca definitiva.
+
+## Salas privadas
+
+Las salas privadas son efímeras y viven inicialmente en memoria del game server.
+
+Flujo:
+
+1. el host crea una sala;
+2. el servidor genera `roomId` y código/token de invitación no predecible;
+3. el host comparte enlace o código;
+4. el segundo jugador se autentica y entra;
+5. ambos seleccionan/validan configuración;
+6. al estar ambos preparados se crea la battle;
+7. una vez iniciada, la sala queda vinculada a esa battle;
+8. al finalizar y persistir el resultado, la sala puede eliminarse de memoria.
+
+No existe búsqueda de rival, cola por formato, ELO para emparejamiento ni selección automática de desconocidos.
+
+## Oponente CPU
+
+Single Player reutiliza exactamente el mismo `battle-engine` y protocolo interno de decisiones.
+
+La diferencia es que el segundo participante no tiene socket: un módulo de CPU genera una elección válida a partir del request que produce Pokémon Showdown.
+
+La estrategia de CPU debe ser intercambiable para poder mejorar dificultad más adelante sin tocar el motor de battle.
