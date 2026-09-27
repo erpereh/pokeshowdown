@@ -24,7 +24,7 @@ const SIZES: Record<GameButtonSize, string> = {
 
 function classes(variant: GameButtonVariant, size: GameButtonSize, extra?: string) {
   return [
-    "font-display inline-flex select-none items-center justify-center gap-2 font-semibold uppercase tracking-wide",
+    "game-button font-display inline-flex select-none items-center justify-center gap-2 font-semibold uppercase tracking-wide",
     "transition-[filter,box-shadow,background-color,border-color,color,transform] duration-[var(--dur-fast)] ease-[var(--ease-out-game)]",
     "disabled:pointer-events-none disabled:opacity-45 active:translate-y-px",
     VARIANTS[variant],

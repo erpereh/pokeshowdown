@@ -64,7 +64,7 @@ export function parseSideId(token: string): SideId | null {
 }
 
 export function parsePokemonRef(token: string): PokemonRef | null {
-  const match = /^(p[12])[a-d]: (.+)$/.exec(token);
+  const match = /^(p[12])(?:[a-d])?: (.+)$/.exec(token);
   if (!match) return null;
   const side = match[1];
   if (side !== "p1" && side !== "p2") return null;

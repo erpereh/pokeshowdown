@@ -2,6 +2,7 @@
 
 import { PokemonSprite } from "@/client/sprites/PokemonSprite.tsx";
 import { GameLink } from "@/client/ui/GameButton.tsx";
+import { useDialog } from "@/client/ui/Modal.tsx";
 import { formatName } from "@/client/ui/format.ts";
 import type { BattleView, PokemonView, PublicBattleState } from "@/shared/contract";
 
@@ -11,13 +12,14 @@ function spotlight(state: PublicBattleState): PokemonView | null {
 }
 
 export function EndOverlay({ view, state }: { view: BattleView; state: PublicBattleState }) {
+  const ref = useDialog(true);
   const mon = spotlight(state);
   const forfeit = view.endReason === "forfeit";
   const headline = forfeit ? "Te has rendido" : view.result === "win" ? "¡VICTORIA!" : view.result === "tie" ? "EMPATE" : "DERROTA";
   const tone = view.result === "win" ? "text-accent" : view.result === "tie" ? "text-accent-2" : "text-danger";
 
   return (
-    <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/65 p-4" role="dialog" aria-modal="true" aria-labelledby="end-title">
+    <div ref={ref} tabIndex={-1} className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/65 p-4" role="dialog" aria-modal="true" aria-labelledby="end-title">
       <div className={`glass w-full max-w-md rounded-[var(--radius-panel)] px-5 py-6 text-center ${view.result === "loss" ? "saturate-50" : ""}`}>
         {mon ? <PokemonSprite spriteId={mon.spriteId} facing="front" shiny={mon.shiny} gender={mon.gender} animated alt={mon.name} className="mx-auto max-h-40" /> : null}
         <h2 id="end-title" className={`font-display text-4xl font-bold uppercase tracking-wide sm:text-5xl ${tone}`}>

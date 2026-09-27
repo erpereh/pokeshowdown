@@ -15,6 +15,7 @@ export function toPlayerRequest(request: ShowdownRequest | null, formatId: Forma
 
   const active = request.active?.[0];
   const kind = requestKind(request);
+  const reviving = request.side.pokemon.some((pokemon) => pokemon.reviving);
   const moves = (active?.moves ?? []).map((move, index) => {
     const info = getMoveInfo(formatId, move.id || move.move);
     return {
@@ -38,7 +39,9 @@ export function toPlayerRequest(request: ShowdownRequest | null, formatId: Forma
     const details = parseDetails(pokemon.details);
     const condition = parseCondition(pokemon.condition);
     const fainted = condition.fainted || condition.hp === 0;
-    const reason = fainted ? "fainted" : pokemon.active ? "active" : null;
+    const reason = reviving
+      ? fainted ? null : "notFainted"
+      : fainted ? "fainted" : pokemon.active ? "active" : null;
     return {
       slot: index + 1,
       name: nameFromIdent(pokemon.ident),
@@ -55,7 +58,8 @@ export function toPlayerRequest(request: ShowdownRequest | null, formatId: Forma
     switches,
     canTerastallize: active?.canTerastallize || null,
     trapped: Boolean(active?.trapped),
-    teamPreviewSize: request.teamPreview ? (request.maxChosenTeamSize ?? 6) : 0,
+    reviving,
+    teamPreviewSize: request.teamPreview ? (request.maxChosenTeamSize ?? request.side.pokemon.length) : 0,
   };
 }
 

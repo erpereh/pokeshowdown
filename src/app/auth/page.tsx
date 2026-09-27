@@ -15,7 +15,7 @@ export default async function AuthPage({ searchParams }: { searchParams: Promise
 
   return (
     <ScreenShell mode="hero" user={null}>
-      <AuthCard initialMode={params.mode === "signup" ? "signup" : "login"} nextPath={nextPath} confirmError={params.error === "confirm"} />
+      <AuthCard initialMode={params.mode === "signup" ? "signup" : params.mode === "recovery" ? "recovery" : "login"} nextPath={nextPath} confirmError={params.error === "confirm"} />
     </ScreenShell>
   );
 }

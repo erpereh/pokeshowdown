@@ -27,9 +27,7 @@ export function BattleScreen({ battleId }: { battleId: string }) {
   const [sending, setSending] = useState(false);
   const [netError, setNetError] = useState(false);
   const [forfeitOpen, setForfeitOpen] = useState(false);
-  const ids = useRef(new Map<number, string>());
   const pending = useRef<Pending | null>(null);
-  const forfeitId = useRef<string | null>(null);
   const busy = useRef(false);
 
   const load = useCallback(async () => {
@@ -55,7 +53,11 @@ export function BattleScreen({ battleId }: { battleId: string }) {
   const applyResponse = useCallback(
     async (response: ActionResponse) => {
       setView(response.view);
-      if (response.newFrames.length > 0) await playback.playNew(response.newFrames);
+      if (response.replayed) playback.hydrate(response.view);
+      else if (response.newFrames.length > 0) {
+        await playback.playNew(response.newFrames);
+        playback.hydrate(response.view);
+      }
       else playback.hydrate(response.view);
     },
     [playback.hydrate, playback.playNew],
@@ -71,25 +73,31 @@ export function BattleScreen({ battleId }: { battleId: string }) {
         return;
       }
       if (reason instanceof ApiRequestError && (reason.status === 422 || reason.code === "invalid_choice")) {
+        pending.current = null;
+        setNetError(false);
         pushToast(reason.message || "Esa acción no es válida.");
         return;
       }
-      if (reason instanceof ApiRequestError && reason.status === 0) {
+      if (!(reason instanceof ApiRequestError) || reason.status === 0 || reason.status >= 500) {
         setNetError(true);
+        return;
+      }
+      pending.current = null;
+      setNetError(false);
+      if (reason.status === 401) {
+        router.push(`/auth?next=${encodeURIComponent(`/battle/${battleId}`)}`);
         return;
       }
       pushToast(reason instanceof ApiRequestError ? reason.message : "No se pudo enviar la acción.");
     },
-    [playback.hydrate],
+    [battleId, playback.hydrate, router],
   );
 
   const submit = useCallback(
     async (choice: PlayerChoice) => {
-      if (!view?.request || busy.current || playback.playing) return;
+      if (!view?.request || busy.current || pending.current || playback.playing) return;
       busy.current = true;
-      const existing = ids.current.get(view.request.rqid);
-      const clientActionId = existing ?? newClientId();
-      if (!existing) ids.current.set(view.request.rqid, clientActionId);
+      const clientActionId = newClientId();
       const revision = view.revision;
       pending.current = { kind: "choice", choice, clientActionId, revision };
       setSending(true);
@@ -111,10 +119,9 @@ export function BattleScreen({ battleId }: { battleId: string }) {
   );
 
   const forfeit = useCallback(async () => {
-    if (!view || busy.current || playback.playing) return;
+    if (!view || busy.current || pending.current || playback.playing) return;
     busy.current = true;
-    const clientActionId = forfeitId.current ?? newClientId();
-    forfeitId.current = clientActionId;
+    const clientActionId = newClientId();
     const revision = view.revision;
     pending.current = { kind: "forfeit", clientActionId, revision };
     setForfeitOpen(false);
@@ -124,7 +131,6 @@ export function BattleScreen({ battleId }: { battleId: string }) {
       const response = await apiFetch<ActionResponse>(`/api/battles/${battleId}/forfeit`, {
         body: { clientActionId, revision },
       });
-      forfeitId.current = null;
       pending.current = null;
       await applyResponse(response);
     } catch (reason: unknown) {
@@ -146,7 +152,6 @@ export function BattleScreen({ battleId }: { battleId: string }) {
       const body = job.kind === "forfeit" ? { clientActionId: job.clientActionId, revision: job.revision } : { clientActionId: job.clientActionId, revision: job.revision, choice: job.choice };
       const response = await apiFetch<ActionResponse>(path, { body });
       pending.current = null;
-      if (job.kind === "forfeit") forfeitId.current = null;
       await applyResponse(response);
     } catch (reason: unknown) {
       fail(reason);
@@ -158,7 +163,7 @@ export function BattleScreen({ battleId }: { battleId: string }) {
 
   const closeForfeit = useCallback(() => setForfeitOpen(false), []);
   const display = playback.state ?? view?.state ?? null;
-  const locked = sending || playback.playing;
+  const locked = sending || playback.playing || netError;
   const showEnd = Boolean(view && view.status === "finished" && !playback.playing && !sending);
 
   if (error) {
@@ -206,7 +211,7 @@ export function BattleScreen({ battleId }: { battleId: string }) {
           <div>
             {netError ? (
               <div className="mx-2 mb-2 flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-card)] border border-danger/50 bg-danger/10 px-3 py-2" role="alert">
-                <p className="text-sm">No se pudo enviar. La conexión falló.</p>
+                <p className="text-sm">No se pudo confirmar la acción. Reintentar recupera el mismo turno guardado.</p>
                 <GameButton type="button" size="md" onClick={() => void retry()} loading={sending}>
                   Reintentar
                 </GameButton>

@@ -11,6 +11,7 @@ out/
 # Playwright
 playwright-report/
 test-results/
+artifacts/
 
 # Build
 dist/

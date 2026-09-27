@@ -1,55 +1,45 @@
 # Producto y reglas
 
-**Estado:** alcance aprobado; sin implementación jugable. Nombre de trabajo: PokeShowdown. Las decisiones visuales se definirán más adelante.
+PokeShowdown ofrece combates singles PvE contra CPU con Gen 9 OU y Gen 9 Random Battle. Este MVP excluye Private Battle y cualquier multijugador.
 
-## Funcionalidades iniciales
+## Funcionalidades
 
 | Área | Comportamiento |
 | --- | --- |
-| Cuenta | Registro, acceso, cierre de sesión y recuperación con Supabase Auth; perfil básico e historial. |
-| Equipos | Crear, editar, duplicar, eliminar, importar/exportar en formato Showdown y validar. Seis slots con especie/forma, nivel, género si aplica, objeto, habilidad, naturaleza, movimientos, EVs, IVs y shiny. |
-| Formatos | Gen 9 OU (equipo propio validado) y Gen 9 Random Battle (equipos generados por Showdown). |
-| Combate | Singles 1v1, movimientos/cambios, estados, campo/clima, rendición, log, resultado y replay. |
-| Single Player | Oponente CPU, inicio inmediato, autosave y continuación de partida. |
-| Private Battle | Sala para exactamente dos personas, creada por uno e incorporada por invitación/código; ambos preparados antes del inicio. |
-| Persistencia | Equipos, partidas activas, historial y replays vinculados al usuario. |
+| Cuenta | Registro, confirmación, acceso, cierre y recuperación/cambio de contraseña con Supabase Auth. |
+| Equipos | Crear, editar, duplicar, eliminar, importar/exportar Showdown y validar. Hasta seis slots: especie/forma, nivel, género, objeto, habilidad, naturaleza, movimientos, EVs, IVs, shiny y tipo Tera. |
+| Gen 9 OU | Cada lado elige independientemente equipo personalizado o aleatorio. El personalizado es un equipo propio guardado o una importación. |
+| Gen 9 Random Battle | Equipos y niveles del generador oficial de la versión instalada; sin Team Preview ni personalizados. |
+| Combate | Movimientos, cambios voluntarios/forzados, Teracristalización, Revival Blessing, estados, clima/campo, rendición, registro, resultado y replay. |
+| Persistencia | Equipos, partidas activas, historial y replays vinculados al usuario; autosave en servidor. |
 
-Un equipo puede guardarse mientras se edita aunque sea inválido; no puede iniciar un formato que requiera equipo válido sin pasar `TeamValidator`.
+Un borrador inválido puede guardarse. Antes de iniciar OU se valida otra vez mediante TeamValidator. Se respetan equipos legales de uno a seis Pokémon. Un equipo aleatorio OU se genera y valida para OU: no convierte el formato en Random Battle. La previsualización permite revisar exactamente los sets elegidos; regenerar crea otra propuesta.
 
-## Single Player
+## Ciclo de combate
 
-1. El usuario elige formato/equipo; el sistema crea la partida persistida con datos suficientes para reconstruirla.
-2. Elige una acción; Vercel valida, reconstruye el motor y calcula la elección legal de CPU.
-3. Showdown resuelve y se **guarda el turno antes de devolver confirmación**.
-4. Tras cerrar la pestaña, reabrir o cambiar de dispositivo, se ofrece continuar desde el último turno confirmado.
+1. Elegir formato/equipos y persistir la partida antes de devolverla.
+2. Recibir la request vigente del motor y elegir una acción legal.
+3. Reconstruir Showdown en servidor, obtener elección CPU y resolver.
+4. Guardar secretos, checkpoint, frame y revisión atómicamente antes de confirmar.
+5. Reanudar desde el último estado confirmado tras cerrar/reabrir o acceder desde otro navegador.
+6. Conservar resultado e historial; reproducir el replay de solo lectura.
 
-Una petición duplicada, retrasada o fallida no debe consumir dos veces el turno. Si se cierra durante el procesamiento, al reanudar se recupera el último estado confirmado. La estrategia CPU debe poder evolucionar sin alterar el motor.
+Una solicitud repetida no consume dos veces la decisión. Si se pierde una respuesta, se conserva la acción y se reintenta con el mismo ID. Una revisión obsoleta recupera la vista confirmada. No se sustituye una acción de resultado incierto por otra elección.
 
-## Private Battle
-
-1. Se crea sala privada con formato, caducidad y código/enlace no predecible.
-2. Entra el segundo usuario; se verifican identidad, plaza, equipos y disponibilidad.
-3. Cada jugador envía su decisión en privado. El rival no conoce la elección pendiente.
-4. Con ambas decisiones, una única ejecución reclama y resuelve el turno mediante Showdown; se persiste el resultado antes de avisar por Realtime.
-5. Los participantes recuperan sus vistas autorizadas; una caída de navegador permite reanudar la batalla desde datos persistidos.
-
-Ningún navegador actúa como host ni decide daño, RNG, legalidad o victoria.
+Revival Blessing pide un debilitado del propio equipo; los sanos no son seleccionables. Revivir al banquillo no sustituye al activo. Teracristalización se ofrece únicamente cuando Showdown la permite.
 
 ## Invariantes
 
-- Cada acción pertenece al usuario, batalla, turno y request vigentes. No aceptar elecciones inválidas/duplicadas.
-- No filtrar equipo completo, movimientos no revelados o elecciones pendientes al otro jugador.
-- Cada turno confirmado de ambos modos es durable y su resultado coincide con el motor.
-- La CPU usa una solicitud de decisión apropiada, sin información oculta accidental.
-- La batalla finalizada no altera su resultado; el replay es de solo lectura y registra versión del motor.
-- «Random Battle» no implica adversario aleatorio.
+- Showdown decide reglas, daño, RNG, legalidad, victoria y requests.
+- El navegador no calcula resultados ni recibe seeds, equipos ocultos o input logs.
+- Cada acción pertenece al usuario, partida y revisión vigentes.
+- CPU recibe solo su request y la información pública.
+- Toda confirmación es durable; una partida finalizada no cambia de resultado.
+- Equipos e historial solo son accesibles por su dueño.
+- Replay guarda versión y frames públicos, sin resimular versiones antiguas.
 
 ## Criterios de aceptación
 
-- Un usuario completa OU y Random Battle contra CPU; al cerrar/reabrir a mitad de partida conserva el último turno.
-- Dos cuentas completan una batalla privada desde navegadores distintos; invitación, validación y reanudación funcionan.
-- No hay doble resolución bajo envíos simultáneos o retries ni filtraciones entre participantes.
-- Equipos, historial y replays persisten.
-- Tests unitarios, integración y E2E cubren estos flujos críticos.
+Completar las cuatro combinaciones OU personalizado/aleatorio y Gen 9 Random Battle. Resolver cambios forzados, Tera y Revival con motor real; reanudar sin duplicar turnos; gestionar equipos y reproducir resultados. Pasar typecheck, unit/integración real, verify:engine, build y E2E desktop/móvil; revisar tres ciclos visuales, recursos, animaciones, consola y red.
 
-**No entra ahora:** emparejamiento público/ranked, espectadores, torneos, chat, campañas, doubles/VGC, todas las generaciones, pagos, aplicaciones nativas ni decisiones de interfaz visual.
+Fuera de alcance: multijugador, salas, matchmaking/ranked, espectadores, torneos, chat, campañas, doubles/VGC, otras generaciones, pagos y aplicaciones nativas.

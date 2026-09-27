@@ -227,6 +227,13 @@ export async function applyPlayerAction(
       written.push(FORFEIT_LINE);
     } else {
       if (!session.isActionable("p1")) throw invalidChoice("No hay una decisión pendiente.");
+      if (action.choice.kind === "teamPreview") {
+        const pending = session.parsedRequest("p1");
+        const size = pending?.maxChosenTeamSize ?? pending?.side.pokemon.length;
+        if (!pending?.teamPreview || action.choice.order.length !== size) {
+          throw invalidChoice("El orden debe incluir todos los Pokémon del equipo.");
+        }
+      }
       const token = choiceToProtocol(action.choice);
       const epoch = session.epoch("p1");
       const errors = await session.writeLine(`>p1 ${token}`);

@@ -51,8 +51,9 @@ export const createBattleSchema = z.object({
 
 const teamPreviewOrder = z
   .array(z.number().int().min(1).max(6))
-  .length(6)
-  .refine((order) => new Set(order).size === 6, "El orden debe ser una permutación de 1 a 6");
+  .min(1)
+  .max(6)
+  .refine((order) => new Set(order).size === order.length && order.every((slot) => slot <= order.length), "El orden debe incluir todos los slots del equipo");
 
 export const playerChoiceSchema = z.discriminatedUnion("kind", [
   z.object({

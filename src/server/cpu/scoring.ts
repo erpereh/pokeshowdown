@@ -178,6 +178,9 @@ function hasOwnHazards(ctx: CpuContext): boolean {
 }
 
 function utilityScore(ctx: CpuContext, moveId: string, moveType: string, heal: boolean): number {
+  if (moveId === "revivalblessing") {
+    return ctx.input.request.side.pokemon.some((pokemon) => pokemon.condition.endsWith(" fnt")) ? 125 : -1;
+  }
   if (PROTECT.has(moveId)) return 6;
   if (REMOVAL.has(moveId) && hasOwnHazards(ctx)) return 78;
   const hazard = HAZARD_MOVES[moveId];

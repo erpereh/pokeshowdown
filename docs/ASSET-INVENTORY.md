@@ -1,52 +1,31 @@
-# Fuentes y sincronización de assets
+# Assets y sincronización
 
-Este archivo **solo fija fuentes y pipeline técnico**; no decide interfaz, estética, layout ni componentes. Proyecto personal de uso propio.
+Showdown es la fuente principal; PokéAPI Sprites es fallback del perfil full. No se añaden fuentes. Las rutas public/assets/generated son locales y se regeneran; source indica procedencia.
 
-## Origen
+## Perfil runtime
 
-- **Principal:** [Pokémon Showdown](https://play.pokemonshowdown.com/sprites/) (IDs alineados con el `Dex`).
-- **Fallback:** [PokéAPI Sprites](https://github.com/PokeAPI/sprites) cuando falte una variante concreta.
-- No añadir fuentes adicionales sin necesidad.
+El build Vercel y la instalación local usan pnpm sync:assets --profile=runtime.
 
-| Categoría | Rutas de Showdown |
-| --- | --- |
-| Combate | `ani/`, `ani-back/`, `ani-shiny/`, `ani-back-shiny/`, `gen*/` |
-| Artwork | `home/`, `home-centered/`, `home-shiny/` |
-| Otros | iconos/spritesheets Pokémon, `itemicons/`, `types/`, `typeicons/`, `trainers/`, `substitutes/`, `misc/` |
-| Entorno/efectos | `gen6bgs/`, `/fx/` |
+- Sprites ani/ani-back y gen5/gen5-back, con gen5 shiny en ambas orientaciones. Solo IDs relevantes para Gen 9, formas y alternativas.
+- Hoja itemicons-sheet.png, tipos/typeicons, fondos gen6bgs, sustitutos gen5 y efectos de combate.
+- runtime-index.json compacto: variantes disponibles, tamaños de frame, fondos, tipos y FX. El frontend consulta este índice, no el manifest completo.
+- Shiny animado se usa si existe una sincronización full; runtime conserva fallback estático shiny. Reduced motion usa variantes estáticas.
+- El mirror de Vercel vive en .next/cache/showdown-assets; el public publicado incluye únicamente lo requerido por el perfil.
 
-## Pipeline
+Medición del perfil runtime en esta entrega: 6.054 archivos, 162.126.402 bytes; 998 IDs en runtime-index, 19 fondos, 82 efectos y 40 imágenes de tipo. Sin fallos de descarga, no disponibles, huérfanos ni archivos ausentes. El manifest registra 1.417 especies del Dex; la cobertura de generaciones fuera del perfil no describe un fallo del MVP.
 
-- `pnpm sync:assets`: lee el índice `?view=dir` de cada directorio permitido, compara fecha y tamaño con `sync-state.jsonl`, omite lo ya descargado y reintenta fallos de red. Escribe `public/assets/generated/manifest.json`.
-- `pnpm audit:assets`: cobertura por especie y forma base, archivos del manifest que no están en disco, huérfanos, y grupos con el mismo SHA-256. El informe queda en `public/assets/generated/audit.json`.
-- Los binarios viven en `public/assets/generated/` y Git los ignora. Los recursos propios, cuando existan, irán en `public/assets/custom/`.
-- Las rutas del manifest son locales (`/assets/generated/...`). El campo `source` solo indica la procedencia (`showdown` o `pokeapi`).
-- La ausencia de un sprite no impide una batalla. El fallback remoto de PokéAPI solo se usa al sincronizar, para formas base a las que les falta el GIF o el HOME en Showdown.
-- Un build de Vercel ejecuta `pnpm sync:assets` y publica `public/`. El árbol no viaja en el repositorio. En el plan Hobby la salida de un build de Git no tiene el tope de 100 MB que aplica a la subida de fuentes por CLI. Los sprites no entran en el bundle de la Function (límite 250 MB sin comprimir).
+## Perfil full opcional
 
-Directorios descargados: `ani`, `ani-back`, `ani-shiny`, `ani-back-shiny`; `gen1`–`gen5` con back y shiny cuando existen; `gen6` y `gen6-back`; `home`, `home-centered`, `home-shiny`, `home-centered-shiny`; hojas `pokemonicons-sheet.png`, `pokemonicons-pokeball-sheet.png` e `itemicons-sheet.png`; `itemicons/`, `types/`, `typeicons/`, `trainers/`, `substitutes/`, `gen6bgs/` (solo `.jpg` si también hay `.png`) y efectos de combate en `/fx/` (sin chrome del sitio ni `.mp4` cuando ya hay `.webm`).
+pnpm sync:assets --profile=full descarga ani con shiny, gen1–gen6, HOME, iconos, objetos, entrenadores, sustitutos, fondos y FX. PokéAPI solo cubre formas base sin GIF/HOME de Showdown. No es necesario para jugar Gen 9.
 
-No se descargan `afd`, `digimon`, `dex`, paletas de juego (`gen1rb`, `gen3rs`, `gen4dp` y equivalentes), `gen5ani`, `trainers-custom` ni hojas de iconos antiguas.
+Se excluyen afd/digimon/dex, paletas de juegos, entrenadores custom y chrome ajeno al combate. MP4 se omite cuando existe WEBM. Tipos ??? se guardan como unknown.png; colisiones por mayúsculas usan __alt, compatible Windows/Linux.
 
-El tipo `???` se guarda como `sprites/types/unknown.png` porque `?` no es válido en Windows ni en una ruta URL. Si el servidor tiene dos archivos que solo se distinguen por mayúsculas (`unown-l.gif` y `unown-L.gif`), el segundo se guarda con el sufijo `__alt` para que el manifest sea el mismo en Windows y en Linux.
+## Pipeline y verificación
 
-`gen6-back/` contiene props de Pokéstar, no espaldas de especie: los archivos están en disco y la cobertura por especie de esa variante es 0.
+sync compara índices remotos, fechas/tamaños y sync-state.jsonl; omite coincidencias y reintenta fallos. Produce manifest.json y runtime-index.json. audit:assets compara manifest/disco, cobertura, huérfanos y hashes; falla por errores de descarga o archivos ausentes.
 
-## Medición
+Binarios y reportes generados están ignorados por Git. La ausencia de una variante admite fallback local sin impedir la simulación. El índice solo cachea cargas correctas: tras fallo de red se puede reintentar al volver conectividad/visibilidad.
 
-Sincronización comprobada con `pokemon-showdown@0.11.11`:
+Playwright comprueba imágenes cargadas, requests de assets, consola y overflow con desktop/móvil. Las capturas se generan en artefactos ignorados y son evidencias de la revisión visual.
 
-| Dato | Valor |
-| --- | --- |
-| Archivos en manifest y en disco | 28.444 |
-| Tamaño | 741.273.274 bytes (707 MiB) |
-| Especies Dex (`num > 0`) | 1.417, de ellas 1.025 formas base |
-| HOME en formas base | 1.025/1.025 |
-| Frente animado en formas base | 1.011/1.025 |
-| Fallback PokéAPI | 14 archivos, solo formas base sin GIF o sin HOME en Showdown |
-| Formas sin frente animado ni HOME | 15, todas alternativas (megas o cosméticas) |
-| Huérfanos / archivos del manifest ausentes | 0 / 0 |
-| Grupos con el mismo hash | 1.118 |
-| No disponible en origen | `itemicons/kyurem-white.png` (respuesta vacía) |
-
-Compartidos: 3 hojas de iconos, 580 objetos, 40 tipos, 19 iconos de tipo, 1.500 entrenadores, 8 sustitutos, 19 fondos y 123 efectos. Una segunda `pnpm sync:assets` terminó con `downloaded=0`.
+Fuentes: [Showdown sprites](https://play.pokemonshowdown.com/sprites/) · [Showdown FX](https://play.pokemonshowdown.com/fx/) · [PokéAPI Sprites](https://github.com/PokeAPI/sprites).

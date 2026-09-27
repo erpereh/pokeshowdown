@@ -1,7 +1,7 @@
 "use client";
 
 import { GameButton, GameLink } from "@/client/ui/GameButton";
-import { Modal } from "@/client/ui/Modal";
+import { Modal, useDialog } from "@/client/ui/Modal";
 import { pushToast } from "@/client/ui/Toast";
 import type { NatureEntry, SpeciesSummary, TeamRecord, ValidationResult } from "@/shared/contract";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
@@ -71,7 +71,7 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [exportText, setExportText] = useState<string | null>(null);
-  const sheetRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useDialog(sheet && mobile, () => setSheet(false));
   const validateGen = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
   const pickToken = useRef(0);
@@ -128,25 +128,6 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
   useEffect(() => {
     document.title = `${state.name.trim() || "Nuevo equipo"} · Equipos · PokeShowdown`;
   }, [state.name]);
-
-  useEffect(() => {
-    if (!sheet) return;
-    const mobile = window.matchMedia("(max-width: 767px)");
-    if (!mobile.matches) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    sheetRef.current?.querySelector<HTMLElement>("[data-sheet-back]")?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || document.querySelector("[data-modal-root]")) return;
-      if (!mobile.matches) return;
-      setSheet(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = previous;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [sheet]);
 
   function selectSlot(index: number) {
     dispatch({ type: "select", index });
@@ -266,10 +247,10 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
             {saving ? "Guardando…" : dirty ? "Cambios sin guardar" : state.id ? "Guardado" : "Equipo nuevo"}
           </p>
         </div>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-          <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="min-w-0 w-full">
             <h1 className="font-display text-3xl font-bold">Editor de equipo</h1>
-            <div className="mt-3">
+            <div className="mt-3 w-full max-w-xl">
               <Field label="Nombre del equipo" htmlFor="team-name" hint={state.name.trim() ? `${state.name.trim().length}/${TEAM_NAME_MAX}` : "El equipo necesita un nombre para guardarse."}>
                 <input
                   id="team-name"
@@ -316,6 +297,7 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
           role={sheet && mobile ? "dialog" : undefined}
           aria-modal={sheet && mobile ? true : undefined}
           aria-labelledby={sheet && mobile ? "slot-editor-title" : undefined}
+          tabIndex={sheet && mobile ? -1 : undefined}
         >
           <GameButton type="button" variant="secondary" size="md" className="mb-3 md:hidden" data-sheet-back onClick={() => setSheet(false)}>
             Volver a las ranuras

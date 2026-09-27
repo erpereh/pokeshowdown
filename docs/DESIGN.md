@@ -1,142 +1,40 @@
 # Diseño
 
-Este documento define **cómo debe verse y comportarse visualmente la aplicación**.
+La interfaz usa una arena competitiva oscura. Se conservan el diseño y los componentes existentes.
 
-Debe representar la UI/UX **actual**, no ideas futuras. Mientras no exista una decisión visual concreta, dejarla sin definir en lugar de inventarla.
+## Sistema visual y navegación
 
-## Regla de mantenimiento
+Inter para texto/formularios y Chakra Petch para títulos, navegación y acciones, mediante next/font. Tokens compartidos en globals.css para fondos, superficies glass/fallback opaco, bordes, texto, acentos amarillo/cian y estados. Tipos Pokémon combinan colores e iconos oficiales con texto.
 
-**Cualquier cambio que afecte a UI o UX debe actualizar este archivo en la misma tarea.**
+GameButton, GlassPanel, Modal/Sheet, chips, barras de HP y estados loading/empty/error son los patrones compartidos. Radios, duraciones y easing usan variables comunes.
 
-Incluye, entre otros:
+Navegación superior en desktop y pestañas inferiores con safe-area en móvil. Combate/replay reservan altura mediante un shell sin pestañas inferiores.
 
-- layout y estructura visual;
-- colores, temas y tokens;
-- tipografía;
-- espaciado;
-- componentes y variantes;
-- responsive;
-- navegación visual;
-- estados loading/empty/error;
-- feedback de interacción;
-- animaciones;
-- accesibilidad visual;
-- iconografía;
-- uso de sprites, fondos y efectos dentro de la interfaz.
+## Pantallas e interacción
 
-Si una decisión deja de ser válida, sustituirla o eliminarla. No acumular decisiones obsoletas.
+Setup conserva formato y selección independiente de equipos. Team Builder usa un rail de seis slots, editor y preview; el editor móvil es un panel modal con scroll.
 
-## Estado actual
+Arena: rival de frente, jugador de espalda, fondo local, HUD de HP/estado, overlays de clima/campo y efectos. Registro lateral en desktop y Sheet en móvil. Acciones debajo, con scroll interno en viewports cortos.
 
-La dirección visual todavía no está definida.
+Partidas e historial usan listas con estados vacíos y enlaces reales. Resultado ofrece nueva partida/replay. Replay tiene play/pause, anterior/siguiente, velocidad y selección de turno.
 
-La única interfaz presente es una página placeholder con el texto «PokeShowdown». `src/app/globals.css` solo importa Tailwind CSS v4. No hay tokens, paleta, tipografía ni layout de producto.
+- La request vigente determina preview, movimiento, cambio o espera.
+- Preview respeta los slots reales y tamaño requerido.
+- Cambios forzados ocultan movimientos; Revival explica la selección de debilitados.
+- Tera refleja disponibilidad oficial.
+- Envío/reproducción bloquean elecciones; fallo de respuesta ofrece retry de la misma acción.
+- Rendición pide confirmación y comunica el resultado persistido.
 
-No asumir:
+## Animación y recursos
 
-- estilo visual;
-- librería de componentes;
-- paleta;
-- tipografía;
-- sistema de diseño;
-- layout;
-- tema claro/oscuro;
-- animaciones;
-- comportamiento responsive;
+El director reproduce eventos confirmados: movimientos, impactos, cambios, debilitamiento, curación, estados y Tera. La lógica autoritativa no depende de terminar animaciones.
 
-hasta que se decida o exista implementación real.
+Velocidad 1×/2× y omitir reproducción. prefers-reduced-motion minimiza transiciones y usa sprites estáticos. Ocultar pestaña detiene reproducción y conserva el estado confirmado.
 
-## Dirección visual
+Sprites usan índice runtime local, variantes y fallback estático. Placeholder únicamente cuando no hay recurso. Fallos transitorios del índice se pueden recuperar al volver conexión/visibilidad.
 
-Pendiente.
+## Accesibilidad y responsive
 
-Cuando se defina, documentar aquí:
+Controles con nombre, foco visible, disabled correcto y área táctil mínima 44px. Modales/sheets contienen foco y lo restauran; Escape cuando corresponde. Selectores respetan su semántica y navegación por teclado.
 
-- sensación general;
-- referencias;
-- jerarquía visual;
-- nivel de densidad;
-- uso de superficies, bordes, sombras y color;
-- criterios que deben mantenerse consistentes.
-
-## Sistema visual
-
-Documentar cuando exista:
-
-### Colores y temas
-
-- fondos y superficies;
-- texto;
-- bordes;
-- accent;
-- estados;
-- colores semánticos;
-- reglas light/dark si se incorporan.
-
-### Tipografía
-
-- familias;
-- pesos;
-- escalas;
-- jerarquía;
-- usos especiales.
-
-### Espaciado y layout
-
-- anchos;
-- grids;
-- paddings;
-- gaps;
-- alineaciones;
-- breakpoints;
-- comportamiento por viewport.
-
-## Componentes
-
-Cuando se creen componentes visuales:
-
-- reutilizar componentes existentes antes de crear otro patrón;
-- documentar componentes compartidos y variantes relevantes;
-- mantener consistentes estados hover, focus, active, disabled y loading;
-- evitar duplicar componentes que resuelvan el mismo problema;
-- actualizar este archivo si aparece una nueva regla reutilizable.
-
-No hace falta listar cada componente trivial: documentar el **sistema y las reglas compartidas**.
-
-## Responsive
-
-Cuando se defina:
-
-- documentar cómo cambia la jerarquía entre desktop y móvil;
-- no asumir que móvil es simplemente desktop apilado;
-- evitar overflow no intencionado;
-- mantener acciones principales utilizables y áreas táctiles adecuadas.
-
-## Animación e interacción
-
-Cuando se incorporen:
-
-- documentar patrones reutilizables;
-- mantener duraciones/easing coherentes;
-- usar animación para feedback o comprensión, no por defecto;
-- respetar `prefers-reduced-motion` cuando aplique.
-
-## Accesibilidad
-
-Toda decisión visual debe preservar:
-
-- contraste suficiente;
-- foco visible;
-- navegación por teclado cuando corresponda;
-- información que no dependa solo del color;
-- semántica adecuada;
-- controles táctiles utilizables.
-
-## Límites de este documento
-
-- Funcionalidad, reglas y alcance → `PRODUCT.md`.
-- Arquitectura e implementación técnica → `ARCHITECTURE.md`.
-- Fuentes de datos Pokémon → `DATA-SOURCES.md`.
-- Origen/sincronización de assets → `ASSET-INVENTORY.md`.
-
-Este archivo no debe contener funcionalidades ni arquitectura salvo el mínimo contexto necesario para explicar una decisión visual.
+Mantener arena, HP, acciones y cambios legibles en desktop, tablet y móvil, sin overflow horizontal ni acciones permanentemente ocultas. Revisar capturas de setup, equipos, combate, cambios/revival, resultado y replay en ambos tamaños.

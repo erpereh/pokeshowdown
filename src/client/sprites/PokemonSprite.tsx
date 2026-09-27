@@ -23,7 +23,7 @@ export const PokemonSprite = forwardRef<HTMLDivElement, PokemonSpriteProps>(func
   ref,
 ) {
   const reduced = useReducedMotion();
-  const chain = useSpriteChain({ spriteId, facing, shiny, gender, animated });
+  const chain = useSpriteChain({ spriteId, facing, shiny, gender, animated: animated && !reduced });
   const width = Math.max(1, Math.round(chain.width * scale));
   const height = Math.max(1, Math.round(chain.height * scale));
   const staticShiny = shiny && !chain.src?.endsWith(".gif");
@@ -32,7 +32,7 @@ export const PokemonSprite = forwardRef<HTMLDivElement, PokemonSpriteProps>(func
     .join(" ");
 
   return (
-    <div ref={ref} {...rest} className={classes} style={{ ...style, width, height }}>
+    <div ref={ref} {...rest} className={classes} style={{ ...style, width, maxWidth: "100%", height: "auto", aspectRatio: `${width} / ${height}` }}>
       {chain.src ? (
         <img
           src={chain.src}

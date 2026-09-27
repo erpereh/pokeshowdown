@@ -55,14 +55,13 @@ La documentación debe describir siempre el estado o decisión actual. Eliminar 
 
 ## Decisiones fijas actuales
 
-- Modos: Single Player contra CPU y Private Battle 1v1 por invitación.
+- MVP actual: Single Player contra CPU. Private Battle y multijugador quedan fuera de esta entrega.
 - Infraestructura: Next.js/Vercel Functions + Supabase Auth/PostgreSQL/Realtime; sin backend persistente propio ni jugador-host.
 - Pokémon Showdown es server-only y autoridad para simulación, RNG, formatos y legalidad.
 - Single Player: CPU server-side, partida persistida y autosave tras cada turno confirmado.
-- Private Battle: elecciones privadas, resolución única/idempotente y persistencia antes del aviso Realtime.
 - Datos competitivos: Showdown; PokéAPI solo complemento.
 - Assets: Showdown principal, PokéAPI Sprites fallback.
-- Diseño visual: todavía pendiente. No inventar decisiones visuales; cuando se tomen, registrarlas en `DESIGN.md`.
+- Diseño visual: conservar la arena oscura y los componentes existentes documentados en `docs/DESIGN.md`.
 
 ## Reglas generales
 

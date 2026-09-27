@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { backgroundForBattle, OUTDOOR_BACKGROUNDS } from "@/server/persistence/backgrounds.ts";
 import { createAdminSupabase, type DbClient } from "@/server/supabase/admin.ts";
 import type { Database } from "@/server/supabase/database.types.ts";
@@ -52,7 +52,6 @@ function memoryStorage() {
 
 describe("persistence", () => {
   let admin: DbClient;
-  const createdUsers: string[] = [];
   let userAId = "";
   let userBId = "";
   let clientA: UserClient;
@@ -82,7 +81,6 @@ describe("persistence", () => {
     if (createdB.error || !createdB.data.user) throw createdB.error ?? new Error("user B");
     userAId = createdA.data.user.id;
     userBId = createdB.data.user.id;
-    createdUsers.push(userAId, userBId);
 
     clientA = signedInClient();
     clientB = signedInClient();
@@ -91,11 +89,7 @@ describe("persistence", () => {
     if (signA.error || signB.error) throw signA.error ?? signB.error;
   }, 60_000);
 
-  afterAll(async () => {
-    for (const id of createdUsers) {
-      await admin.auth.admin.deleteUser(id);
-    }
-  });
+  // Dedicated test users and their records are retained: validation never deletes remote data.
 
   it("creates a profile from display_name or the email prefix", async () => {
     const { data, error } = await admin.from("profiles").select("display_name").eq("user_id", userAId).single();
@@ -178,6 +172,14 @@ describe("persistence", () => {
     const ownBattle = await clientA.from("battles").select("id, revision").eq("id", battleId).single();
     expect(ownBattle.data?.revision).toBe(1);
 
+    const anonymous = anonymousClient();
+    for (const table of ["profiles", "teams", "battles", "battle_actions", "battle_replays"] as const) {
+      const publicRows = await anonymous.from(table).select("*");
+      expect(publicRows.data ?? []).toEqual([]);
+    }
+    const anonymousSecrets = await anonymous.from("battle_secrets").select("*");
+    expect(anonymousSecrets.error).not.toBeNull();
+
     const secrets = await clientA.from("battle_secrets").select("seed").eq("battle_id", battleId);
     expect(secrets.error).not.toBeNull();
     expect(secrets.data).toBeNull();
@@ -236,20 +238,19 @@ describe("persistence", () => {
     expect(otherClient.error?.code).toBe("P0004");
     await expectRevision(2);
 
+    const conflictBattleId = await insertBattle(userAId, crypto.randomUUID());
     const plantedId = crypto.randomUUID();
     const planted = await admin.from("battle_actions").insert({
-      battle_id: battleId,
+      battle_id: conflictBattleId,
       client_request_id: plantedId,
       kind: "choice",
-      revision_before: 2,
+      revision_before: 1,
       p1_choice: { kind: "move", slot: 1 },
     });
     expect(planted.error).toBeNull();
-    const conflict = await admin.rpc("commit_battle_turn", commitArgs(battleId, userAId, 2, plantedId));
+    const conflict = await admin.rpc("commit_battle_turn", commitArgs(conflictBattleId, userAId, 1, plantedId));
     expect(conflict.error?.code).toBe("23505");
     await expectRevision(2);
-    const removed = await admin.from("battle_actions").delete().eq("battle_id", battleId).eq("client_request_id", plantedId);
-    expect(removed.error).toBeNull();
 
     const actions = await admin.from("battle_actions").select("id").eq("battle_id", battleId);
     expect(actions.data).toHaveLength(1);
@@ -264,7 +265,7 @@ describe("persistence", () => {
     expect(rows.data).toHaveLength(1);
   });
 
-  it("refuses to mutate a finished battle and still allows delete", async () => {
+  it("preserves a finished battle and isolates its immutable replay", async () => {
     const finished = await admin.rpc(
       "commit_battle_turn",
       commitArgs(battleId, userAId, 2, crypto.randomUUID(), {
@@ -296,43 +297,8 @@ describe("persistence", () => {
     expect(updated.error?.code).toBe("P0003");
     const secrets = await admin.from("battle_secrets").update({ seed: "sodium,ff" }).eq("battle_id", battleId);
     expect(secrets.error?.code).toBe("P0003");
-    const action = await admin.from("battle_actions").delete().eq("battle_id", battleId);
-    expect(action.error?.code).toBe("P0003");
-
-    const removed = await admin.from("battles").delete().eq("id", battleId);
-    expect(removed.error).toBeNull();
-    const gone = await admin.from("battles").select("id").eq("id", battleId);
-    expect(gone.data).toEqual([]);
-  });
-
-  it("deletes a finished battle when the owner account is removed", async () => {
-    const email = `e2e+${crypto.randomUUID()}@pokeshowdown.test`;
-    const password = `${crypto.randomUUID()}Aa1!`;
-    const created = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { display_name: "Cascade" },
-    });
-    if (created.error || !created.data.user) throw created.error ?? new Error("cascade user");
-    const userId = created.data.user.id;
-    const id = await insertBattle(userId, crypto.randomUUID());
-    const finished = await admin.rpc(
-      "commit_battle_turn",
-      commitArgs(id, userId, 1, crypto.randomUUID(), {
-        kind: "forfeit",
-        choice: null,
-        status: "finished",
-        winner: "p1",
-        endReason: "forfeit",
-        turn: 1,
-      }),
-    );
-    expect(finished.error).toBeNull();
-    const deleted = await admin.auth.admin.deleteUser(userId);
-    expect(deleted.error).toBeNull();
-    const battle = await admin.from("battles").select("id").eq("id", id);
-    expect(battle.data).toEqual([]);
+    const retained = await admin.from("battles").select("status").eq("id", battleId).single();
+    expect(retained.data?.status).toBe("finished");
   });
 
   it("forfeits a battle from another engine version and rejects other actions", async () => {
@@ -410,7 +376,7 @@ describe("persistence", () => {
       p_player_name: "Ada",
       p_cpu_name: "CPU",
       p_turn: 0,
-      p_p1_request: { rqid: 1, kind: "move", moves: [], switches: [], canTerastallize: null, trapped: false, teamPreviewSize: 6 },
+      p_p1_request: { rqid: 1, kind: "move", moves: [], switches: [], canTerastallize: null, trapped: false, reviving: false, teamPreviewSize: 6 },
       p_initial_state: initialState,
       p_frame: frame(0),
       p_seed: "sodium,0123456789abcdef0123456789abcdef",
@@ -436,6 +402,13 @@ function signedInClient(): UserClient {
       storage: memoryStorage(),
     },
   });
+}
+
+function anonymousClient(): UserClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) throw new Error("Missing publishable Supabase environment");
+  return createClient<Database>(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
 function commitArgs(

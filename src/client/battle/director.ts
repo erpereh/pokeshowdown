@@ -58,8 +58,12 @@ export async function playFrames(options: PlaybackContext): Promise<"done" | "ab
     for (const frame of options.frames) {
       for (const event of frame.events) {
         if (options.signal.aborted) return "aborted";
-        state = applyEvent(state, event);
-        options.onState(state);
+        const next = applyEvent(state, event);
+        // Keep the outgoing sprite present until the faint animation completes.
+        if (event.kind !== "faint") {
+          state = next;
+          options.onState(state);
+        }
         if (event.kind === "turn") options.onBanner(event.turn);
 
         const speed = Math.max(1, options.getSpeed());
@@ -86,6 +90,10 @@ export async function playFrames(options: PlaybackContext): Promise<"done" | "ab
         if (options.signal.aborted) {
           options.onBanner(null);
           return "aborted";
+        }
+        if (event.kind === "faint") {
+          state = next;
+          options.onState(state);
         }
         if (event.text) options.onLog(toLine(event, state.turn));
       }

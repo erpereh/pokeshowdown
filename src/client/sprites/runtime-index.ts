@@ -153,8 +153,8 @@ export function normalizeRuntimeIndex(value: unknown): RuntimeIndex {
 }
 
 /**
- * Fetch the runtime index once. A network or parse failure resolves to an empty index
- * so callers can still render placeholders.
+ * Cache successful loads only. A transient failure renders placeholders and may be
+ * retried when connectivity returns or the page becomes visible again.
  */
 export function loadRuntimeIndex(): Promise<RuntimeIndex> {
   if (cachedIndex) return Promise.resolve(cachedIndex);
@@ -169,8 +169,10 @@ export function loadRuntimeIndex(): Promise<RuntimeIndex> {
         return cachedIndex;
       })
       .catch(() => {
-        cachedIndex = emptyRuntimeIndex();
-        return cachedIndex;
+        return emptyRuntimeIndex();
+      })
+      .finally(() => {
+        pendingIndex = null;
       });
   }
   return pendingIndex;
@@ -180,11 +182,21 @@ export function useRuntimeIndex(): RuntimeIndex | null {
   const [index, setIndex] = useState<RuntimeIndex | null>(cachedIndex);
   useEffect(() => {
     let active = true;
-    void loadRuntimeIndex().then((value) => {
-      if (active) setIndex(value);
-    });
+    function load() {
+      void loadRuntimeIndex().then((value) => {
+        if (active) setIndex(value);
+      });
+    }
+    function onVisible() {
+      if (document.visibilityState === "visible" && !cachedIndex) load();
+    }
+    load();
+    window.addEventListener("online", load);
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       active = false;
+      window.removeEventListener("online", load);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
   return index;

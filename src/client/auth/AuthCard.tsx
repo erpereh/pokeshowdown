@@ -7,7 +7,7 @@ import { GameButton } from "@/client/ui/GameButton.tsx";
 import { GlassPanel } from "@/client/ui/GlassPanel.tsx";
 import { SegmentedControl } from "@/client/ui/SegmentedControl.tsx";
 
-type Mode = "login" | "signup";
+type Mode = "login" | "signup" | "recovery" | "password";
 
 const ARENA = "/assets/generated/sprites/gen6bgs/bg-skypillar.jpg";
 
@@ -32,6 +32,7 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
   const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(confirmError ? "El enlace de confirmación no es válido o ha caducado." : null);
   const [info, setInfo] = useState<string | null>(null);
@@ -43,15 +44,19 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
     setError(null);
     setInfo(null);
     const trimmedEmail = email.trim();
-    if (!/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+    if (mode !== "password" && !/^\S+@\S+\.\S+$/.test(trimmedEmail)) {
       setError("El correo no es válido.");
       return;
     }
-    if (password.length < 6) {
+    if (mode !== "recovery" && password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres.");
       return;
     }
     const name = displayName.trim();
+    if (mode === "password" && password !== confirmation) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
     if (mode === "signup" && (name.length < 2 || name.length > 20)) {
       setError("Elige un nombre de entrenador (2–20 caracteres).");
       return;
@@ -60,6 +65,24 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
     setLoading(true);
     try {
       const supabase = createBrowserSupabase();
+      if (mode === "recovery") {
+        const callback = new URL("/auth/confirm", window.location.origin);
+        callback.searchParams.set("next", "/auth/update-password");
+        const { error: recoveryError } = await supabase.auth.resetPasswordForEmail(trimmedEmail, { redirectTo: callback.toString() });
+        if (recoveryError) setError(messageFor(recoveryError));
+        else setInfo("Si existe una cuenta con ese correo, recibirás un enlace para cambiar la contraseña. Revisa también el correo no deseado.");
+        return;
+      }
+      if (mode === "password") {
+        const { error: passwordError } = await supabase.auth.updateUser({ password });
+        if (passwordError) {
+          setError(messageFor(passwordError));
+          return;
+        }
+        router.replace(nextPath || "/");
+        router.refresh();
+        return;
+      }
       if (mode === "login") {
         const { error: signError } = await supabase.auth.signInWithPassword({ email: trimmedEmail, password });
         if (signError) {
@@ -76,7 +99,7 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
         email: trimmedEmail,
         password,
         options: {
-          emailRedirectTo: `${origin}/auth/confirm?next=/`,
+          emailRedirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(nextPath)}`,
           data: { display_name: name },
         },
       });
@@ -108,8 +131,8 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
       <div className="relative z-10 flex min-h-dvh items-center justify-center px-4 py-24">
         <GlassPanel className="w-full max-w-md p-5 sm:p-6">
           <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">PokeShowdown</p>
-          <h1 className="font-display mt-1 text-3xl font-bold">Tu entrenador</h1>
-          <div className="mt-4">
+          <h1 className="font-display mt-1 text-3xl font-bold">{mode === "password" ? "Nueva contraseña" : mode === "recovery" ? "Recupera tu cuenta" : "Tu entrenador"}</h1>
+          {mode === "login" || mode === "signup" ? <div className="mt-4">
             <SegmentedControl
               label="Modo de acceso"
               value={mode}
@@ -123,7 +146,7 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
                 { value: "signup", label: "Crear cuenta" },
               ]}
             />
-          </div>
+          </div> : <p className="mt-3 text-sm text-text-dim">{mode === "password" ? "Elige una contraseña nueva para tu cuenta." : "Te enviaremos un enlace para cambiar la contraseña."}</p>}
           <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-3" noValidate>
             {mode === "signup" ? (
               <label className="block text-sm">
@@ -137,7 +160,7 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
                 />
               </label>
             ) : null}
-            <label className="block text-sm">
+            {mode !== "password" ? <label className="block text-sm">
               <span className="mb-1 block text-text-dim">Correo</span>
               <input
                 type="email"
@@ -147,8 +170,8 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
                 inputMode="email"
                 className="min-h-11 w-full rounded-[var(--radius-card)] border border-line-strong bg-bg-0/70 px-3"
               />
-            </label>
-            <label className="block text-sm">
+            </label> : null}
+            {mode !== "recovery" ? <label className="block text-sm">
               <span className="mb-1 block text-text-dim">Contraseña</span>
               <input
                 type="password"
@@ -157,7 +180,11 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 className="min-h-11 w-full rounded-[var(--radius-card)] border border-line-strong bg-bg-0/70 px-3"
               />
-            </label>
+            </label> : null}
+            {mode === "password" ? <label className="block text-sm">
+              <span className="mb-1 block text-text-dim">Confirmar contraseña</span>
+              <input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} autoComplete="new-password" className="min-h-11 w-full rounded-[var(--radius-card)] border border-line-strong bg-bg-0/70 px-3" />
+            </label> : null}
             {error ? (
               <p role="alert" className="text-sm text-danger">
                 {error}
@@ -169,8 +196,11 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
               </p>
             ) : null}
             <GameButton type="submit" size="lg" loading={loading} className="mt-1 w-full">
-              {mode === "login" ? "Entrar" : "Crear cuenta"}
+              {mode === "login" ? "Entrar" : mode === "signup" ? "Crear cuenta" : mode === "recovery" ? "Enviar enlace" : "Guardar contraseña"}
             </GameButton>
+            {mode === "login" || mode === "recovery" ? <GameButton type="button" variant="ghost" disabled={loading} onClick={() => { setMode(mode === "recovery" ? "login" : "recovery"); setError(null); setInfo(null); }}>
+              {mode === "recovery" ? "Volver al acceso" : "He olvidado mi contraseña"}
+            </GameButton> : null}
           </form>
         </GlassPanel>
       </div>

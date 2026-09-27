@@ -15,16 +15,19 @@ type Tab = "fight" | "switch";
 function TeamPreview({
   you,
   foe,
+  previewSize,
   disabled,
   onConfirm,
 }: {
   you: PokemonView[];
   foe: PokemonView[];
+  previewSize: number;
   disabled: boolean;
   onConfirm: (order: number[]) => void;
 }) {
   const [lead, setLead] = useState<number | null>(null);
-  const slots = [1, 2, 3, 4, 5, 6];
+  const slots = you.map((mon) => mon.slot);
+  const size = previewSize > 0 ? Math.min(previewSize, slots.length) : slots.length;
 
   return (
     <div className="flex flex-col gap-3">
@@ -71,7 +74,7 @@ function TeamPreview({
         disabled={disabled || lead === null}
         onClick={() => {
           if (lead === null) return;
-          onConfirm([lead, ...slots.filter((slot) => slot !== lead)]);
+          onConfirm([lead, ...slots.filter((slot) => slot !== lead)].slice(0, size));
         }}
       >
         Confirmar liderato
@@ -145,7 +148,7 @@ export function ActionPanel({
   if (request.kind === "teamPreview") {
     return (
       <div className="px-3 py-3">
-        <TeamPreview you={you?.team ?? []} foe={foe?.team ?? []} disabled={locked} onConfirm={(order) => onChoice({ kind: "teamPreview", order })} />
+        <TeamPreview key={request.rqid} you={you?.team ?? []} foe={foe?.team ?? []} previewSize={request.teamPreviewSize} disabled={locked} onConfirm={(order) => onChoice({ kind: "teamPreview", order })} />
       </div>
     );
   }
@@ -158,10 +161,10 @@ export function ActionPanel({
       {forced ? (
         <div>
           <h2 className="font-display text-lg font-bold">
-            {request.reviving ? "¿A qué Pokémon debilitado pasarás?" : "¿Qué Pokémon sacarás?"}
+            {request.reviving ? "¿A qué Pokémon revivirás?" : "¿Qué Pokémon sacarás?"}
           </h2>
           {request.reviving ? (
-            <p className="text-sm text-text-dim">Bendición Revivir solo puede ir a un aliado debilitado.</p>
+            <p className="text-sm text-text-dim">Bendición Revivir recupera la mitad de los PS de un aliado debilitado. El Pokémon activo sigue en el campo.</p>
           ) : null}
         </div>
       ) : (

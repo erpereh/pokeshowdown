@@ -246,7 +246,7 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
       </div>
 
       {formatId === "gen9randombattle" ? (
-        <p className="mt-6 max-w-2xl text-text-dim">Random Battle usa equipos oficiales generados por Showdown para los dos lados. No hace falta elegir Pokémon: el motor entrega seis sets legales y el combate empieza en la previsualización de equipo.</p>
+        <p className="mt-6 max-w-2xl text-text-dim">Random Battle usa equipos oficiales generados por Showdown para los dos lados. No hace falta elegir Pokémon: el motor entrega seis sets legales y el combate empieza directamente con el primer Pokémon de cada equipo, sin previsualización.</p>
       ) : null}
 
       {formatId === "gen9ou" ? (

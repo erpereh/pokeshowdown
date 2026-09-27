@@ -420,7 +420,7 @@ function publish(draft: Draft, request: ShowdownRequest | null, viewer: SideId, 
     const side = draft.sides[viewer];
     const previous = side.team;
     side.name = request.side.name || side.name;
-    side.teamSize = Math.max(side.teamSize, request.side.pokemon.length);
+    side.teamSize = request.side.pokemon.length;
     side.team = request.side.pokemon.map((pokemon, index) => {
       const name = nameFromIdent(pokemon.ident);
       const details = parseDetails(pokemon.details);

@@ -269,6 +269,21 @@ describe("chooseCpuActions", () => {
     expect(choices[0]).toBe("switch 2");
   });
 
+  it("uses Revival Blessing only when an ally is fainted, even when the user is injured", () => {
+    const request: ShowdownRequest = {
+      active: [{ moves: [
+        { move: "Revival Blessing", id: "revivalblessing", disabled: false },
+        { move: "Nuzzle", id: "nuzzle", disabled: false },
+      ] }],
+      side: { name: "CPU", id: "p2", pokemon: [
+        pokemon("Pawmot", { condition: "50/300", moves: ["revivalblessing", "nuzzle"] }),
+      ] },
+    };
+    expect(chooseCpuActions(input(request, foe("Blissey", ["Normal"])))[0]).toBe("move 2");
+    request.side.pokemon.push(pokemon("Glimmora", { active: false, condition: "0 fnt", ident: "p2: Glimmora" }));
+    expect(chooseCpuActions(input(request, foe("Blissey", ["Normal"])))[0]).toBe("move 1");
+  });
+
   it("returns default for garbage, default for revival, and nothing while waiting", () => {
     expect(chooseCpuActions(undefined as unknown as CpuInput)).toEqual(["default"]);
     expect(chooseCpuActions({} as CpuInput)).toEqual(["default"]);

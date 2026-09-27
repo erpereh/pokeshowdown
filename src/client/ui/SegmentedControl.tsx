@@ -21,16 +21,31 @@ export function SegmentedControl<T extends string>({
   className?: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className={cx("grid rounded-[var(--radius-card)] border border-line bg-bg-0/50 p-1", className)} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div role="radiogroup" aria-label={label} className={cx("grid rounded-[var(--radius-card)] border border-line bg-bg-0/50 p-1", className)} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
           <button
             key={option.value}
             type="button"
-            role="tab"
-            aria-selected={selected}
+            role="radio"
+            aria-checked={selected}
+            tabIndex={selected ? 0 : -1}
             onClick={() => onChange(option.value)}
+            onKeyDown={(event) => {
+              const index = options.indexOf(option);
+              let nextIndex: number;
+              if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (index + 1) % options.length;
+              else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (index + options.length - 1) % options.length;
+              else if (event.key === "Home") nextIndex = 0;
+              else if (event.key === "End") nextIndex = options.length - 1;
+              else return;
+              event.preventDefault();
+              const next = options[nextIndex];
+              if (!next) return;
+              onChange(next.value);
+              event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("[role='radio']")[nextIndex]?.focus();
+            }}
             className={cx(
               "font-display min-h-11 rounded-[10px] px-2 text-sm font-semibold uppercase tracking-wide",
               selected ? "bg-accent text-bg-0" : "text-text-dim hover:text-text",

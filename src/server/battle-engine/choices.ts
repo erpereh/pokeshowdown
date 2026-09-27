@@ -13,15 +13,15 @@ function isSlot(value: unknown, max: number): value is number {
   return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= max;
 }
 
-/** Full permutation of team slots 1..6, required for the player's team preview. */
+/** Full permutation of the available team slots (one to six Pokémon). */
 export function isTeamPermutation(order: readonly number[]): boolean {
-  if (order.length !== 6) return false;
+  if (order.length < 1 || order.length > 6) return false;
   const seen = new Set<number>();
   for (const slot of order) {
-    if (!Number.isInteger(slot) || slot < 1 || slot > 6 || seen.has(slot)) return false;
+    if (!Number.isInteger(slot) || slot < 1 || slot > order.length || seen.has(slot)) return false;
     seen.add(slot);
   }
-  return seen.size === 6;
+  return seen.size === order.length;
 }
 
 /**
