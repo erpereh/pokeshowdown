@@ -1,5 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm sync:assets",
-  "outputDirectory": "public"
+  "framework": "nextjs",
+  "buildCommand": "pnpm sync:assets --profile=runtime && pnpm build"
 }

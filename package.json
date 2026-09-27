@@ -7,19 +7,36 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
     "sync:assets": "node --experimental-strip-types scripts/sync-assets.ts",
     "audit:assets": "node --experimental-strip-types scripts/audit-assets.ts",
     "sync:data": "node --experimental-strip-types scripts/sync-data.ts",
-    "verify:engine": "node --experimental-strip-types scripts/verify-engine.ts",
-    "typecheck": "tsc --noEmit",
-    "build": "pnpm sync:assets"
+    "verify:engine": "node --experimental-strip-types scripts/verify-engine.ts"
   },
   "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.117.2",
+    "next": "16.3.6",
     "pokemon-showdown": "0.11.11",
-    "server-only": "0.0.1"
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "server-only": "0.0.1",
+    "zod": "4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "22.19.1",
-    "typescript": "5.9.3"
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vite": "8.3.1",
+    "vitest": "5.0.2"
   }
 }

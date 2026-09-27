@@ -2,13 +2,13 @@ import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { SPECIES_DIRECTORIES } from "./lib/catalog.ts";
+import { RUNTIME_INDEX_FILE, SPECIES_DIRECTORIES } from "./lib/catalog.ts";
 import type { AssetManifest } from "./lib/manifest.ts";
 
 const GENERATED_DIR = path.join(process.cwd(), "public", "assets", "generated");
 const MANIFEST_PATH = path.join(GENERATED_DIR, "manifest.json");
 const AUDIT_PATH = path.join(GENERATED_DIR, "audit.json");
-const IGNORED = new Set(["manifest.json", "audit.json", "sync-state.jsonl"]);
+const IGNORED = new Set(["manifest.json", "audit.json", "sync-state.jsonl", RUNTIME_INDEX_FILE]);
 
 interface CoverageRow {
   variant: string;

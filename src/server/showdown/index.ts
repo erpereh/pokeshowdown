@@ -1,11 +1,8 @@
 import "server-only";
-import { createRequire } from "node:module";
+import showdownPackage from "pokemon-showdown/package.json" with { type: "json" };
 import { BattleStream, Dex, TeamValidator, Teams } from "./module.ts";
 
-const require = createRequire(import.meta.url);
-const { version } = require("pokemon-showdown/package.json") as { version: string };
-
-export const ENGINE_VERSION = version;
+export const ENGINE_VERSION = showdownPackage.version;
 
 export function getDex() {
   return Dex;

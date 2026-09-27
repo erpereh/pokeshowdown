@@ -1,10 +1,10 @@
-import { createRequire } from "node:module";
+import PS from "pokemon-showdown";
+import battleModule from "pokemon-showdown/dist/sim/battle.js";
 
-const require = createRequire(import.meta.url);
-const showdown = require("pokemon-showdown") as typeof import("pokemon-showdown");
-
-export const Dex = showdown.Dex;
-export const toID = showdown.toID;
-export const Teams = showdown.Teams;
-export const TeamValidator = showdown.TeamValidator;
-export const BattleStream = showdown.BattleStream;
+export const Dex = PS.Dex;
+export const toID = PS.toID;
+export const Teams = PS.Teams;
+export const TeamValidator = PS.TeamValidator;
+export const BattleStream = PS.BattleStream;
+export const PRNG = PS.PRNG;
+export const extractChannelMessages = battleModule.extractChannelMessages;

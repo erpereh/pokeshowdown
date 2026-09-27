@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-0: #0a0e1a;
+  --color-bg-1: #111729;
+  --color-surface: #182036cc;
+  --color-surface-solid: #182036;
+  --color-surface-2: #222c48;
+  --color-line: #ffffff14;
+  --color-line-strong: #ffffff29;
+  --color-text: #eef2ff;
+  --color-text-dim: #9aa4c0;
+  --color-accent: #ffc83d;
+  --color-accent-2: #4fd1ff;
+  --color-danger: #f0544f;
+  --color-success: #3ddc84;
+
+  --color-hp-high: #3ddc84;
+  --color-hp-mid: #f5c542;
+  --color-hp-low: #f0544f;
+
+  --color-status-brn: #e8743b;
+  --color-status-par: #e9c132;
+  --color-status-psn: #a95bc9;
+  --color-status-tox: #7e3fa3;
+  --color-status-slp: #8e9aaf;
+  --color-status-frz: #6cc7e8;
+
+  --color-type-normal: #9fa19f;
+  --color-type-fire: #e62829;
+  --color-type-water: #2980ef;
+  --color-type-electric: #fac000;
+  --color-type-grass: #3fa129;
+  --color-type-ice: #3dcef3;
+  --color-type-fighting: #ff8000;
+  --color-type-poison: #9141cb;
+  --color-type-ground: #915121;
+  --color-type-flying: #81b9ef;
+  --color-type-psychic: #ef4179;
+  --color-type-bug: #91a119;
+  --color-type-rock: #afa981;
+  --color-type-ghost: #704170;
+  --color-type-dragon: #5060e1;
+  --color-type-dark: #624d4e;
+  --color-type-steel: #60a1b8;
+  --color-type-fairy: #ef70ef;
+  --color-type-stellar: #40b5a5;
+
+  --font-display: var(--font-chakra), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 12px;
+  --radius-panel: 20px;
+
+  --ease-out-game: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-game: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+:root {
+  --dur-instant: 80ms;
+  --dur-fast: 160ms;
+  --dur-base: 280ms;
+  --dur-slow: 480ms;
+  --dur-dramatic: 900ms;
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-bg-0);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100dvh;
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%, #4fd1ff14, transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, #ffc83d12, transparent 60%);
+  background-attachment: fixed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-2);
+  outline-offset: 2px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+}
+
+.glass {
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background: var(--color-surface-solid);
+  }
+}
+
+.clip-angled {
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up var(--dur-slow) var(--ease-out-game) both;
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

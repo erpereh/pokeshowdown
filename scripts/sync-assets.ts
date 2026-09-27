@@ -1,24 +1,33 @@
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
-import { mkdir, stat } from "node:fs/promises";
+import { copyFile, link, mkdir, open, readdir, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createRequire } from "node:module";
 import { Dex, toID } from "../src/server/showdown/module.ts";
 import {
   ASSET_EXTENSIONS,
   ENGINE_VERSION,
+  FX_RUNTIME_SKIP_PREFIXES,
   FX_SKIP_NAMES,
   FX_SKIP_PREFIXES,
   ICON_SHEETS,
   POKEAPI_SPRITES,
+  RUNTIME_ICON_SHEETS,
+  RUNTIME_INDEX_BITS,
+  RUNTIME_INDEX_FILE,
+  RUNTIME_SHARED_FOLDERS,
+  RUNTIME_SPECIES_FOLDERS,
+  RUNTIME_SUBSTITUTE_FOLDERS,
   SHARED_DIRECTORIES,
   SHOWDOWN_FX,
   SHOWDOWN_SPRITES,
   SPECIES_DIRECTORIES,
+  type RuntimeSpriteBit,
 } from "./lib/catalog.ts";
 import {
   emptyShared,
   type AssetManifest,
   type AssetSource,
+  type RuntimeSpriteIndex,
   type SharedAsset,
   type SyncFailure,
 } from "./lib/manifest.ts";
@@ -37,11 +46,15 @@ import {
 const require = createRequire(import.meta.url);
 const installedVersion = (require("pokemon-showdown/package.json") as { version: string }).version;
 
-const GENERATED_DIR = path.join(process.cwd(), "public", "assets", "generated");
-const STATE_PATH = path.join(GENERATED_DIR, "sync-state.jsonl");
-const MANIFEST_PATH = path.join(GENERATED_DIR, "manifest.json");
+const PUBLIC_DIR = path.join(process.cwd(), "public", "assets", "generated");
+const VERCEL_MIRROR = path.join(process.cwd(), ".next", "cache", "showdown-assets");
 const PUBLIC_PREFIX = "/assets/generated";
 const CONCURRENCY = 12;
+
+type Profile = "full" | "runtime";
+
+let mirrorDir = PUBLIC_DIR;
+let publishDir = PUBLIC_DIR;
 
 interface StateEntry {
   relative: string;
@@ -59,6 +72,44 @@ interface PlannedFile {
   variant?: string;
   group?: keyof AssetManifest["shared"];
   stem: string;
+}
+
+interface CliOptions {
+  profile: Profile;
+  out?: string;
+  mirror?: string;
+}
+
+function parseArgs(argv: string[]): CliOptions {
+  const options: CliOptions = { profile: "full" };
+  for (const arg of argv) {
+    if (arg === "--profile=full" || arg === "--profile=runtime") {
+      options.profile = arg.slice("--profile=".length) as Profile;
+      continue;
+    }
+    if (arg.startsWith("--out=")) {
+      options.out = arg.slice("--out=".length);
+      continue;
+    }
+    if (arg.startsWith("--mirror=")) {
+      options.mirror = arg.slice("--mirror=".length);
+      continue;
+    }
+    throw new Error(`unknown argument ${arg}`);
+  }
+  return options;
+}
+
+function resolveCliDir(value: string) {
+  return path.resolve(process.cwd(), value);
+}
+
+function statePath() {
+  return path.join(mirrorDir, "sync-state.jsonl");
+}
+
+function manifestPath() {
+  return path.join(mirrorDir, "manifest.json");
 }
 
 function safeSegment(segment: string) {
@@ -91,13 +142,14 @@ function publicPath(relative: string) {
 }
 
 function diskPath(relative: string) {
-  return path.join(GENERATED_DIR, ...relative.split("/"));
+  return path.join(mirrorDir, ...relative.split("/"));
 }
 
 function loadState(): Map<string, StateEntry> {
   const state = new Map<string, StateEntry>();
-  if (!existsSync(STATE_PATH)) return state;
-  for (const line of readFileSync(STATE_PATH, "utf8").split("\n")) {
+  const filePath = statePath();
+  if (!existsSync(filePath)) return state;
+  for (const line of readFileSync(filePath, "utf8").split("\n")) {
     if (!line.trim()) continue;
     const entry = JSON.parse(line) as StateEntry;
     state.set(entry.relative, entry);
@@ -107,7 +159,7 @@ function loadState(): Map<string, StateEntry> {
 
 function remember(state: Map<string, StateEntry>, entry: StateEntry, append: boolean) {
   state.set(entry.relative, entry);
-  if (append) appendFileSync(STATE_PATH, `${JSON.stringify(entry)}\n`);
+  if (append) appendFileSync(statePath(), `${JSON.stringify(entry)}\n`);
 }
 
 function isAssetFile(name: string) {
@@ -119,6 +171,13 @@ function keepFx(name: string, names: Set<string>) {
   if (FX_SKIP_PREFIXES.some((prefix) => name.startsWith(prefix))) return false;
   if (FX_SKIP_NAMES.has(name)) return false;
   if (name.endsWith(".mp4") && names.has(name.slice(0, -4) + ".webm")) return false;
+  return true;
+}
+
+function keepRuntimeFx(name: string, names: Set<string>) {
+  if (!keepFx(name, names)) return false;
+  if (FX_RUNTIME_SKIP_PREFIXES.some((prefix) => name.startsWith(prefix))) return false;
+  if (extensionOf(name) === "webm") return false;
   return true;
 }
 
@@ -165,20 +224,159 @@ function uniqueId(stem: string, used: Set<string>) {
   return id;
 }
 
+function spriteIdOf(species: { baseSpecies: string; forme: string }) {
+  const base = toID(species.baseSpecies);
+  return species.forme ? `${base}-${toID(species.forme)}` : base;
+}
+
+function cosmeticSpriteId(baseSpecies: string, cosmetic: string) {
+  const prefix = `${baseSpecies}-`;
+  const formeName = cosmetic.startsWith(prefix) ? cosmetic.slice(prefix.length) : cosmetic;
+  return `${toID(baseSpecies)}-${toID(formeName)}`;
+}
+
+/**
+ * Gen 9 usable sprite filenames: standard species (num > 0, not nonstandard,
+ * which already includes gen 9 battle-only formes), cosmetic forme ids
+ * (`toID(base)-toID(forme)`), and `-f` female variants. Past megas are
+ * nonstandard in gen 9 and stay out. The non-`-f` set is 927 ids.
+ */
+function gen9RuntimeSpriteIds() {
+  const dex = Dex.forGen(9);
+  const ids = new Set<string>();
+  const add = (id: string) => {
+    ids.add(id);
+    ids.add(`${id}-f`);
+  };
+  for (const species of dex.species.all()) {
+    if (!species.exists || species.num <= 0 || species.isNonstandard) continue;
+    add(spriteIdOf(species));
+    for (const cosmetic of species.cosmeticFormes ?? []) {
+      add(cosmeticSpriteId(species.baseSpecies, cosmetic));
+    }
+  }
+  return ids;
+}
+
+async function imageSize(filePath: string): Promise<[number, number]> {
+  const handle = await open(filePath, "r");
+  try {
+    const buffer = Buffer.alloc(24);
+    const { bytesRead } = await handle.read(buffer, 0, 24, 0);
+    if (bytesRead < 10) return [0, 0];
+    if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
+      return [buffer.readUInt16LE(6), buffer.readUInt16LE(8)];
+    }
+    if (bytesRead >= 24 && buffer[0] === 0x89 && buffer.toString("ascii", 1, 4) === "PNG") {
+      return [buffer.readUInt32BE(16), buffer.readUInt32BE(20)];
+    }
+    return [0, 0];
+  } finally {
+    await handle.close();
+  }
+}
+
+async function listAssetNames(directory: string) {
+  if (!existsSync(directory)) return [];
+  const names = await readdir(directory);
+  return names.filter((name) => isAssetFile(name)).sort((left, right) => left.localeCompare(right));
+}
+
+async function writeRuntimeIndex(engine: string) {
+  const sprites = new Map<string, { mask: number; paths: Partial<Record<RuntimeSpriteBit, string>> }>();
+  for (let bitIndex = 0; bitIndex < RUNTIME_INDEX_BITS.length; bitIndex += 1) {
+    const bit = RUNTIME_INDEX_BITS[bitIndex];
+    const directory = path.join(publishDir, "sprites", bit);
+    if (!existsSync(directory)) continue;
+    for (const name of await readdir(directory)) {
+      if (!isAssetFile(name)) continue;
+      const id = stemOf(name);
+      const draft = sprites.get(id) ?? { mask: 0, paths: {} };
+      draft.mask |= 1 << bitIndex;
+      draft.paths[bit] = path.join(directory, name);
+      sprites.set(id, draft);
+    }
+  }
+
+  const spriteIndex: RuntimeSpriteIndex["sprites"] = {};
+  const entries = [...sprites.entries()].sort((left, right) => left[0].localeCompare(right[0]));
+  await mapPool(entries, CONCURRENCY, async ([id, draft]) => {
+    const frontPath = draft.paths.ani ?? draft.paths.gen5;
+    const backPath = draft.paths["ani-back"] ?? draft.paths["gen5-back"];
+    const [frontW, frontH] = frontPath ? await imageSize(frontPath) : [0, 0];
+    const [backW, backH] = backPath ? await imageSize(backPath) : [0, 0];
+    spriteIndex[id] = [draft.mask, frontW, frontH, backW, backH];
+  });
+
+  const index: RuntimeSpriteIndex = {
+    v: 1,
+    engine,
+    base: PUBLIC_PREFIX,
+    bits: RUNTIME_INDEX_BITS,
+    sprites: spriteIndex,
+    backgrounds: await listAssetNames(path.join(publishDir, "sprites", "gen6bgs")),
+    fx: await listAssetNames(path.join(publishDir, "fx")),
+    types: await listAssetNames(path.join(publishDir, "sprites", "types")),
+  };
+  await mkdir(publishDir, { recursive: true });
+  await writeFile(path.join(publishDir, RUNTIME_INDEX_FILE), JSON.stringify(index));
+  console.log(
+    `runtime-index sprites=${Object.keys(spriteIndex).length} backgrounds=${index.backgrounds.length} fx=${index.fx.length} types=${index.types.length}`,
+  );
+}
+
+async function publishKeptFiles(relatives: string[]) {
+  if (path.resolve(mirrorDir) === path.resolve(publishDir)) return;
+  await rm(publishDir, { recursive: true, force: true });
+  await mkdir(publishDir, { recursive: true });
+  let linked = 0;
+  let copied = 0;
+  for (const relative of relatives) {
+    const from = path.join(mirrorDir, ...relative.split("/"));
+    const to = path.join(publishDir, ...relative.split("/"));
+    await mkdir(path.dirname(to), { recursive: true });
+    try {
+      await link(from, to);
+      linked += 1;
+    } catch {
+      await copyFile(from, to);
+      copied += 1;
+    }
+  }
+  console.log(`published files=${relatives.length} linked=${linked} copied=${copied}`);
+}
+
 async function main() {
   if (installedVersion !== ENGINE_VERSION) {
     throw new Error(`pokemon-showdown ${installedVersion} does not match ${ENGINE_VERSION}`);
   }
 
-  await mkdir(GENERATED_DIR, { recursive: true });
+  const options = parseArgs(process.argv.slice(2));
+  const onVercel = Boolean(process.env.VERCEL);
+  mirrorDir = options.mirror
+    ? resolveCliDir(options.mirror)
+    : onVercel
+      ? VERCEL_MIRROR
+      : PUBLIC_DIR;
+  publishDir = options.out
+    ? resolveCliDir(options.out)
+    : onVercel
+      ? PUBLIC_DIR
+      : mirrorDir;
+  console.log(`profile=${options.profile} mirror=${mirrorDir} publish=${publishDir}`);
+
+  await mkdir(mirrorDir, { recursive: true });
   const state = loadState();
   const failures: SyncFailure[] = [];
   const casePaths = new Map<string, string>();
   const planned: PlannedFile[] = [];
+  const spriteIds = options.profile === "runtime" ? gen9RuntimeSpriteIds() : null;
+  if (spriteIds) console.log(`runtime sprite ids=${spriteIds.size}`);
 
   const rootListing = parseDirectoryListing(await fetchText(SHOWDOWN_SPRITES));
   const rootByName = new Map(rootListing.map((entry) => [entry.name, entry]));
-  for (const sheet of ICON_SHEETS) {
+  const iconSheets = options.profile === "runtime" ? RUNTIME_ICON_SHEETS : ICON_SHEETS;
+  for (const sheet of iconSheets) {
     const remote = rootByName.get(sheet);
     if (!remote || remote.isDirectory) {
       throw new Error(`missing icon sheet ${sheet} in ${SHOWDOWN_SPRITES}`);
@@ -194,13 +392,19 @@ async function main() {
     });
   }
 
-  for (const directory of SPECIES_DIRECTORIES) {
+  const speciesDirectories = options.profile === "runtime"
+    ? SPECIES_DIRECTORIES.filter((directory) => RUNTIME_SPECIES_FOLDERS.has(directory.folder))
+    : SPECIES_DIRECTORIES;
+  for (const directory of speciesDirectories) {
     const files = await listFiles(`${SHOWDOWN_SPRITES}${directory.folder}/`, false);
     if (directory.folder === "ani" && files.length < 1000) {
       throw new Error(`ani listing parsed ${files.length} files`);
     }
-    console.log(`listed ${directory.folder}: ${files.length}`);
+    let kept = 0;
     for (const file of files) {
+      const stem = stemOf(file.name);
+      if (spriteIds && !spriteIds.has(stem)) continue;
+      kept += 1;
       planned.push({
         relative: localRelative(`sprites/${directory.folder}/${file.urlPath}`, casePaths),
         url: `${SHOWDOWN_SPRITES}${directory.folder}/${file.urlPath}`,
@@ -208,16 +412,25 @@ async function main() {
         source: "showdown",
         kind: "species",
         variant: directory.variant,
-        stem: stemOf(file.name),
+        stem,
       });
     }
+    console.log(`listed ${directory.folder}: ${files.length}${spriteIds ? ` kept ${kept}` : ""}`);
   }
 
-  for (const directory of SHARED_DIRECTORIES) {
+  const sharedDirectories = options.profile === "runtime"
+    ? SHARED_DIRECTORIES.filter((directory) => RUNTIME_SHARED_FOLDERS.has(directory.folder))
+    : SHARED_DIRECTORIES;
+  for (const directory of sharedDirectories) {
     let files = await listFiles(`${SHOWDOWN_SPRITES}${directory.folder}/`, "recursive" in directory);
     if ("preferJpg" in directory) files = preferJpg(files);
-    console.log(`listed ${directory.folder}: ${files.length}`);
+    let kept = 0;
     for (const file of files) {
+      if (options.profile === "runtime" && directory.folder === "substitutes") {
+        const folder = file.urlPath.split("/")[0];
+        if (!RUNTIME_SUBSTITUTE_FOLDERS.has(folder)) continue;
+      }
+      kept += 1;
       planned.push({
         relative: localRelative(`sprites/${directory.folder}/${file.urlPath}`, casePaths),
         url: `${SHOWDOWN_SPRITES}${directory.folder}/${file.urlPath}`,
@@ -228,11 +441,14 @@ async function main() {
         stem: stemOf(file.urlPath.replaceAll("/", "-")),
       });
     }
+    console.log(`listed ${directory.folder}: ${files.length}${options.profile === "runtime" ? ` kept ${kept}` : ""}`);
   }
 
   const fxFiles = await listFiles(SHOWDOWN_FX, false);
   const fxNames = new Set(fxFiles.map((file) => file.name));
-  const keptFx = fxFiles.filter((file) => keepFx(file.name, fxNames));
+  const keptFx = fxFiles.filter((file) =>
+    options.profile === "runtime" ? keepRuntimeFx(file.name, fxNames) : keepFx(file.name, fxNames),
+  );
   console.log(`listed fx: ${keptFx.length}`);
   for (const file of keptFx) {
     planned.push({
@@ -331,7 +547,9 @@ async function main() {
     if (file.kind === "species" && file.variant) {
       const speciesId = spriteIndex.get(file.stem) ?? spriteIndex.get(toID(file.stem));
       if (!speciesId) continue;
-      speciesRecords[speciesId].variants[file.variant] = asset;
+      const species = speciesRecords[speciesId];
+      if (!species) continue;
+      species.variants[file.variant] = asset;
       continue;
     }
     if (file.group) {
@@ -341,7 +559,7 @@ async function main() {
     }
   }
 
-  const fallbacks = planPokeapiFallbacks(speciesRecords);
+  const fallbacks = options.profile === "full" ? planPokeapiFallbacks(speciesRecords) : [];
   console.log(`pokeapi fallbacks: ${fallbacks.length}`);
   await mapPool(fallbacks, CONCURRENCY, async (file) => {
     const destination = diskPath(file.relative);
@@ -412,8 +630,9 @@ async function main() {
     files,
   };
 
-  const { writeFile } = await import("node:fs/promises");
-  await writeFile(MANIFEST_PATH, JSON.stringify(manifest));
+  await writeFile(manifestPath(), JSON.stringify(manifest));
+  await publishKeptFiles(Object.keys(files));
+  await writeRuntimeIndex(installedVersion);
   console.log(
     `manifest files=${manifest.stats.fileCount} bytes=${manifest.stats.bytes} downloaded=${downloaded} skipped=${skipped} failures=${failures.length} unavailable=${unavailable.length}`,
   );

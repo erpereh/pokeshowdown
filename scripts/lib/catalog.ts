@@ -55,6 +55,43 @@ export const ICON_SHEETS = [
   "itemicons-sheet.png",
 ] as const;
 
+/** Species folders included in the Vercel runtime profile. Shiny ani stays local-only. */
+export const RUNTIME_SPECIES_FOLDERS = new Set([
+  "ani",
+  "ani-back",
+  "gen5",
+  "gen5-back",
+  "gen5-shiny",
+  "gen5-back-shiny",
+]);
+
+/**
+ * Bit order for runtime-index.json. ani-shiny bits are set only when those
+ * files are present (full local sync); the runtime profile does not download them.
+ */
+export const RUNTIME_INDEX_BITS = [
+  "ani",
+  "ani-back",
+  "gen5",
+  "gen5-back",
+  "gen5-shiny",
+  "gen5-back-shiny",
+  "ani-shiny",
+  "ani-back-shiny",
+] as const;
+
+export type RuntimeSpriteBit = (typeof RUNTIME_INDEX_BITS)[number];
+
+export const RUNTIME_INDEX_FILE = "runtime-index.json";
+
+export const RUNTIME_SHARED_FOLDERS = new Set(["types", "typeicons", "gen6bgs", "substitutes"]);
+
+export const RUNTIME_SUBSTITUTE_FOLDERS = new Set(["gen5", "gen5-back"]);
+
+export const RUNTIME_ICON_SHEETS = ["itemicons-sheet.png"] as const;
+
+export const FX_RUNTIME_SKIP_PREFIXES = ["bg-"];
+
 export const ASSET_EXTENSIONS = new Set([
   "gif",
   "png",

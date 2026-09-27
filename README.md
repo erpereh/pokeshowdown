@@ -1,6 +1,6 @@
 # PokeShowdown
 
-Proyecto personal de simulación de combates Pokémon. Nombre provisional. **Estado actual: motor y recursos locales listos; aún no hay interfaz, autenticación, salas ni combate jugable.**
+Proyecto personal de simulación de combates Pokémon. Nombre provisional. **Estado actual: motor, recursos locales y shell Next.js listos; la interfaz es un placeholder. Aún no hay autenticación, salas ni combate jugable.**
 
 ## Alcance cerrado
 
@@ -36,11 +36,12 @@ pnpm sync:assets
 pnpm audit:assets
 pnpm verify:engine
 pnpm typecheck
+pnpm dev
 ```
 
-`pnpm sync:assets` descarga los sprites a `public/assets/generated/` (no se versionan). Una segunda ejecución no vuelve a bajar los archivos que ya coinciden. `pnpm sync:data` regenera `data/complement/es.json`. `pnpm verify:engine` comprueba Dex, Teams, TeamValidator y una batalla mínima con BattleStream.
+`pnpm sync:assets` descarga los sprites a `public/assets/generated/` (no se versionan). Una segunda ejecución no vuelve a bajar los archivos que ya coinciden. `pnpm sync:data` regenera `data/complement/es.json`. `pnpm verify:engine` comprueba Dex, Teams, TeamValidator y una batalla mínima con BattleStream. `pnpm dev` arranca Next.js. `pnpm build` ejecuta `next build`.
 
-En un despliegue limpio de Vercel el build ejecuta `pnpm sync:assets` y publica `public/`. Cuando exista la aplicación Next.js, el build será `pnpm sync:assets && next build` y habrá que quitar `outputDirectory` de `vercel.json`.
+En un despliegue limpio de Vercel el build es `pnpm sync:assets && pnpm build` (framework Next.js, sin `outputDirectory`).
 
 ## Configuración
 

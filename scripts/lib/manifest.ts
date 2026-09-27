@@ -56,6 +56,19 @@ export interface AssetManifest {
   files: Record<string, { bytes: number; remoteMtime: string; source: AssetSource }>;
 }
 
+export interface RuntimeSpriteIndex {
+  v: 1;
+  engine: string;
+  base: string;
+  bits: readonly string[];
+  /** id → [bitmask, frontW, frontH, backW, backH] */
+  sprites: Record<string, [number, number, number, number, number]>;
+  /** Filenames in sprites/gen6bgs/, sprites/types/, and fx/. */
+  backgrounds: string[];
+  fx: string[];
+  types: string[];
+}
+
 export function emptyShared(): AssetManifest["shared"] {
   return {
     iconSheets: {},

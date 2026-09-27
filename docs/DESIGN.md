@@ -30,6 +30,8 @@ Si una decisión deja de ser válida, sustituirla o eliminarla. No acumular deci
 
 La dirección visual todavía no está definida.
 
+La única interfaz presente es una página placeholder con el texto «PokeShowdown». `src/app/globals.css` solo importa Tailwind CSS v4. No hay tokens, paleta, tipografía ni layout de producto.
+
 No asumir:
 
 - estilo visual;
