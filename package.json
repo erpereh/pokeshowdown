@@ -1,0 +1,25 @@
+{
+  "name": "pokeshowdown",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "sync:assets": "node --experimental-strip-types scripts/sync-assets.ts",
+    "audit:assets": "node --experimental-strip-types scripts/audit-assets.ts",
+    "sync:data": "node --experimental-strip-types scripts/sync-data.ts",
+    "verify:engine": "node --experimental-strip-types scripts/verify-engine.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "pnpm sync:assets"
+  },
+  "dependencies": {
+    "pokemon-showdown": "0.11.11",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.1",
+    "typescript": "5.9.3"
+  }
+}

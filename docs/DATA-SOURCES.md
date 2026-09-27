@@ -20,6 +20,9 @@ Fuentes: [Pokémon Showdown](https://github.com/smogon/pokemon-showdown) · [Pok
 - Los datos competitivos deben corresponder a la **versión fijada del motor**; guardar `engine_version` en partidas/replays y cuando corresponda en equipos.
 - Normalizar IDs internamente, priorizando el ID de Showdown y mapeando el ID de PokéAPI solo si hace falta.
 - PokéAPI nunca es requisito para iniciar/resolver batalla, validar equipo o generar Random Battle. Ante fallo de PokéAPI, la funcionalidad competitiva continúa.
+- El motor instalado está fijado en `pokemon-showdown@0.11.11`. El adaptador server-only vive en `src/server/showdown/`.
+- El complemento descargado es solo nombres y genus en español, más el nombre de forma, en `data/complement/es.json`. Se regenera con `pnpm sync:data` a partir de `pokemon_species_names.csv`, `pokemon_form_names.csv` y `pokemon_forms.csv` (este último solo como enlace entre id e identifier). No se copian movimientos, habilidades, objetos, learnsets ni stats.
+- `src/server/pokemon-data/` lee ese JSON local. Si el archivo no está, la consulta devuelve null y el simulador sigue disponible.
 - Sincronizaciones deterministas y versionadas; caché para metadatos estáticos, no para el estado autoritativo de partidas activas.
 - No duplicar manualmente fórmulas, learnsets, bans, clauses, prioridades, estados o interacciones entre items/abilities.
 - Los archivos de sprites siguen un pipeline diferente descrito en [ASSET-INVENTORY.md](ASSET-INVENTORY.md).

@@ -1,6 +1,16 @@
 # Arquitectura serverless
 
-**Estado:** objetivo técnico aprobado; aún no existe aplicación ni esquema desplegado. Meta: funcionar en planes gratuitos mientras el uso encaje en sus cuotas, sin proceso propio encendido 24/7.
+**Estado:** objetivo técnico aprobado. Hay adaptador del motor y pipeline de assets; aún no hay aplicación Next.js, esquema Supabase ni combate persistido. Meta: funcionar en planes gratuitos mientras el uso encaje en sus cuotas, sin proceso propio encendido 24/7.
+
+## Motor y assets ya presentes
+
+| Pieza | Ubicación |
+| --- | --- |
+| Adaptador server-only de `Dex`, `Teams`, `TeamValidator` y `BattleStream` | `src/server/showdown/` |
+| Nombres en español que Showdown no trae | `src/server/pokemon-data/` y `data/complement/es.json` |
+| Sprites locales | `public/assets/generated/`, generados por `pnpm sync:assets` |
+
+Node `>=22`. Showdown fijado en `0.11.11` e importado solo desde el servidor. `public/assets/generated/` no se versiona: `vercel.json` ejecuta `pnpm sync:assets` y publica `public/`, así un clone vacío regenera los archivos en el build. Esos estáticos no forman parte del bundle de la Function (tope de 250 MB sin comprimir en el plan gratuito). Al añadir Next.js, el build pasa a `pnpm sync:assets && next build` y se elimina `outputDirectory`. No hay variables de entorno nuevas.
 
 ## Componentes
 

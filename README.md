@@ -1,6 +1,6 @@
 # PokeShowdown
 
-Proyecto personal de simulación de combates Pokémon. Nombre provisional. **Estado actual: documentación; aún no hay aplicación ni backend implementados.**
+Proyecto personal de simulación de combates Pokémon. Nombre provisional. **Estado actual: motor y recursos locales listos; aún no hay interfaz, autenticación, salas ni combate jugable.**
 
 ## Alcance cerrado
 
@@ -25,9 +25,26 @@ No hay servidor propio permanente. Las Functions cargan/reconstruyen el combate,
 
 La UI todavía no está definida. `docs/DESIGN.md` es el documento vivo donde se registrarán las decisiones visuales a medida que se implementen.
 
+## Instalación
+
+Requiere Node.js 22 o superior y pnpm 10. Desde la raíz:
+
+```bash
+pnpm install
+pnpm sync:data
+pnpm sync:assets
+pnpm audit:assets
+pnpm verify:engine
+pnpm typecheck
+```
+
+`pnpm sync:assets` descarga los sprites a `public/assets/generated/` (no se versionan). Una segunda ejecución no vuelve a bajar los archivos que ya coinciden. `pnpm sync:data` regenera `data/complement/es.json`. `pnpm verify:engine` comprueba Dex, Teams, TeamValidator y una batalla mínima con BattleStream.
+
+En un despliegue limpio de Vercel el build ejecuta `pnpm sync:assets` y publica `public/`. Cuando exista la aplicación Next.js, el build será `pnpm sync:assets && next build` y habrá que quitar `outputDirectory` de `vercel.json`.
+
 ## Configuración
 
-Copiar `.env.example` a `.env.local` y completar las claves del proyecto Supabase. `SUPABASE_SECRET_KEY` es exclusivamente para servidor. No subir secretos reales.
+Copiar `.env.example` a `.env.local` y completar las claves del proyecto Supabase. `SUPABASE_SECRET_KEY` es exclusivamente para servidor. No subir secretos reales. El motor y los assets no necesitan variables nuevas.
 
 ## Documentación
 
