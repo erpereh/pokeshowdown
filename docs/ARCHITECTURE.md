@@ -4,14 +4,14 @@ MVP PvE: Next.js App Router, Route Handlers Node.js, Supabase Auth/PostgreSQL y 
 
 ## Aplicación y motor
 
-- Node.js >=22, pnpm 10.34.5, Next.js 16.3.6 y pokemon-showdown 0.11.11 fijados.
+- Node.js 22.x, pnpm 10.34.5, Next.js 16.3.6 y pokemon-showdown 0.11.11 fijados.
 - src/server/showdown adapta Dex, Teams, TeamValidator, BattleStream, PRNG y extractChannelMessages.
 - battle-engine reconstruye el motor, convierte requests y obtiene frames públicos. CPU recibe solo su request y vista pública; no accede al objeto Battle.
 - El frontend existente contiene shell, Auth, Team Builder, setup, combate, historial y replay. Tailwind v4 y componentes propios compartidos.
 - Next proxy refresca cookies SSR y protege /play, /teams, /battle, /saved, /history y /replay. Los handlers autentican con getUser y nunca aceptan un userId del navegador.
 - Confirmación Auth admite token_hash/type y code PKCE; recuperación termina en /auth/update-password.
 
-Showdown no se importa en el navegador ni Edge. next.config conserva serverExternalPackages y outputFileTracingIncludes para dist/data y dist/config cargados dinámicamente. agentRules:false evita mutaciones automáticas de AGENTS. No hay RAM compartida entre invocaciones.
+Showdown no se importa en el navegador ni Edge. next.config conserva serverExternalPackages y outputFileTracingIncludes para dist/data y dist/config cargados dinámicamente. El build de producción usa next build --webpack para evitar los aliases de paquetes externos generados por Turbopack en directorios enlazados de .next al empaquetar Functions en Vercel. El adaptador admite la interoperabilidad CommonJS tanto de Node ESM como de Webpack; la importación diferida de CPU usa un literal que el bundler puede analizar. agentRules:false evita mutaciones automáticas de AGENTS. No hay RAM compartida entre invocaciones.
 
 ## Equipos y datos
 

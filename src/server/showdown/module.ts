@@ -1,5 +1,9 @@
-import PS from "pokemon-showdown";
-import battleModule from "pokemon-showdown/dist/sim/battle.js";
+import showdownDefault, * as showdownNamespace from "pokemon-showdown";
+import battleDefault, * as battleNamespace from "pokemon-showdown/dist/sim/battle.js";
+
+// Native Node ESM exposes the CJS object as default; Webpack honors its __esModule marker.
+const PS = showdownDefault ?? showdownNamespace;
+const battleModule = battleDefault ?? battleNamespace;
 
 export const Dex = PS.Dex;
 export const toID = PS.toID;

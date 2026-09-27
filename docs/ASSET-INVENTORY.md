@@ -10,7 +10,7 @@ El build Vercel y la instalación local usan pnpm sync:assets --profile=runtime.
 - Hoja itemicons-sheet.png, tipos/typeicons, fondos gen6bgs, sustitutos gen5 y efectos de combate.
 - runtime-index.json compacto: variantes disponibles, tamaños de frame, fondos, tipos y FX. El frontend consulta este índice, no el manifest completo.
 - Shiny animado se usa si existe una sincronización full; runtime conserva fallback estático shiny. Reduced motion usa variantes estáticas.
-- El mirror de Vercel vive en .next/cache/showdown-assets; el public publicado incluye únicamente lo requerido por el perfil.
+- El mirror de Vercel vive en .next/cache/showdown-assets; el public publicado incluye únicamente lo requerido por el perfil, con copias reales mediante copyFile y sin hardlinks. Localmente, si mirror y destino difieren, se conservan hardlinks con fallback a copia.
 
 Medición del perfil runtime en esta entrega: 6.054 archivos, 162.126.402 bytes; 998 IDs en runtime-index, 19 fondos, 82 efectos y 40 imágenes de tipo. Sin fallos de descarga, no disponibles, huérfanos ni archivos ausentes. El manifest registra 1.417 especies del Dex; la cobertura de generaciones fuera del perfil no describe un fallo del MVP.
 

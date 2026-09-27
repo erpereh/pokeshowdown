@@ -72,8 +72,7 @@ function normalizeCpuChoices(proposed: unknown): string[] {
 
 async function resolveCpu(options?: EngineRunOptions): Promise<ChooseCpu> {
   if (options?.cpu) return options.cpu;
-  const href = new URL("../cpu/index.ts", import.meta.url).href;
-  const loaded = (await import(href)) as { chooseCpuActions?: ChooseCpu };
+  const loaded = await import("../cpu/index.ts");
   if (typeof loaded.chooseCpuActions !== "function") throw new Error("chooseCpuActions no está disponible.");
   return loaded.chooseCpuActions;
 }

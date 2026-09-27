@@ -325,7 +325,7 @@ async function writeRuntimeIndex(engine: string) {
   );
 }
 
-async function publishKeptFiles(relatives: string[]) {
+async function publishKeptFiles(relatives: string[], onVercel: boolean) {
   if (path.resolve(mirrorDir) === path.resolve(publishDir)) return;
   await rm(publishDir, { recursive: true, force: true });
   await mkdir(publishDir, { recursive: true });
@@ -335,13 +335,17 @@ async function publishKeptFiles(relatives: string[]) {
     const from = path.join(mirrorDir, ...relative.split("/"));
     const to = path.join(publishDir, ...relative.split("/"));
     await mkdir(path.dirname(to), { recursive: true });
-    try {
-      await link(from, to);
-      linked += 1;
-    } catch {
-      await copyFile(from, to);
-      copied += 1;
+    if (!onVercel) {
+      try {
+        await link(from, to);
+        linked += 1;
+        continue;
+      } catch {
+        // Local filesystems may not support hardlinks; publish a real copy instead.
+      }
     }
+    await copyFile(from, to);
+    copied += 1;
   }
   console.log(`published files=${relatives.length} linked=${linked} copied=${copied}`);
 }
@@ -631,7 +635,7 @@ async function main() {
   };
 
   await writeFile(manifestPath(), JSON.stringify(manifest));
-  await publishKeptFiles(Object.keys(files));
+  await publishKeptFiles(Object.keys(files), onVercel);
   await writeRuntimeIndex(installedVersion);
   console.log(
     `manifest files=${manifest.stats.fileCount} bytes=${manifest.stats.bytes} downloaded=${downloaded} skipped=${skipped} failures=${failures.length} unavailable=${unavailable.length}`,

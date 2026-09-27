@@ -26,6 +26,18 @@ Validación ejecutada el 27 de septiembre de 2026 sobre el trabajo existente de 
 
 No existe script lint en package.json. Next avisa del pnpm-lock.yaml ajeno al repositorio en C:/Users/david; no impide el build. Playwright avisa de NO_COLOR/FORCE_COLOR del entorno; no es un fallo de aplicación.
 
+## Empaquetado de producción para Vercel
+
+Comprobado con Node.js 22.23.3: typecheck, 60/60 tests, verify:engine y next build --webpack correctos. Se preservan serverExternalPackages y outputFileTracingIncludes de Showdown. Solo se adaptaron las importaciones CommonJS y la importación diferida de CPU para su análisis por Webpack, sin modificar decisiones ni reglas del motor.
+
+El build limpio conserva la caché de assets y no genera el alias .next/node_modules de Turbopack. Inspección de 35 manifiestos .nft.json: 44.071 referencias resolubles, sin enlaces rotos ni referencias al alias generado; las 19 rutas API incluyen Showdown, dist/data y dist/config. Producción local responde correctamente en /api/health (motor 0.11.11 y OU disponible) y en la búsqueda de Pikachu del Dex. E2E focalizado de producción: 4/4 en desktop/móvil, completando las cuatro combinaciones OU y Random oficial, acciones CPU, concurrencia/idempotencia y rendición, contra backend real.
+
+sync:assets con VERCEL=1, mirror existente y salida temporal publicó 6.054 archivos: linked=0, copied=6054. Se verificaron todos mediante SHA-256 y stat: idénticos al origen, archivos regulares con nlink=1 e identidad distinta del mirror. Las evidencias están en artifacts/deployment-fix/assets-verification.json y traces-verification.json, ignoradas por Git.
+
+Una primera corrida paralela falló únicamente el umbral de reconstrucción caliente (100,6 ms frente a <100 ms). La repetición sin carga concurrente y la corrida sobre el código final pasaron 60/60 sin cambiar el test.
+
+Estas comprobaciones locales no equivalen a confirmar el empaquetado remoto de Vercel; ese resultado debe comprobarse en el redeploy del commit publicado.
+
 ## E2E contra backend real
 
 Chromium desktop y Pixel 7 prueban los mismos seis recorridos:

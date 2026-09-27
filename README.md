@@ -13,7 +13,7 @@ MVP PvE para combatir contra una CPU con el simulador oficial de Pokémon Showdo
 
 ## Instalación
 
-Node.js >=22 y pnpm 10.34.5.
+Node.js 22.x y pnpm 10.34.5.
 
 ```bash
 pnpm install --frozen-lockfile
@@ -38,7 +38,7 @@ No subir claves ni sesiones. En Supabase Auth configurar la URL del sitio y perm
 
 supabase/migrations contiene el historial aplicado, con las mismas versiones y orden. La entrada inicial registra el baseline histórico; las siguientes contienen tablas, funciones, RLS y restricciones. No repetirlo sobre un proyecto ya migrado ni resetear la base.
 
-Vercel conserva el build pnpm sync:assets --profile=runtime && pnpm build. No necesita servidor permanente ni servicios de pago.
+Vercel conserva el build pnpm sync:assets --profile=runtime && pnpm build. La compilación de producción usa next build --webpack y Node.js 22.x; los assets se publican como copias independientes de la caché, sin hardlinks. No necesita servidor permanente ni servicios de pago.
 
 ## Validación
 
