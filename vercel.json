@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
+  "installCommand": "corepack pnpm@10.34.5 install --frozen-lockfile --config.node-linker=hoisted",
   "buildCommand": "pnpm sync:assets --profile=runtime && pnpm build"
 }
