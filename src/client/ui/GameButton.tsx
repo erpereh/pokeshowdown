@@ -8,23 +8,23 @@ export type GameButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<GameButtonVariant, string> = {
   primary:
-    "clip-angled bg-accent text-bg-0 hover:brightness-110 hover:shadow-[0_0_24px_#ffc83d66] active:brightness-95",
+    "rounded-[var(--radius-card)] border border-[#ffe4a8] bg-[linear-gradient(135deg,#ffe3a6,#ffd479)] text-bg-0 shadow-[inset_0_1px_0_#ffffff60,0_6px_20px_#ffd47918] hover:brightness-110 active:brightness-95",
   secondary:
-    "rounded-[var(--radius-card)] border border-line-strong bg-surface-2 text-text hover:border-accent-2 hover:shadow-[0_0_18px_#4fd1ff33]",
+    "rounded-[var(--radius-card)] border border-line-strong bg-white/5 text-text shadow-[inset_0_1px_0_#ffffff0c] hover:border-accent-2 hover:bg-white/10",
   ghost: "rounded-[var(--radius-card)] text-text-dim hover:bg-white/5 hover:text-text",
   danger:
     "rounded-[var(--radius-card)] border border-danger/60 bg-danger/15 text-danger hover:bg-danger/25 hover:shadow-[0_0_18px_#f0544f44]",
 };
 
 const SIZES: Record<GameButtonSize, string> = {
-  sm: "min-h-9 px-3 text-sm",
-  md: "min-h-11 px-5 text-base",
+  sm: "min-h-12 px-3 text-sm",
+  md: "min-h-12 px-4 text-sm",
   lg: "min-h-14 px-7 text-lg",
 };
 
 function classes(variant: GameButtonVariant, size: GameButtonSize, extra?: string) {
   return [
-    "game-button font-display inline-flex select-none items-center justify-center gap-2 font-semibold uppercase tracking-wide",
+    "game-button font-display inline-flex select-none items-center justify-center gap-2 text-center font-semibold",
     "transition-[filter,box-shadow,background-color,border-color,color,transform] duration-[var(--dur-fast)] ease-[var(--ease-out-game)]",
     "disabled:pointer-events-none disabled:opacity-45 active:translate-y-px",
     VARIANTS[variant],

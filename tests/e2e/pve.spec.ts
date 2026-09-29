@@ -36,6 +36,7 @@ test("Auth real, Team Builder, las cuatro combinaciones OU y Random oficial comp
 
   await page.goto("/teams/new");
   await page.getByLabel("Nombre del equipo", { exact: true }).fill(`QA ${info.project.name}`);
+  await page.getByText("Más opciones de equipo", { exact: true }).click();
   await page.getByRole("button", { name: "Importar", exact: true }).click();
   await page.getByLabel("Texto de Showdown", { exact: true }).fill(REVIVAL_TEAM);
   await page.getByRole("button", { name: "Sustituir equipo", exact: true }).click();
@@ -45,8 +46,10 @@ test("Auth real, Team Builder, las cuatro combinaciones OU y Random oficial comp
   expect(saved.status()).toBe(201);
   const playerTeam: TeamResponse = await saved.json();
   expect(playerTeam.validation.valid, JSON.stringify(playerTeam.validation.problems)).toBe(true);
+  await expect(page).toHaveURL(`/teams/${playerTeam.team.id}`);
   await expect(page.getByText("Guardado", { exact: true })).toBeVisible();
   await screenshot(page, info, "01-team-builder");
+  await page.getByText("Más opciones de equipo", { exact: true }).click();
   await page.getByRole("button", { name: "Exportar", exact: true }).click();
   await expect(page.getByLabel("Texto del equipo", { exact: true })).toHaveValue(/Forretress/);
   await page.getByRole("button", { name: "Cerrar", exact: true }).click();
@@ -127,12 +130,12 @@ test("Revival Blessing, cambio forzado, Tera, autosave, cerrar/reabrir y victori
   await page.goto(`/battle/${created.id}`);
   await page.getByRole("button", { name: /^Forretress/ }).click();
   await uiAction(page, created.id, () => page.getByRole("button", { name: "Confirmar liderato", exact: true }).click());
-  let result = await uiAction(page, created.id, () => page.getByRole("button", { name: /Explosion/ }).click());
+  let result = await uiAction(page, created.id, () => page.getByRole("button", { name: "Explosion", exact: true }).click());
   expect(result.view.request?.kind).toBe("switch");
   expect(result.view.state.sides.p1.team.find((mon) => mon.species === "Forretress")?.fainted).toBe(true);
   await screenshot(page, info, "07-forced-switch");
   result = await uiAction(page, created.id, () => page.getByRole("button", { name: /^Pawmot/ }).click());
-  result = await uiAction(page, created.id, () => page.getByRole("button", { name: /Revival Blessing/ }).click());
+  result = await uiAction(page, created.id, () => page.getByRole("button", { name: "Revival Blessing", exact: true }).click());
   expect(result.view.request?.reviving).toBe(true);
   await screenshot(page, info, "08-revival-choice");
   result = await uiAction(page, created.id, () => page.getByRole("button", { name: /^Forretress/ }).click());
@@ -159,7 +162,7 @@ test("Revival Blessing, cambio forzado, Tera, autosave, cerrar/reabrir y victori
     expect(reloaded.state).toEqual(persisted.state);
     await screenshot(reopened, info, "09-resumed");
     await reopened.getByRole("button", { name: /Teracristalizar/ }).click();
-    result = await uiAction(reopened, created.id, () => reopened.getByRole("button", { name: /Thunder Punch/ }).click());
+    result = await uiAction(reopened, created.id, () => reopened.getByRole("button", { name: "Thunder Punch", exact: true }).click());
     expect(result.view.frames.some((frame) => frame.events.some((event) => event.kind === "terastallize" && event.pokemon.side === "p1"))).toBe(true);
     const finished = result.view.status === "finished" ? result.view : await finishBattle(reopened.request, result.view);
     expect(finished.result).toBe("win");
@@ -239,7 +242,7 @@ test("Pérdida real de respuesta recupera el mismo turno con Reintentar", async 
       await route.continue();
     }
   });
-  await page.getByRole("button", { name: new RegExp(move.name) }).click();
+  await page.getByRole("button", { name: move.name, exact: true }).click();
   await expect(page.getByRole("button", { name: "Reintentar", exact: true })).toBeVisible();
   const durable = await current(page, view.id);
   expect(durable.revision).toBe(view.revision + 1);
@@ -277,8 +280,8 @@ test("Recuperación Auth verifica OTP real, cambia contraseña y permite acceso 
     await page.getByLabel("Confirmar contraseña", { exact: true }).fill(newPassword);
     await page.getByRole("button", { name: "Guardar contraseña", exact: true }).click();
     await expect(page).toHaveURL("/");
-    await page.getByRole("button", { name: "PvE Recovery", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Cerrar sesión", exact: true }).click();
+    await page.getByRole("button", { name: "Cuenta de PvE Recovery", exact: true }).click();
+    await page.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
     await expect(page.getByRole("link", { name: "Entrar", exact: true }).first()).toBeVisible();
     await login(page, { email, password: newPassword });
   } finally {

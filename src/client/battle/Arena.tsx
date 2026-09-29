@@ -17,8 +17,8 @@ function SpriteSlot({ side, state, reduced }: { side: SideId; state: PublicBattl
       data-fx-sprite={side}
       className={
         foe
-          ? "absolute right-[3%] top-[8%] z-10 flex w-[42%] max-w-[220px] justify-center"
-          : "absolute bottom-[4%] left-[2%] z-10 flex w-[48%] max-w-[260px] justify-center"
+          ? "arena-foe absolute right-[3%] top-[8%] z-10 flex justify-center"
+          : "arena-player absolute bottom-[4%] left-[2%] z-10 flex justify-center"
       }
     >
       <div className="relative flex w-full justify-center">
@@ -47,8 +47,7 @@ export const Arena = forwardRef<HTMLDivElement, { state: PublicBattleState; back
     return (
       <div
         ref={ref}
-        className="relative mx-auto aspect-[16/10] w-full shrink overflow-hidden rounded-[var(--radius-panel)] border border-line bg-bg-1 shadow-[0_20px_60px_#00000088] max-lg:aspect-auto max-lg:h-[46dvh] max-lg:max-h-[calc(100dvh-24rem)] max-lg:min-h-0 max-lg:max-w-full max-lg:rounded-none max-lg:border-x-0"
-        style={{ maxWidth: "min(100%, 960px, calc(52dvh * 1.6))" }}
+        className="battle-arena"
       >
         {backgroundSrc ? <img src={backgroundSrc} alt="" className="absolute inset-0 h-full w-full object-cover" /> : null}
         <WeatherOverlay weather={state.field.weather} terrain={state.field.terrain} pseudoWeather={state.field.pseudoWeather} />

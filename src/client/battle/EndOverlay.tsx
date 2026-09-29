@@ -20,7 +20,8 @@ export function EndOverlay({ view, state }: { view: BattleView; state: PublicBat
 
   return (
     <div ref={ref} tabIndex={-1} className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/65 p-4" role="dialog" aria-modal="true" aria-labelledby="end-title">
-      <div className={`glass w-full max-w-md rounded-[var(--radius-panel)] px-5 py-6 text-center ${view.result === "loss" ? "saturate-50" : ""}`}>
+      <div className={`result-panel w-full max-w-md rounded-[var(--radius-panel)] border border-line-strong px-5 py-6 text-center shadow-[0_20px_80px_#00000088] ${view.result === "loss" ? "saturate-50" : ""}`}>
+        <p className="section-kicker mb-4">Combate completado</p>
         {mon ? <PokemonSprite spriteId={mon.spriteId} facing="front" shiny={mon.shiny} gender={mon.gender} animated alt={mon.name} className="mx-auto max-h-40" /> : null}
         <h2 id="end-title" className={`font-display text-4xl font-bold uppercase tracking-wide sm:text-5xl ${tone}`}>
           {headline}

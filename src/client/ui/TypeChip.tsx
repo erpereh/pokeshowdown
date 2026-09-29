@@ -43,20 +43,20 @@ export const TYPE_NAMES_ES: Record<string, string> = {
 };
 
 /** Types whose colour is light enough to need dark text for 4.5:1 contrast. */
-const LIGHT_TYPES = new Set(["Normal", "Electric", "Ice", "Flying", "Rock", "Grass", "Bug", "Stellar", "Fairy", "Steel"]);
+const LIGHT_TYPES = new Set(["Normal", "Fire", "Water", "Electric", "Ice", "Fighting", "Flying", "Psychic", "Rock", "Grass", "Bug", "Stellar", "Fairy", "Steel"]);
 
 export function typeColor(type: string) {
   return TYPE_COLORS[type] ?? "#9aa4c0";
 }
 
 export function typeTextColor(type: string) {
-  return LIGHT_TYPES.has(type) ? "#0a0e1a" : "#ffffff";
+  return LIGHT_TYPES.has(type) ? "#000000" : "#ffffff";
 }
 
 export function TypeChip({ type, size = "md", className }: { type: string; size?: "sm" | "md"; className?: string }) {
   return (
     <span
-      className={`font-display inline-flex items-center justify-center rounded-md font-semibold uppercase ${
+      className={`font-display inline-flex items-center justify-center rounded-full font-semibold ${
         size === "sm" ? "px-1.5 py-0.5 text-[10px]" : "px-2 py-0.5 text-xs"
       } ${className ?? ""}`}
       style={{ backgroundColor: typeColor(type), color: typeTextColor(type) }}

@@ -6,7 +6,7 @@ import type { MoveCategory } from "@/shared/contract";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 export const controlClass =
-  "min-h-11 w-full min-w-0 rounded-[var(--radius-card)] border border-line bg-bg-0/70 px-3 text-base text-text outline-none placeholder:text-text-dim/80 disabled:cursor-not-allowed disabled:opacity-50";
+  "min-h-12 w-full min-w-0 rounded-[var(--radius-card)] border border-line-strong bg-bg-0/60 px-3 text-base text-text placeholder:text-text-dim/80 disabled:cursor-not-allowed disabled:opacity-50";
 
 export function Field({
   label,
@@ -21,7 +21,7 @@ export function Field({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <label htmlFor={htmlFor} className="font-display text-xs font-semibold uppercase tracking-wide text-text-dim">
+      <label htmlFor={htmlFor} className="text-sm font-medium text-text-dim">
         {label}
       </label>
       {children}

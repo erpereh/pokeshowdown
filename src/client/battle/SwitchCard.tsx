@@ -30,7 +30,7 @@ export function SwitchCard({
       disabled={blocked}
       onClick={() => onPick(option.slot)}
       className={cx(
-        "flex min-h-14 w-full items-center gap-3 rounded-[var(--radius-card)] border border-line bg-surface-2/80 px-3 py-2 text-left",
+        "flex min-h-16 w-full items-center gap-3 rounded-[var(--radius-card)] border border-line bg-bg-0/50 px-3 py-2 text-left hover:border-accent-2",
         "disabled:opacity-45",
       )}
     >

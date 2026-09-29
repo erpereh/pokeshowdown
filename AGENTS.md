@@ -61,7 +61,7 @@ La documentación debe describir siempre el estado o decisión actual. Eliminar 
 - Single Player: CPU server-side, partida persistida y autosave tras cada turno confirmado.
 - Datos competitivos: Showdown; PokéAPI solo complemento.
 - Assets: Showdown principal, PokéAPI Sprites fallback.
-- Diseño visual: conservar la arena oscura y los componentes existentes documentados en `docs/DESIGN.md`.
+- Diseño visual: liquid glass oscuro y premium, identidad de videojuego y mobile first, según `docs/DESIGN.md`. Reutilizar los componentes compartidos y mantener la arena de combate oscura.
 
 ## Reglas generales
 

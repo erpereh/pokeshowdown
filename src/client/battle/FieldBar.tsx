@@ -21,10 +21,10 @@ export function FieldBar({
   return (
     <div className="shrink-0 border-b border-line bg-bg-0/80 px-2 py-1.5 sm:px-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="font-display text-sm font-bold uppercase tracking-wide">
+        <p className="font-display shrink-0 text-sm font-semibold">
           Turno <span className="tabular text-accent">{state.turn}</span>
         </p>
-        <div className="flex items-center gap-1">{trailing}</div>
+        <div className="flex min-w-0 flex-wrap justify-end gap-1">{trailing}</div>
       </div>
       <div className="mt-1 flex max-w-full flex-wrap gap-1">
         {weather ? <Chip>{fieldLabel("weather", weather)}</Chip> : null}
@@ -65,7 +65,7 @@ export function SpeedSkip({
       </GameButton>
       {playing ? (
         <GameButton type="button" variant="secondary" size="md" onClick={onSkip}>
-          Saltar animación
+          Omitir
         </GameButton>
       ) : null}
     </>

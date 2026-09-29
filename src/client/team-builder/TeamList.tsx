@@ -113,9 +113,9 @@ export function TeamListPage() {
   return (
     <TeamScreen>
       <PageHeader
-        eyebrow="Constructor"
+        eyebrow="Tu estrategia"
         title="Tus equipos"
-        subtitle="Construye equipos de Gen 9 OU. La legalidad la decide Pokémon Showdown."
+        subtitle="Prepara tu equipo de Gen 9 OU para entrar en la arena."
         action={
           <div className="grid grid-cols-2 gap-2 sm:flex">
             <GameLink href="/teams/new" size="md" className="w-full sm:w-auto">
@@ -253,7 +253,7 @@ function TeamCard({
   }));
 
   return (
-    <GlassPanel as="article" data-testid="team-card" className="flex h-full flex-col gap-3 p-3">
+    <GlassPanel as="article" data-testid="team-card" className="flex h-full flex-col gap-4 p-4">
       <div className="flex min-w-0 items-start justify-between gap-2">
         <h2 className="min-w-0 truncate font-display text-xl font-semibold">{team.name}</h2>
         <ValidityBadge valid={team.valid} />
@@ -274,9 +274,12 @@ function TeamCard({
         ))}
       </ul>
       <div className="mt-auto grid grid-cols-2 gap-2">
-        <GameLink href={`/teams/${team.id}`} variant="secondary" size="md" className="w-full">
+        <GameLink href={`/teams/${team.id}`} variant="secondary" size="md" className="col-span-2 w-full">
           Editar
         </GameLink>
+        <details className="editor-tools col-span-2">
+          <summary>Opciones de equipo</summary>
+          <div className="grid grid-cols-2 gap-2 p-2">
         <GameButton type="button" variant="secondary" size="md" loading={pending === "duplicate"} onClick={onDuplicate}>
           Duplicar
         </GameButton>
@@ -286,6 +289,8 @@ function TeamCard({
         <GameButton type="button" variant="ghost" size="md" loading={pending === "export"} onClick={onExport}>
           Exportar
         </GameButton>
+          </div>
+        </details>
       </div>
     </GlassPanel>
   );

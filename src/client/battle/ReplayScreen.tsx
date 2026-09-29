@@ -180,8 +180,8 @@ export function ReplayScreen({ replayId }: { replayId: string }) {
         lines={lines}
         top={<FieldBar state={state} />}
         bottom={
-          <div className="flex flex-col gap-3 px-3 py-3">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-3 py-4">
+            <div className="grid grid-cols-[1fr_1.2fr_1fr] gap-2">
               <GameButton type="button" variant="secondary" onClick={() => stepTurn(-1)} disabled={cursor === 0}>
                 Anterior
               </GameButton>
@@ -191,12 +191,9 @@ export function ReplayScreen({ replayId }: { replayId: string }) {
               <GameButton type="button" variant="secondary" onClick={() => stepTurn(1)} disabled={cursor >= replay.frames.length}>
                 Siguiente
               </GameButton>
-              <GameButton type="button" variant="ghost" onClick={() => setSpeed((value) => (value === 1 ? 2 : 1))} aria-label={`Velocidad ${speed}×`}>
-                {speed}×
-              </GameButton>
             </div>
             <label className="flex min-h-11 items-center gap-3 text-sm">
-              <span className="font-display uppercase tracking-wide text-text-dim">Turno {state.turn}</span>
+              <span className="font-display text-text-dim">Turno {state.turn}</span>
               <input
                 type="range"
                 min={0}
@@ -204,12 +201,15 @@ export function ReplayScreen({ replayId }: { replayId: string }) {
                 value={Math.min(state.turn, maxTurn)}
                 aria-label="Turno de la repetición"
                 onChange={(event) => seek(endCursorForTurn(replay.frames, Number(event.target.value)))}
-                className="h-11 flex-1 accent-accent"
+                className="h-12 min-w-0 flex-1 accent-accent-2"
               />
             </label>
-            <Link href="/history" className="font-display inline-flex min-h-11 items-center text-sm font-semibold uppercase text-accent-2">
+            <div className="flex items-center justify-between gap-3">
+            <Link href="/history" className="font-display inline-flex min-h-12 items-center text-sm font-semibold text-accent-2">
               Volver al historial
             </Link>
+            <GameButton type="button" variant="secondary" onClick={() => setSpeed((value) => (value === 1 ? 2 : 1))} aria-label={`Velocidad ${speed}×`}>{speed}×</GameButton>
+            </div>
           </div>
         }
       />

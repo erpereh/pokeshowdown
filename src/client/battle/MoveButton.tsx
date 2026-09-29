@@ -1,100 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, type CSSProperties } from "react";
 import type { MoveOption } from "@/shared/contract";
 import { CategoryIcon, categoryLabel } from "@/client/ui/CategoryIcon.tsx";
 import { TypeChip, typeColor } from "@/client/ui/TypeChip.tsx";
-import { cx } from "@/client/ui/cx.ts";
+import { Sheet } from "@/client/ui/Modal.tsx";
+import { Icon } from "@/client/ui/Icon.tsx";
 
-function accuracyLabel(accuracy: number | true): string {
-  return accuracy === true ? "Siempre" : `${accuracy}`;
-}
-
-export function MoveButton({
-  move,
-  disabled,
-  onSelect,
-}: {
-  move: MoveOption;
-  disabled: boolean;
-  onSelect: (slot: number) => void;
-}) {
+export function MoveButton({ move, disabled, onSelect }: { move: MoveOption; disabled: boolean; onSelect: (slot: number) => void }) {
   const [open, setOpen] = useState(false);
-  const timer = useRef<number | null>(null);
-  const suppress = useRef(false);
   const color = typeColor(move.type);
   const power = move.basePower > 0 ? String(move.basePower) : "—";
-
-  useEffect(() => {
-    if (!open) return;
-    function onKey(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
-
-  function clearTimer() {
-    if (timer.current !== null) {
-      window.clearTimeout(timer.current);
-      timer.current = null;
-    }
-  }
-
   return (
-    <div className="relative min-w-0">
-      <button
-        type="button"
-        disabled={disabled || move.disabled}
-        onClick={() => {
-          if (suppress.current) {
-            suppress.current = false;
-            return;
-          }
-          onSelect(move.slot);
-        }}
-        onPointerDown={() => {
-          clearTimer();
-          timer.current = window.setTimeout(() => {
-            suppress.current = true;
-            setOpen(true);
-          }, 420);
-        }}
-        onPointerUp={clearTimer}
-        onPointerLeave={clearTimer}
-        onPointerCancel={clearTimer}
-        title={`${categoryLabel(move.category)} · Potencia ${power} · Precisión ${accuracyLabel(move.accuracy)}. ${move.shortDesc}`}
-        className={cx(
-          "flex min-h-14 w-full flex-col justify-center rounded-[var(--radius-card)] border px-2 py-1.5 text-left",
-          "disabled:opacity-40",
-        )}
-        style={{ borderColor: color, background: `linear-gradient(180deg, ${color}33, #111729cc)` }}
-      >
-        <span className="flex items-center justify-between gap-1 text-[10px] uppercase tracking-wide" style={{ color }}>
-          <span className="inline-flex items-center gap-1">
-            <CategoryIcon category={move.category} />
-            {categoryLabel(move.category)}
-          </span>
-          <TypeChip type={move.type} size="sm" />
-        </span>
-        <span className="truncate font-display text-sm font-bold leading-tight sm:text-base">{move.name}</span>
-        <span className="tabular text-[11px] text-text-dim">
-          PP {move.pp}/{move.maxPp}
-          {move.basePower > 0 ? ` · Pot ${move.basePower}` : ""}
-        </span>
+    <div className="move-choice relative min-w-0" style={{ "--move-color": color } as CSSProperties}>
+      <button type="button" aria-label={move.name} disabled={disabled || move.disabled} onClick={() => onSelect(move.slot)} className="flex min-h-20 w-full flex-col justify-center gap-1 rounded-[var(--radius-card)] px-3 pb-3 pt-2 text-left disabled:opacity-40">
+        <span className="flex items-center justify-between gap-1.5 text-[10px] text-text-dim"><span aria-label={categoryLabel(move.category)}><CategoryIcon category={move.category} /></span><TypeChip type={move.type} size="sm" /></span>
+        <span className="font-display w-full break-words text-sm font-semibold leading-tight sm:text-base">{move.name}</span>
+        <span className="tabular pr-9 text-[11px] text-text-dim">PP {move.pp}/{move.maxPp}</span>
       </button>
-      {open ? (
-        <div className="glass absolute inset-x-0 bottom-full z-30 mb-1 rounded-[var(--radius-card)] p-2 text-xs shadow-lg">
-          <p>
-            Potencia {power} · Precisión {accuracyLabel(move.accuracy)}
-            {move.priority !== 0 ? ` · Prioridad ${move.priority > 0 ? `+${move.priority}` : move.priority}` : ""}
-          </p>
-          {move.shortDesc ? <p className="mt-1 text-text-dim">{move.shortDesc}</p> : null}
-          <button type="button" className="mt-1 min-h-11 font-semibold uppercase text-accent-2" onClick={() => setOpen(false)}>
-            Cerrar
-          </button>
-        </div>
-      ) : null}
+      <button type="button" aria-label={`Detalles de ${move.name}`} onClick={() => setOpen(true)} className="absolute bottom-0 right-0 flex size-12 items-center justify-center rounded-[var(--radius-card)] text-text-dim hover:bg-white/5 hover:text-text"><Icon name="info" className="size-4" /></button>
+      <Sheet open={open} title={move.name} onClose={() => setOpen(false)}>
+        <div className="mb-4 flex items-center gap-3"><TypeChip type={move.type} /><span className="inline-flex items-center gap-2 text-sm"><CategoryIcon category={move.category} />{categoryLabel(move.category)}</span></div>
+        <dl className="grid grid-cols-3 gap-3 rounded-[var(--radius-card)] bg-bg-0/60 p-4 text-center text-sm">
+          <div><dt className="text-xs text-text-dim">Potencia</dt><dd className="mt-1 font-semibold">{power}</dd></div>
+          <div><dt className="text-xs text-text-dim">Precisión</dt><dd className="mt-1 font-semibold">{move.accuracy === true ? "Siempre" : `${move.accuracy}%`}</dd></div>
+          <div><dt className="text-xs text-text-dim">PP</dt><dd className="mt-1 font-semibold">{move.pp}/{move.maxPp}</dd></div>
+        </dl>
+        {move.priority !== 0 ? <p className="mt-4 text-sm">Prioridad {move.priority > 0 ? "+" : ""}{move.priority}</p> : null}
+        {move.shortDesc ? <p className="my-4 text-sm leading-relaxed text-text-dim">{move.shortDesc}</p> : null}
+      </Sheet>
     </div>
   );
 }

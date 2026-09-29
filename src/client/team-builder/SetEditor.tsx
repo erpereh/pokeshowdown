@@ -2,9 +2,10 @@
 
 import { GameButton } from "@/client/ui/GameButton";
 import { GlassPanel } from "@/client/ui/GlassPanel";
+import { SegmentedControl } from "@/client/ui/SegmentedControl";
 import { TypeChip, TYPE_NAMES_ES } from "@/client/ui/TypeChip";
 import type { NatureEntry, PokemonSetData, SpeciesSummary, StatId, ValidationProblem } from "@/shared/contract";
-import type { Dispatch } from "react";
+import { useEffect, useState, type Dispatch } from "react";
 import { controlClass, Field } from "./controls";
 import type { BundleStatus, SpeciesBundle } from "./hooks";
 import { MiniSprite } from "./media";
@@ -49,6 +50,8 @@ export function SetEditor({
   onNotice,
   dispatch,
 }: SetEditorProps) {
+  const [section, setSection] = useState<"pokemon" | "set" | "training">("pokemon");
+  useEffect(() => setSection("pokemon"), [index]);
   const base = `slot-${index}`;
   const fixedGender = bundle?.species.gender ?? null;
   const forceTera = bundle?.species.forceTeraType ?? null;
@@ -68,7 +71,9 @@ export function SetEditor({
           <p className="text-sm text-text-dim">{set ? set.species : "Ranura vacía"}</p>
         </div>
         {set ? (
-          <div className="flex flex-wrap gap-2">
+          <details className="editor-tools w-full md:w-auto">
+            <summary>Acciones de Pokémon</summary>
+            <div className="flex flex-wrap gap-2 p-2">
             <GameButton type="button" variant="secondary" size="md" disabled={index === 0} onClick={() => dispatch({ type: "nudge", index, direction: -1 })}>
               Subir
             </GameButton>
@@ -99,15 +104,24 @@ export function SetEditor({
             <GameButton type="button" variant="danger" size="md" onClick={() => dispatch({ type: "remove", index })}>
               Quitar
             </GameButton>
-          </div>
+            </div>
+          </details>
         ) : null}
       </div>
 
-      <ProblemList
+      {problems.length > 0 ? <ProblemList
         title="Problemas de este Pokémon"
         problems={problems}
         empty={set ? "Showdown no marca problemas en esta ranura." : "Esta ranura está vacía."}
-      />
+      /> : null}
+
+      <div className="editor-sections md:hidden">
+        <SegmentedControl label="Sección del Pokémon" value={section} onChange={setSection} options={[
+          { value: "pokemon", label: "Pokémon" },
+          { value: "set", label: "Set" },
+          { value: "training", label: "Entrenamiento" },
+        ]} />
+      </div>
 
       <div className="mt-4 flex flex-col gap-4">
         {set && bundle ? (
@@ -135,10 +149,13 @@ export function SetEditor({
           </div>
         ) : null}
 
-        <SpeciesField id={`${base}-species`} disabled={picking} onPick={onPickSpecies} />
+        <div className={section === "pokemon" || !set ? "flex flex-col gap-4" : "hidden flex-col gap-4 md:flex"}>
+          <SpeciesField id={`${base}-species`} disabled={picking} onPick={onPickSpecies} />
+        </div>
 
         {set ? (
           <>
+            <div className={section === "pokemon" ? "flex flex-col gap-4" : "hidden flex-col gap-4 md:flex"}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Apodo" htmlFor={`${base}-nickname`} hint="Opcional. El nombre de especie se queda en inglés.">
                 <input
@@ -176,12 +193,15 @@ export function SetEditor({
                 role="switch"
                 aria-checked={set.shiny}
                 onClick={() => patch({ shiny: !set.shiny })}
-                className={`min-h-11 min-w-16 rounded-full px-3 text-sm font-semibold ${set.shiny ? "bg-accent text-bg-0" : "bg-surface-2 text-text-dim"}`}
+                className={`min-h-12 min-w-16 rounded-full px-3 text-sm font-semibold ${set.shiny ? "bg-accent-2 text-bg-0" : "bg-surface-2 text-text-dim"}`}
               >
                 {set.shiny ? "Sí" : "No"}
               </button>
             </div>
 
+            </div>
+
+            <div className={section === "set" ? "flex flex-col gap-4" : "hidden flex-col gap-4 md:flex"}>
             <Field
               label="Tipo Tera"
               htmlFor={`${base}-tera`}
@@ -251,7 +271,9 @@ export function SetEditor({
             </Field>
 
             <MoveList idPrefix={base} moves={set.moves} learnset={bundle?.moves ?? []} onChange={(moveIndex, name) => dispatch({ type: "move", index, moveIndex, name })} />
+            </div>
 
+            <div className={section === "training" ? "flex flex-col gap-4" : "hidden flex-col gap-4 md:flex"}>
             <TrainingFields
               index={index}
               set={set}
@@ -261,6 +283,7 @@ export function SetEditor({
               onEvs={(evs) => dispatch({ type: "evs", index, evs })}
               onIvs={(ivs) => dispatch({ type: "ivs", index, ivs })}
             />
+            </div>
             <p className="sr-only">Naturaleza activa: {findNature(natures, set.nature)?.name ?? set.nature}</p>
           </>
         ) : (
@@ -291,7 +314,7 @@ function GenderField({
   if (fixed === "N") {
     return (
       <fieldset className="min-w-0">
-        <legend className="font-display text-xs font-semibold uppercase tracking-wide text-text-dim">Género</legend>
+        <legend className="text-sm font-medium text-text-dim">Género</legend>
         <p className="mt-2 text-sm">Sin género</p>
         {gender !== "N" ? (
           <GameButton type="button" variant="secondary" size="md" className="mt-2" onClick={() => onChange("N")}>
@@ -310,13 +333,13 @@ function GenderField({
 
   return (
     <fieldset className="min-w-0">
-      <legend className="font-display text-xs font-semibold uppercase tracking-wide text-text-dim">Género</legend>
+      <legend className="text-sm font-medium text-text-dim">Género</legend>
       {fixed ? <p className="mt-1 text-xs text-text-dim">El género de esta especie es fijo.</p> : null}
       <div className="mt-2 grid grid-cols-3 gap-2">
         {options.map((option) => (
           <label
             key={option.label}
-            className={`flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-card)] border px-2 text-sm ${
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-card)] border px-2 text-sm ${
               gender === option.value ? "border-accent-2 bg-white/5" : "border-line"
             } ${option.disabled ? "opacity-45" : ""}`}
           >

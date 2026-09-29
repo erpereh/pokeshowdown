@@ -47,13 +47,14 @@ export function BattleList({ status }: { status: "active" | "finished" }) {
         />
       ) : null}
       {battles && battles.length > 0 ? (
-        <ul className="grid gap-4 sm:grid-cols-2">
+        <ul className="flex flex-col gap-3">
           {battles.map((battle) => {
             const badge = resultBadge(battle.result, battle.endReason);
             return (
-              <li key={battle.id} className="glass flex flex-col gap-3 rounded-[var(--radius-card)] p-4">
+              <li key={battle.id} className="battle-list-row glass rounded-[var(--radius-panel)]">
+                <div className="flex min-w-0 flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">
-                  <h2 className="font-display text-xl font-bold">{formatName(battle.formatId)}</h2>
+                  <h2 className="font-display text-lg font-semibold">{formatName(battle.formatId)}</h2>
                   {status === "finished" ? <span className={`rounded-full border px-2 py-1 text-xs font-semibold ${badge.className}`}>{badge.text}</span> : null}
                 </div>
                 <div className="flex items-center gap-3">
@@ -64,7 +65,8 @@ export function BattleList({ status }: { status: "active" | "finished" }) {
                 <p className="text-sm text-text-dim">
                   Turno {battle.turn} · {formatWhen(battle.updatedAt)}
                 </p>
-                <GameLink href={status === "active" ? `/battle/${battle.id}` : `/replay/${battle.id}`} variant="secondary" className="w-full">
+                </div>
+                <GameLink href={status === "active" ? `/battle/${battle.id}` : `/replay/${battle.id}`} variant="secondary" className="w-full md:w-auto">
                   {status === "active" ? "Continuar" : "Ver repetición"}
                 </GameLink>
               </li>

@@ -15,6 +15,14 @@ PokeShowdown ofrece combates singles PvE contra CPU con Gen 9 OU y Gen 9 Random 
 
 Un borrador inválido puede guardarse. Antes de iniciar OU se valida otra vez mediante TeamValidator. Se respetan equipos legales de uno a seis Pokémon. Un equipo aleatorio OU se genera y valida para OU: no convierte el formato en Random Battle. La previsualización permite revisar exactamente los sets elegidos; regenerar crea otra propuesta.
 
+## Navegación e interacción
+
+El inicio es un lobby: Jugar abre la preparación de partida; Continuar partida aparece si hay un combate activo. Sin sesión ofrece acceso y registro. La navegación enlaza Inicio, Jugar, Equipos, Partidas e Historial; combate y replay tienen controles propios.
+
+En móvil OU configura cada lado por separado mediante pestañas. El editor agrupa campos en Pokémon, Set y Entrenamiento sin perder cambios al cambiar de sección; guardar sigue siendo explícito. Importar, exportar y generar están en opciones de equipo.
+
+Los detalles de movimientos se consultan desde un botón independiente, sin seleccionar el movimiento ni resolver un turno. El registro móvil se abre en un panel. Estas acciones solo muestran la información pública ya disponible.
+
 ## Ciclo de combate
 
 1. Elegir formato/equipos y persistir la partida antes de devolverla.

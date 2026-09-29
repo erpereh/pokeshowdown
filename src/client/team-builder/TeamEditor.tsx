@@ -227,7 +227,7 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
   }
 
   const editorClass = sheet
-    ? "fixed inset-0 z-50 block overflow-y-auto overscroll-contain bg-bg-0 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:static md:z-auto md:overflow-visible md:bg-transparent md:p-0"
+    ? "editor-sheet fixed inset-0 z-50 block overflow-y-auto overscroll-contain bg-bg-0 p-3 pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:z-auto md:overflow-visible md:bg-transparent md:p-0"
     : "hidden md:block";
 
   const bundle = selectedSet ? species.get(selectedSet.species) : null;
@@ -270,7 +270,10 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
             <GameButton type="button" variant="secondary" size="md" loading={checking} onClick={() => void runValidate(setsRef.current)}>
               Validar
             </GameButton>
-            <GameButton type="button" variant="secondary" size="md" className="col-span-2 sm:col-span-1" loading={busy === "random"} onClick={() => void generateRandom()}>
+            <details className="editor-tools col-span-2 w-full sm:w-auto">
+              <summary>Más opciones de equipo</summary>
+              <div className="flex flex-wrap gap-2 p-3">
+            <GameButton type="button" variant="secondary" size="md" loading={busy === "random"} onClick={() => void generateRandom()}>
               Generar equipo aleatorio OU
             </GameButton>
             <GameButton type="button" variant="secondary" size="md" onClick={() => setImportOpen(true)}>
@@ -279,6 +282,8 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
             <GameButton type="button" variant="secondary" size="md" loading={busy === "export"} onClick={() => void openExport()}>
               Exportar
             </GameButton>
+              </div>
+            </details>
           </div>
         </div>
       </header>
@@ -304,7 +309,7 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
           </GameButton>
           <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,280px)]">
             <div className="flex min-w-0 flex-col gap-4">
-              <div className="lg:hidden">
+              <div className={problems.length > 0 || checkError ? "lg:hidden" : "hidden md:block lg:hidden"}>
                 <TeamProblems problems={problems} checking={checking} error={checkError} hasSets={sets.length > 0} />
               </div>
               <SetEditor
@@ -333,6 +338,9 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
                 <TeamProblems problems={problems} checking={checking} error={checkError} hasSets={sets.length > 0} />
               </div>
             </div>
+          </div>
+          <div className="sticky bottom-0 mt-4 bg-bg-0/95 py-3 md:hidden">
+            <GameButton type="button" className="w-full" loading={saving} disabled={!state.name.trim()} onClick={() => void save()}>Guardar equipo</GameButton>
           </div>
         </div>
       </div>

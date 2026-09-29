@@ -47,7 +47,7 @@ function TeamPreview({
                 onClick={() => setLead(mon.slot)}
                 className={cx(
                   "flex min-h-14 w-full flex-col items-center rounded-[var(--radius-card)] border px-1 py-2",
-                  selected ? "border-accent bg-accent/15" : "border-line bg-bg-0/30",
+                selected ? "border-accent-2 bg-accent-2/15" : "border-line bg-bg-0/30",
                 )}
               >
                 <MiniSprite spriteId={mon.spriteId} alt={mon.name} size={48} shiny={mon.shiny} gender={mon.gender} />
@@ -157,7 +157,7 @@ export function ActionPanel({
   const showMoves = !forced && tab === "fight";
 
   return (
-    <div className="flex min-h-0 flex-col gap-2 px-2 py-2 sm:px-3">
+    <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-col gap-3 px-3 py-3 sm:px-4">
       {forced ? (
         <div>
           <h2 className="font-display text-lg font-bold">
@@ -191,8 +191,8 @@ export function ActionPanel({
               aria-pressed={tera}
               onClick={() => setTera((value) => !value)}
               className={cx(
-                "flex min-h-11 items-center justify-center gap-2 rounded-[var(--radius-card)] border px-3 font-display text-sm font-semibold uppercase",
-                tera ? "border-accent bg-accent/15 text-accent" : "border-line text-text",
+                "flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-card)] border px-3 font-display text-sm font-semibold",
+                tera ? "border-accent-2 bg-accent-2/15 text-accent-2" : "border-line-strong text-text",
               )}
             >
               Teracristalizar

@@ -52,7 +52,7 @@ export function HudCard({ sideId, side }: { sideId: SideId; side: SideView }) {
   const mon = side.active;
   const mark = mon ? genderMark(mon.gender) : null;
   return (
-    <div data-fx-hud={sideId} className="glass pointer-events-none rounded-[var(--radius-card)] px-2 py-1.5 shadow-[0_8px_24px_#00000066]">
+    <div data-fx-hud={sideId} className="pointer-events-none rounded-[var(--radius-card)] border border-line-strong bg-bg-0/90 px-2.5 py-2 shadow-[inset_0_1px_0_#ffffff10,0_8px_24px_#00000055]">
       <p className="font-display text-[10px] font-semibold uppercase tracking-[0.16em] text-text-dim">{sideId === "p1" ? "Tú" : "Rival"}</p>
       {mon ? (
         <>

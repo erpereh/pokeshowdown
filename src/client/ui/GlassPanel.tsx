@@ -7,7 +7,7 @@ interface GlassPanelProps extends HTMLAttributes<HTMLDivElement> {
 
 export function GlassPanel({ as: Tag = "div", className, children, ...rest }: GlassPanelProps) {
   return (
-    <Tag {...rest} className={`glass rounded-[var(--radius-panel)] shadow-[0_12px_40px_#00000055] ${className ?? ""}`}>
+    <Tag {...rest} className={`glass rounded-[var(--radius-panel)] ${className ?? ""}`}>
       {children}
     </Tag>
   );

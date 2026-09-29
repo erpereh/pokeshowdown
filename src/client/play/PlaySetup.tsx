@@ -11,6 +11,7 @@ import { PageHeader } from "@/client/ui/PageHeader.tsx";
 import { SegmentedControl } from "@/client/ui/SegmentedControl.tsx";
 import { formatBlurb, formatName, toSpriteId } from "@/client/ui/format.ts";
 import { cx } from "@/client/ui/cx.ts";
+import { Icon } from "@/client/ui/Icon.tsx";
 import type { CreateBattleResponse, FormatId, ListTeamsResponse, PokemonSetData, RandomTeamResponse, TeamSource, TeamSummary } from "@/shared/contract";
 
 type SideMode = "saved" | "random";
@@ -71,7 +72,7 @@ function SideEditor({
   onPreview: () => void;
 }) {
   return (
-    <section className="rounded-[var(--radius-panel)] border border-line bg-surface-solid/40 p-4">
+    <section className="glass rounded-[var(--radius-panel)] p-4 sm:p-5">
       <h2 className="font-display text-xl font-bold">{title}</h2>
       <div className="mt-3">
         <SegmentedControl
@@ -103,7 +104,7 @@ function SideEditor({
                     onClick={() => onChange({ ...side, teamId: team.id })}
                     className={cx(
                       "flex min-h-14 w-full items-center gap-2 rounded-[var(--radius-card)] border px-2 py-2 text-left",
-                      selected ? "border-accent bg-accent/10" : "border-line bg-bg-0/30",
+                      selected ? "border-accent-2 bg-accent-2/10" : "border-line bg-bg-0/30",
                       !team.valid && "opacity-60",
                     )}
                   >
@@ -219,8 +220,8 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
   }
 
   return (
-    <div>
-      <PageHeader eyebrow="Un jugador" title="Jugar contra la CPU" subtitle="Elige el formato. En OU configuras tu equipo y el de la CPU por separado." />
+    <div className="pb-28 lg:pb-0">
+      <PageHeader eyebrow="Entra en la arena" title="Jugar contra la CPU" subtitle="Elige cómo quieres combatir." />
       <div className="grid gap-3 sm:grid-cols-2">
         {(["gen9ou", "gen9randombattle"] as const).map((id) => {
           const selected = formatId === id;
@@ -234,11 +235,11 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
                 setError(null);
               }}
               className={cx(
-                "min-h-28 rounded-[var(--radius-panel)] border p-4 text-left",
-                selected ? "border-accent bg-accent/10 shadow-[0_0_24px_#ffc83d33]" : "border-line bg-surface-solid/40 hover:border-line-strong",
+                "format-option p-5 text-left hover:border-line-strong",
               )}
             >
-              <span className="font-display block text-2xl font-bold">{formatName(id)}</span>
+              <span className="mb-3 flex items-center justify-between text-accent-2"><Icon name={id === "gen9ou" ? "team" : "spark"} /><span className="text-xs">{id === "gen9ou" ? "Tu estrategia" : "Listo para jugar"}</span></span>
+              <span className="font-display block text-xl font-semibold">{formatName(id)}</span>
               <span className="mt-1 block text-sm text-text-dim">{formatBlurb(id)}</span>
             </button>
           );
@@ -246,7 +247,7 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
       </div>
 
       {formatId === "gen9randombattle" ? (
-        <p className="mt-6 max-w-2xl text-text-dim">Random Battle usa equipos oficiales generados por Showdown para los dos lados. No hace falta elegir Pokémon: el motor entrega seis sets legales y el combate empieza directamente con el primer Pokémon de cada equipo, sin previsualización.</p>
+        <p className="glass mt-5 rounded-[var(--radius-panel)] p-5 text-sm leading-relaxed text-text-dim">Seis Pokémon sorpresa para cada lado. Entra directamente al combate, sin preparar equipos.</p>
       ) : null}
 
       {formatId === "gen9ou" ? (
@@ -297,10 +298,13 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
         </p>
       ) : null}
 
-      <div className="mt-6">
-        <GameButton size="lg" disabled={!formatId} loading={starting} onClick={() => void start()}>
+      <div className="setup-footer">
+        <div className="glass-light flex items-center gap-4">
+        <p className="hidden flex-1 text-sm text-text-dim sm:block">{formatId ? formatName(formatId) : "Selecciona un formato"}</p>
+        <GameButton size="lg" className="w-full sm:w-auto" disabled={!formatId || previewing !== null} loading={starting} onClick={() => void start()}>
           Comenzar combate
         </GameButton>
+        </div>
       </div>
     </div>
   );

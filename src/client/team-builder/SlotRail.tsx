@@ -32,7 +32,7 @@ export function SlotRail({ slots, selected, problems, bundleFor, onSelect }: Slo
   return (
     <GlassPanel as="section" aria-label="Ranuras del equipo" className="p-3">
       <h2 className="font-display mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-text-dim">Equipo</h2>
-      <div role="tablist" aria-orientation="vertical" className="flex flex-col gap-2" onKeyDown={onKeyDown}>
+      <div role="tablist" aria-orientation="vertical" className="grid grid-cols-1 gap-2 min-[390px]:grid-cols-2 md:grid-cols-1" onKeyDown={onKeyDown}>
         {slots.map((set, index) => {
           const count = set ? problemsForSlot(problems, slots, index).length : 0;
           const bundle = set ? bundleFor(set.species) : null;

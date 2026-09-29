@@ -47,8 +47,8 @@ export function SegmentedControl<T extends string>({
               event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("[role='radio']")[nextIndex]?.focus();
             }}
             className={cx(
-              "font-display min-h-11 rounded-[10px] px-2 text-sm font-semibold uppercase tracking-wide",
-              selected ? "bg-accent text-bg-0" : "text-text-dim hover:text-text",
+              "font-display min-h-12 rounded-[14px] px-2 text-sm font-semibold transition-colors duration-[var(--dur-fast)]",
+              selected ? "bg-accent-2/15 text-accent-2 shadow-[inset_0_1px_0_#80e3f330]" : "text-text-dim hover:text-text",
             )}
           >
             {option.label}

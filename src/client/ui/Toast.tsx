@@ -33,7 +33,7 @@ export function ToastViewport() {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-[70] flex flex-col items-center gap-2 px-4 md:bottom-6" aria-live="assertive">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[var(--nav-clearance)] z-[70] flex flex-col items-center gap-2 px-4 lg:bottom-6" aria-live="polite">
       {toasts.map((toast) => (
         <p key={toast.id} role="status" className="glass pointer-events-auto max-w-md rounded-[var(--radius-card)] px-4 py-3 text-sm shadow-[0_12px_40px_#00000066]">
           {toast.message}

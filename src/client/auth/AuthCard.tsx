@@ -6,10 +6,9 @@ import { createBrowserSupabase } from "@/lib/supabase/browser.ts";
 import { GameButton } from "@/client/ui/GameButton.tsx";
 import { GlassPanel } from "@/client/ui/GlassPanel.tsx";
 import { SegmentedControl } from "@/client/ui/SegmentedControl.tsx";
+import { Icon } from "@/client/ui/Icon.tsx";
 
 type Mode = "login" | "signup" | "recovery" | "password";
-
-const ARENA = "/assets/generated/sprites/gen6bgs/bg-skypillar.jpg";
 
 function messageFor(error: { message: string; code?: string }): string {
   const code = error.code ?? "";
@@ -37,7 +36,6 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
   const [error, setError] = useState<string | null>(confirmError ? "El enlace de confirmación no es válido o ha caducado." : null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [bgOk, setBgOk] = useState(true);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -125,13 +123,18 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
   }
 
   return (
-    <section className="relative min-h-dvh overflow-hidden">
-      {bgOk ? <img src={ARENA} alt="" className="absolute inset-0 h-full w-full object-cover" onError={() => setBgOk(false)} /> : null}
-      <div className="absolute inset-0 bg-bg-0/70" />
-      <div className="relative z-10 flex min-h-dvh items-center justify-center px-4 py-24">
-        <GlassPanel className="w-full max-w-md p-5 sm:p-6">
-          <p className="font-display text-xs font-semibold uppercase tracking-[0.18em] text-accent">PokeShowdown</p>
+    <section className="relative min-h-dvh bg-[radial-gradient(ellipse_at_50%_15%,#233c4c,transparent_65%)]">
+      <div className="app-content relative mx-auto flex min-h-dvh max-w-5xl items-center justify-center gap-20 px-4 pt-24 lg:px-8">
+        <div className="hidden max-w-sm lg:block">
+          <div className="glass-light mb-8 flex size-20 items-center justify-center rounded-3xl text-accent-2"><Icon name="spark" className="size-10" /></div>
+          <p className="section-kicker mb-4">Tu estadio te espera</p>
+          <p className="font-display text-5xl font-semibold leading-tight">Prepara tu próxima victoria.</p>
+          <p className="mt-5 leading-relaxed text-text-dim">Tus equipos, tus partidas y tu estrategia. Todo a tu ritmo.</p>
+        </div>
+        <GlassPanel className="my-6 w-full max-w-md p-6 sm:p-8">
+          <p className="section-kicker">PokeShowdown</p>
           <h1 className="font-display mt-1 text-3xl font-bold">{mode === "password" ? "Nueva contraseña" : mode === "recovery" ? "Recupera tu cuenta" : "Tu entrenador"}</h1>
+          {mode === "login" || mode === "signup" ? <p className="mt-2 text-sm text-text-dim">Entra y guarda tu progreso.</p> : null}
           {mode === "login" || mode === "signup" ? <div className="mt-4">
             <SegmentedControl
               label="Modo de acceso"

@@ -1,19 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Chakra_Petch, Inter } from "next/font/google";
+import { Manrope, Outfit } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 
-const chakra = Chakra_Petch({
+const outfit = Outfit({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
-  variable: "--font-chakra",
+  variable: "--font-outfit",
   display: "swap",
 });
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-inter",
+  variable: "--font-manrope",
   display: "swap",
 });
 
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0e1a",
+  themeColor: "#080d16",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${chakra.variable} ${inter.variable}`}>
+    <html lang="es" className={`${outfit.variable} ${manrope.variable}`}>
       <body>{children}</body>
     </html>
   );

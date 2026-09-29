@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { cx } from "./cx.ts";
+import { Icon } from "./Icon.tsx";
 
 export function useDialog(open: boolean, onClose?: () => void) {
   const ref = useRef<HTMLDivElement>(null);
@@ -78,7 +79,7 @@ export function Modal({
   if (!open) return null;
 
   return (
-    <div data-modal-root className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+    <div data-modal-root className="fixed inset-0 z-50 flex items-end justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:items-center">
       <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       <div
         ref={ref}
@@ -88,9 +89,12 @@ export function Modal({
         tabIndex={-1}
         className="glass relative z-10 max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-[var(--radius-panel)] p-5 shadow-[0_24px_80px_#000000aa]"
       >
-        <h2 id={titleId} className="font-display text-2xl font-bold">
+        <div className="flex items-center justify-between gap-3">
+        <h2 id={titleId} className="font-display text-xl font-semibold">
           {title}
         </h2>
+        <button type="button" aria-label={`Cerrar ${title}`} onClick={onClose} className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line hover:bg-white/5"><Icon name="close" /></button>
+        </div>
         <div className="mt-3">{children}</div>
       </div>
     </div>
@@ -122,19 +126,20 @@ export function Sheet({
         aria-labelledby={titleId}
         tabIndex={-1}
         className={cx(
-          "glass relative z-10 flex max-h-[85dvh] w-full flex-col rounded-t-[var(--radius-panel)] shadow-[0_-20px_60px_#000000aa]",
+          "glass relative z-10 mx-auto flex max-h-[85dvh] w-full max-w-2xl flex-col rounded-t-[var(--radius-panel)] shadow-[0_-20px_60px_#000000aa]",
           "pb-[env(safe-area-inset-bottom)]",
         )}
       >
-        <div className="flex items-center justify-between gap-3 px-4 pt-4">
+        <div aria-hidden="true" className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-full bg-line-strong" />
+        <div className="flex items-center justify-between gap-3 px-5 pt-2">
           <h2 id={titleId} className="font-display text-xl font-bold">
             {title}
           </h2>
-          <button type="button" onClick={onClose} className="font-display min-h-11 rounded-[var(--radius-card)] px-3 text-sm font-semibold uppercase text-text-dim">
-            Cerrar
+          <button type="button" aria-label="Cerrar" onClick={onClose} className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line text-text-dim hover:text-text">
+            <Icon name="close" />
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">{children}</div>
       </div>
     </div>
   );
