@@ -12,7 +12,7 @@ Patrones compartidos: GameButton (píldoras), Card/PokeballDeco/Pokeball, Segmen
 
 ## Navegación y pantallas
 
-- Cinco destinos: Inicio, Jugar, Equipos, Partidas e Historial. Por debajo de 1024 px, barra inferior blanca anclada con safe area; Jugar es una Poké Ball central elevada y el destino activo se marca en rojo con indicador. Desde 1024 px, pestañas en píldora en la cabecera. Marca y cuenta permanecen accesibles.
+- Cinco destinos: Inicio, Jugar, Equipos, Partidas e Historial. Por debajo de 1024 px, barra inferior blanca anclada con safe area, en el orden Inicio, Equipos, Jugar, Partidas e Historial; Jugar ocupa la tercera columna como Poké Ball central elevada y el destino activo se marca en rojo con indicador. Desde 1024 px, pestañas en píldora en la cabecera en el orden Inicio, Jugar, Equipos, Partidas e Historial. Marca y cuenta permanecen accesibles.
 - Inicio: saludo, tarjeta roja principal con Garchomp vs Dragapult y acción ¡A combatir! (o Entrar/Crear cuenta), y accesos en rejilla 2 columnas como tarjetas por tipo (Continuar partida cuando existe, Equipos, Partidas, Historial).
 - Jugar: formatos como tarjetas grandes de color con sprite; selección de equipos OU por lado con pestañas en móvil; Comenzar combate fijo sobre la navbar en móvil/tablet y sticky en desktop.
 - Equipos: tarjetas coloreadas por el tipo del primer Pokémon con sprite líder, formato, legalidad y bandeja blanca con los seis sprites y acciones; botón flotante azul + en móvil.
