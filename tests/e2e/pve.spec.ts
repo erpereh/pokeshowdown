@@ -282,7 +282,7 @@ test("Recuperación Auth verifica OTP real, cambia contraseña y permite acceso 
     await page.getByLabel("Contraseña", { exact: true }).fill(newPassword);
     await page.getByLabel("Confirmar contraseña", { exact: true }).fill(newPassword);
     await page.getByRole("button", { name: "Guardar contraseña", exact: true }).click();
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL(/\/play$/);
     await page.getByRole("button", { name: "Cuenta de PvE Recovery", exact: true }).click();
     await page.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
     await expect(page.getByRole("link", { name: "Entrar", exact: true }).first()).toBeVisible();

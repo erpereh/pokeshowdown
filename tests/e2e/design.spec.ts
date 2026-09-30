@@ -15,18 +15,16 @@ test("Lobby, navegación y pantallas mantienen espacio táctil en móvil, tablet
   for (const [width, height] of [[320, 568], [390, 844], [430, 932], [768, 1024], [1280, 800]]) {
     await page.setViewportSize({ width: width!, height: height! });
     await page.goto("/");
+    await expect(page).toHaveURL(/\/play$/);
     const nav = page.locator("nav[aria-label='Principal']:visible");
     await expect(nav.getByRole("link")).toHaveCount(5);
-    await expect(nav.getByRole("link", { name: "Inicio", exact: true })).toHaveAttribute("aria-current", "page");
+    await expect(nav.getByRole("link", { name: "Jugar", exact: true })).toHaveAttribute("aria-current", "page");
     for (const link of await nav.getByRole("link").all()) {
       const box = await link.boundingBox();
       expect(box?.height).toBeGreaterThanOrEqual(48);
       expect(box?.width).toBeGreaterThanOrEqual(48);
     }
     await capture(page, info, `lobby-${width}`);
-    await nav.getByRole("link", { name: "Jugar", exact: true }).click();
-    await expect(page).toHaveURL(/\/play$/);
-    await expect(nav.getByRole("link", { name: "Jugar", exact: true })).toHaveAttribute("aria-current", "page");
     await page.getByRole("button", { name: /Gen 9 Random Battle/ }).click();
     await capture(page, info, `setup-${width}`);
     const button = await page.getByRole("button", { name: "Comenzar combate", exact: true }).boundingBox();
@@ -34,7 +32,7 @@ test("Lobby, navegación y pantallas mantienen espacio táctil en móvil, tablet
     expect(button).not.toBeNull();
     if (button && tabs) expect(button.y + button.height).toBeLessThanOrEqual(tabs.y);
   }
-  for (const route of ["/teams", "/saved", "/history"]) {
+  for (const route of ["/friends", "/teams", "/saved", "/history"]) {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(route);
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

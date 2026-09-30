@@ -4,13 +4,11 @@ import { PokeballDeco } from "./Card.tsx";
 import { Icon } from "./Icon.tsx";
 
 export function PageHeader({
-  eyebrow,
   title,
   subtitle,
   action,
   backHref,
 }: {
-  eyebrow?: string;
   title: string;
   subtitle?: string;
   action?: ReactNode;
@@ -25,7 +23,6 @@ export function PageHeader({
             <Icon name="back" className="size-6" />
           </Link>
         ) : null}
-        {eyebrow ? <p className="section-kicker mb-1">{eyebrow}</p> : null}
         <h1 className="font-display text-[2rem] font-bold leading-tight sm:text-4xl">{title}</h1>
         {subtitle ? <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-text-dim">{subtitle}</p> : null}
       </div>

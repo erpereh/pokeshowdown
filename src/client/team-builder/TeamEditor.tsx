@@ -20,7 +20,7 @@ import {
   updateTeam,
   validateTeam,
 } from "./api";
-import { controlClass, Field, FormatBadge, ValidityBadge } from "./controls";
+import { controlClass, Field, FormatBadge, ToolButton, ToolMenu, ValidityBadge } from "./controls";
 import { useUnsavedWarning } from "./feedback";
 import { useSpeciesCache } from "./hooks";
 import {
@@ -265,27 +265,20 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
               </Field>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            <GameButton type="button" size="md" loading={saving} disabled={!state.name.trim()} onClick={() => void save()} data-testid="save-team">
-              Guardar
-            </GameButton>
-            <GameButton type="button" variant="secondary" size="md" loading={checking} onClick={() => void runValidate(setsRef.current)}>
-              Validar
-            </GameButton>
-            <details className="editor-tools col-span-2 w-full sm:w-auto">
-              <summary>Más opciones de equipo</summary>
-              <div className="flex flex-wrap gap-2 p-3">
-            <GameButton type="button" variant="secondary" size="md" loading={busy === "random"} onClick={() => void generateRandom()}>
-              Generar equipo aleatorio OU
-            </GameButton>
-            <GameButton type="button" variant="secondary" size="md" onClick={() => setImportOpen(true)}>
-              Importar
-            </GameButton>
-            <GameButton type="button" variant="secondary" size="md" loading={busy === "export"} onClick={() => void openExport()}>
-              Exportar
-            </GameButton>
-              </div>
-            </details>
+          <div className="flex w-full max-w-xl flex-col gap-2">
+            <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] gap-2">
+              <GameButton type="button" size="sm" loading={saving} disabled={!state.name.trim()} onClick={() => void save()} data-testid="save-team">
+                Guardar
+              </GameButton>
+              <GameButton type="button" variant="secondary" size="sm" loading={checking} onClick={() => void runValidate(setsRef.current)}>
+                Validar
+              </GameButton>
+            </div>
+            <ToolMenu label="Más opciones de equipo" columns={3}>
+              <ToolButton icon="shuffle" label="Aleatorio" ariaLabel="Generar equipo aleatorio OU" loading={busy === "random"} onClick={() => void generateRandom()} />
+              <ToolButton icon="download" label="Importar" onClick={() => setImportOpen(true)} />
+              <ToolButton icon="upload" label="Exportar" loading={busy === "export"} onClick={() => void openExport()} />
+            </ToolMenu>
           </div>
         </div>
       </header>

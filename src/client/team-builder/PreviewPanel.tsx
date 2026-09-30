@@ -36,8 +36,7 @@ export function ProblemList({
         <ul className="mt-2 flex flex-col gap-2">
           {problems.map((problem, index) => (
             <li key={`${problem.setIndex ?? "team"}-${index}`} className="animate-fade-up rounded-[var(--radius-card)] border-2 border-danger/25 bg-danger/5 px-3 py-2">
-              <p className="font-display text-xs font-semibold uppercase text-danger">Detalle del validador</p>
-              <p className="mt-1 whitespace-pre-wrap break-words text-sm">{problem.message}</p>
+              <p className="whitespace-pre-wrap break-words text-sm">{problem.message}</p>
             </li>
           ))}
         </ul>

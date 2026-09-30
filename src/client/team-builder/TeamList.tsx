@@ -16,7 +16,7 @@ import type { TeamSummary } from "@/shared/contract";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { copyText, deleteTeam, duplicateTeam, errorMessage, exportTeam, getTeam, importTeam, listTeams } from "./api";
-import { controlClass, EmptySlotMark, Field } from "./controls";
+import { controlClass, EmptySlotMark, Field, ToolButton, ToolMenu } from "./controls";
 import { TeamScreen } from "./frame";
 import { MiniSprite } from "./media";
 import { formatUpdated, IMPORTED_SETS_KEY } from "./model";
@@ -117,7 +117,6 @@ export function TeamListPage() {
   return (
     <TeamScreen>
       <PageHeader
-        eyebrow="Tu estrategia"
         title="Tus equipos"
         subtitle="Prepara tu equipo de Gen 9 OU para entrar en la arena."
         action={
@@ -300,20 +299,11 @@ function TeamCard({
         <GameLink href={`/teams/${team.id}`} variant="primary" size="md" className="col-span-2 w-full">
           Editar
         </GameLink>
-        <details className="editor-tools col-span-2">
-          <summary>Opciones de equipo</summary>
-          <div className="grid grid-cols-2 gap-2 p-2">
-        <GameButton type="button" variant="secondary" size="md" loading={pending === "duplicate"} onClick={onDuplicate}>
-          Duplicar
-        </GameButton>
-        <GameButton type="button" variant="danger" size="md" onClick={onDelete}>
-          Eliminar
-        </GameButton>
-        <GameButton type="button" variant="ghost" size="md" loading={pending === "export"} onClick={onExport}>
-          Exportar
-        </GameButton>
-          </div>
-        </details>
+        <ToolMenu label="Opciones de equipo" columns={3} className="col-span-2">
+          <ToolButton icon="copy" label="Duplicar" loading={pending === "duplicate"} onClick={onDuplicate} />
+          <ToolButton icon="upload" label="Exportar" loading={pending === "export"} onClick={onExport} />
+          <ToolButton icon="trash" label="Eliminar" tone="danger" onClick={onDelete} />
+        </ToolMenu>
       </div>
       </div>
     </article>

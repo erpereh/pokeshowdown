@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-export type IconName = "home" | "play" | "team" | "saved" | "history" | "arrow" | "user" | "info" | "close" | "spark" | "bolt" | "swap" | "gem" | "flag" | "plus" | "back";
+export type IconName = "home" | "play" | "team" | "saved" | "history" | "arrow" | "user" | "info" | "close" | "spark" | "bolt" | "swap" | "gem" | "flag" | "plus" | "back" | "friends" | "shuffle" | "download" | "upload" | "copy" | "trash" | "up" | "down" | "chevron";
 const paths: Record<IconName, string> = {
   home: "m3 10 9-7 9 7M5 9v11h5v-6h4v6h5V9",
   play: "m9 5 11 7-11 7V5ZM4 5v14",
@@ -18,6 +18,15 @@ const paths: Record<IconName, string> = {
   flag: "M5 21V4m0 0h12l-2.5 4.5L17 13H5",
   plus: "M12 5v14M5 12h14",
   back: "M20 12H4m6-6-6 6 6 6",
+  friends: "M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM2 21v-2a7 7 0 0 1 12.5-4.3M19 14v6m-3-3h6",
+  shuffle: "M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5",
+  download: "M12 3v12m-5-5 5 5 5-5M4 21h16",
+  upload: "M12 21V9m-5 5 5-5 5 5M4 3h16",
+  copy: "M9 9h11v11H9zM5 15H4V4h11v1",
+  trash: "M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3",
+  up: "m6 15 6-6 6 6",
+  down: "m6 9 6 6 6-6",
+  chevron: "m9 6 6 6-6 6",
 };
 
 export function Icon({ name, className, ...props }: SVGProps<SVGSVGElement> & { name: IconName }) {

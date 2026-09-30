@@ -6,7 +6,7 @@ import { SegmentedControl } from "@/client/ui/SegmentedControl";
 import { TypeChip, typeCardColor, TYPE_NAMES_ES } from "@/client/ui/TypeChip";
 import type { NatureEntry, PokemonSetData, SpeciesSummary, StatId, ValidationProblem } from "@/shared/contract";
 import { useEffect, useState, type CSSProperties, type Dispatch } from "react";
-import { controlClass, Field } from "./controls";
+import { controlClass, Field, ToolButton, ToolMenu } from "./controls";
 import type { BundleStatus, SpeciesBundle } from "./hooks";
 import { PokemonSprite } from "./media";
 import { findNature, natureCaption, SLOT_COUNT } from "./model";
@@ -94,25 +94,12 @@ export function SetEditor({
       <div className="sheet-surface -mt-7 px-4 pb-4 pt-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         {set ? (
-          <details className="editor-tools w-full">
-            <summary>Acciones de Pokémon</summary>
-            <div className="flex flex-wrap gap-2 p-2">
-            <GameButton type="button" variant="secondary" size="md" disabled={index === 0} onClick={() => dispatch({ type: "nudge", index, direction: -1 })}>
-              Subir
-            </GameButton>
-            <GameButton
-              type="button"
-              variant="secondary"
-              size="md"
-              disabled={index === SLOT_COUNT - 1}
-              onClick={() => dispatch({ type: "nudge", index, direction: 1 })}
-            >
-              Bajar
-            </GameButton>
-            <GameButton
-              type="button"
-              variant="secondary"
-              size="md"
+          <ToolMenu label="Acciones de Pokémon" columns={4} className="w-full">
+            <ToolButton icon="up" label="Subir" disabled={index === 0} onClick={() => dispatch({ type: "nudge", index, direction: -1 })} />
+            <ToolButton icon="down" label="Bajar" disabled={index === SLOT_COUNT - 1} onClick={() => dispatch({ type: "nudge", index, direction: 1 })} />
+            <ToolButton
+              icon="copy"
+              label="Duplicar"
               disabled={!hasEmptySlot}
               onClick={() => {
                 if (!hasEmptySlot) {
@@ -121,14 +108,9 @@ export function SetEditor({
                 }
                 dispatch({ type: "duplicate", index });
               }}
-            >
-              Duplicar
-            </GameButton>
-            <GameButton type="button" variant="danger" size="md" onClick={() => dispatch({ type: "remove", index })}>
-              Quitar
-            </GameButton>
-            </div>
-          </details>
+            />
+            <ToolButton icon="trash" label="Quitar" tone="danger" onClick={() => dispatch({ type: "remove", index })} />
+          </ToolMenu>
         ) : null}
       </div>
 

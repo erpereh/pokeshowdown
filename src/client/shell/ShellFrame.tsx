@@ -10,8 +10,6 @@ import { GameLink } from "@/client/ui/GameButton.tsx";
 import { Pokeball } from "@/client/ui/Card.tsx";
 import { NAV_ITEMS, navActive, type ShellMode, type ShellUser } from "./types.ts";
 
-const BOTTOM_NAV_ITEMS = [NAV_ITEMS[0], NAV_ITEMS[2], NAV_ITEMS[1], NAV_ITEMS[3], NAV_ITEMS[4]];
-
 function Wordmark() {
   return (
     <Link href="/" aria-label="PokeShowdown, inicio" className="font-display group inline-flex min-h-12 shrink-0 items-center gap-2 text-xl font-bold">
@@ -110,7 +108,7 @@ function BottomTabs() {
       className="mobile-nav lg:hidden"
     >
       <ul className="grid grid-cols-5 gap-1">
-        {BOTTOM_NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.map((item) => {
           const active = navActive(pathname, item.href);
           const play = item.href === "/play";
           return (
@@ -124,7 +122,7 @@ function BottomTabs() {
                 )}
               >
                 {play ? (
-                  <span className="nav-play-ball bg-surface"><Pokeball className="size-full" /></span>
+                  <span className="nav-play-ball"><Pokeball className="size-full" /></span>
                 ) : (
                   <Icon name={item.icon} className="size-6" />
                 )}

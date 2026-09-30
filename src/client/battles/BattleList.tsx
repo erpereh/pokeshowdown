@@ -33,7 +33,7 @@ export function BattleList({ status }: { status: "active" | "finished" }) {
 
   return (
     <div>
-      <PageHeader eyebrow="Un jugador" title={title} subtitle={subtitle} />
+      <PageHeader title={title} subtitle={subtitle} />
       {error ? <ErrorState title="No se pudo cargar" body={error} onRetry={load} /> : null}
       {!error && battles === null ? (
         <div className="flex justify-center py-16">

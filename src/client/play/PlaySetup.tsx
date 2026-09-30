@@ -14,7 +14,9 @@ import { cx } from "@/client/ui/cx.ts";
 import { Icon } from "@/client/ui/Icon.tsx";
 import { PokeballDeco } from "@/client/ui/Card.tsx";
 import { PokemonSprite } from "@/client/sprites/PokemonSprite.tsx";
-import type { CreateBattleResponse, FormatId, ListTeamsResponse, PokemonSetData, RandomTeamResponse, TeamSource, TeamSummary } from "@/shared/contract";
+import { DuelHero } from "@/client/home/DuelHero.tsx";
+import { typeCardColor } from "@/client/ui/TypeChip.tsx";
+import type { CreateBattleResponse, FormatId, ListBattlesResponse, ListTeamsResponse, PokemonSetData, RandomTeamResponse, TeamSource, TeamSummary } from "@/shared/contract";
 
 type SideMode = "saved" | "random";
 
@@ -154,6 +156,15 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const requestRef = useRef<{ fingerprint: string; id: string } | null>(null);
+  const [continueId, setContinueId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch<ListBattlesResponse>("/api/battles?status=active")
+      .then((response) => { if (!cancelled) setContinueId(response.battles[0]?.id ?? null); })
+      .catch(() => { if (!cancelled) setContinueId(null); });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
     if (formatId !== "gen9ou") return;
@@ -223,7 +234,25 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
 
   return (
     <div className="pb-28 lg:pb-0">
-      <PageHeader eyebrow="Entra en la arena" title="Jugar contra la CPU" subtitle="Elige cómo quieres combatir." />
+      <PageHeader title="¿Listo para combatir?" />
+      <div className="grid gap-3 md:grid-cols-[1.35fr_1fr] md:items-start">
+        <DuelHero compact />
+        {continueId ? (
+          <Link
+            href={`/battle/${continueId}`}
+            className="type-card press animate-fade-up flex min-h-24 items-center justify-between gap-3 rounded-[24px] p-4"
+            style={{ "--card-color": typeCardColor("Water") } as CSSProperties}
+          >
+            <PokeballDeco className="-bottom-6 -right-6 w-24" />
+            <span>
+              <span className="card-title font-display block text-lg font-bold leading-tight">Continuar partida</span>
+              <span className="soft-pill mt-2 gap-1 px-2 py-0.5 text-[11px]"><Icon name="saved" className="size-3.5" />En curso</span>
+            </span>
+            <Icon name="arrow" className="size-6 shrink-0" />
+          </Link>
+        ) : null}
+      </div>
+      <h2 className="font-display mb-3 mt-6 text-xl font-bold">Elige formato</h2>
       <div className="stagger grid gap-3 sm:grid-cols-2">
         {(["gen9ou", "gen9randombattle"] as const).map((id) => {
           const selected = formatId === id;

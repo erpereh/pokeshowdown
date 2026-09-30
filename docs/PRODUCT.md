@@ -17,7 +17,7 @@ Un borrador inválido puede guardarse. Antes de iniciar OU se valida otra vez me
 
 ## Navegación e interacción
 
-El inicio es un lobby: Jugar abre la preparación de partida; Continuar partida aparece si hay un combate activo. Sin sesión ofrece acceso y registro. La navegación enlaza Inicio, Jugar, Equipos, Partidas e Historial; combate y replay tienen controles propios.
+Con sesión, la pantalla principal es Jugar (`/` redirige a `/play`): presentación, Continuar partida si hay un combate activo y la preparación de partida. Sin sesión, `/` ofrece acceso y registro. La navegación enlaza Amigos, Equipos, Jugar, Partidas e Historial; Amigos es por ahora una pantalla vacía sin funcionalidad (el multijugador sigue fuera del MVP). Combate y replay tienen controles propios.
 
 En móvil OU configura cada lado por separado mediante pestañas. El editor agrupa campos en Pokémon, Set y Entrenamiento sin perder cambios al cambiar de sección; guardar sigue siendo explícito. Importar, exportar y generar están en opciones de equipo.
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { CategoryIcon, categoryLabel } from "@/client/ui/CategoryIcon";
+import { Spinner } from "@/client/ui/GameButton";
+import { Icon, type IconName } from "@/client/ui/Icon";
 import { TypeChip } from "@/client/ui/TypeChip";
 import type { MoveCategory } from "@/shared/contract";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
@@ -27,6 +29,51 @@ export function Field({
       {children}
       {hint ? <p className="text-xs text-text-dim">{hint}</p> : null}
     </div>
+  );
+}
+
+/** Collapsible group of secondary actions, laid out as equal compact tiles. */
+export function ToolMenu({ label, columns, className, children }: { label: string; columns: 3 | 4; className?: string; children: ReactNode }) {
+  return (
+    <details className={`editor-tools ${className ?? ""}`}>
+      <summary>
+        <Icon name="chevron" className="editor-tools-chevron size-4" />
+        {label}
+      </summary>
+      <div className={`grid gap-2 px-2 pb-2 ${columns === 4 ? "grid-cols-4" : "grid-cols-3"}`}>{children}</div>
+    </details>
+  );
+}
+
+export function ToolButton({
+  icon,
+  label,
+  ariaLabel,
+  tone = "default",
+  loading,
+  disabled,
+  onClick,
+}: {
+  icon: IconName;
+  label: string;
+  ariaLabel?: string;
+  tone?: "default" | "danger";
+  loading?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={ariaLabel}
+      aria-busy={loading || undefined}
+      disabled={disabled || loading}
+      onClick={onClick}
+      className={`tool-button press ${tone === "danger" ? "is-danger" : ""}`}
+    >
+      {loading ? <Spinner className="size-5" /> : <Icon name={icon} className="size-5" />}
+      <span className="truncate">{label}</span>
+    </button>
   );
 }
 

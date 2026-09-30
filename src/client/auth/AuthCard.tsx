@@ -128,14 +128,12 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
       <div className="app-content relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-5xl items-center justify-center gap-20 px-4 pt-4 lg:px-8">
         <div className="hidden max-w-sm lg:block">
           <Pokeball className="animate-float mb-8 size-20" />
-          <p className="section-kicker mb-4">Tu estadio te espera</p>
           <p className="font-display text-5xl font-bold leading-tight">Prepara tu próxima victoria.</p>
           <p className="mt-5 leading-relaxed text-text-dim">Tus equipos, tus partidas y tu estrategia. Todo a tu ritmo.</p>
         </div>
         <Card className="animate-pop-in my-6 w-full max-w-md p-6 sm:p-8">
           <Pokeball className="mb-3 size-12 lg:hidden" />
-          <p className="section-kicker">PokeShowdown</p>
-          <h1 className="font-display mt-1 text-3xl font-bold">{mode === "password" ? "Nueva contraseña" : mode === "recovery" ? "Recupera tu cuenta" : "Tu entrenador"}</h1>
+          <h1 className="font-display text-3xl font-bold">{mode === "password" ? "Nueva contraseña" : mode === "recovery" ? "Recupera tu cuenta" : "Tu entrenador"}</h1>
           {mode === "login" || mode === "signup" ? <p className="mt-2 text-sm text-text-dim">Entra y guarda tu progreso.</p> : null}
           {mode === "login" || mode === "signup" ? <div className="mt-4">
             <SegmentedControl
