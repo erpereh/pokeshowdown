@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ApiRequestError, apiFetch, newClientId } from "@/client/api.ts";
 import { MiniSprite } from "@/client/sprites/MiniSprite.tsx";
 import { GameButton, GameLink } from "@/client/ui/GameButton.tsx";
@@ -12,6 +12,8 @@ import { SegmentedControl } from "@/client/ui/SegmentedControl.tsx";
 import { formatBlurb, formatName, toSpriteId } from "@/client/ui/format.ts";
 import { cx } from "@/client/ui/cx.ts";
 import { Icon } from "@/client/ui/Icon.tsx";
+import { PokeballDeco } from "@/client/ui/Card.tsx";
+import { PokemonSprite } from "@/client/sprites/PokemonSprite.tsx";
 import type { CreateBattleResponse, FormatId, ListTeamsResponse, PokemonSetData, RandomTeamResponse, TeamSource, TeamSummary } from "@/shared/contract";
 
 type SideMode = "saved" | "random";
@@ -35,9 +37,9 @@ function sourceOf(side: SideState): TeamSource | null {
 
 function TeamPreviewGrid({ sets }: { sets: PokemonSetData[] }) {
   return (
-    <ul className="grid grid-cols-3 gap-2">
+    <ul className="stagger grid grid-cols-3 gap-2">
       {sets.map((set, index) => (
-        <li key={`${set.species}-${index}`} className="min-w-0 rounded-[var(--radius-card)] bg-bg-0/40 p-2 text-center">
+        <li key={`${set.species}-${index}`} className="min-w-0 rounded-[var(--radius-card)] bg-surface-2 p-2 text-center">
           <MiniSprite
             spriteId={toSpriteId(set.species)}
             alt={set.species}
@@ -45,7 +47,7 @@ function TeamPreviewGrid({ sets }: { sets: PokemonSetData[] }) {
             shiny={set.shiny}
             gender={set.gender === "M" || set.gender === "F" ? set.gender : undefined}
           />
-          <p className="truncate text-xs">{set.name || set.species}</p>
+          <p className="font-display truncate text-xs font-semibold">{set.name || set.species}</p>
         </li>
       ))}
     </ul>
@@ -72,7 +74,7 @@ function SideEditor({
   onPreview: () => void;
 }) {
   return (
-    <section className="glass rounded-[var(--radius-panel)] p-4 sm:p-5">
+    <section className="card rounded-[var(--radius-panel)] p-4 sm:p-5">
       <h2 className="font-display text-xl font-bold">{title}</h2>
       <div className="mt-3">
         <SegmentedControl
@@ -92,7 +94,7 @@ function SideEditor({
           {!loadingTeams && !teamsError && teams.length === 0 ? (
             <EmptyState title="Sin equipos" body="Guarda un equipo OU válido para usarlo aquí." action={<GameLink href="/teams/new">Crear equipo</GameLink>} />
           ) : null}
-          <ul className="flex flex-col gap-2">
+          <ul className="stagger flex flex-col gap-2">
             {teams.map((team) => {
               const selected = side.teamId === team.id;
               return (
@@ -103,8 +105,8 @@ function SideEditor({
                     aria-pressed={selected}
                     onClick={() => onChange({ ...side, teamId: team.id })}
                     className={cx(
-                      "flex min-h-14 w-full items-center gap-2 rounded-[var(--radius-card)] border px-2 py-2 text-left",
-                      selected ? "border-accent-2 bg-accent-2/10" : "border-line bg-bg-0/30",
+                      "press flex min-h-16 w-full items-center gap-2 rounded-[20px] border-2 px-3 py-2 text-left",
+                      selected ? "border-accent-2 bg-accent-2/10" : "border-line bg-surface-2",
                       !team.valid && "opacity-60",
                     )}
                   >
@@ -113,8 +115,8 @@ function SideEditor({
                         <MiniSprite key={`${team.id}-${index}`} spriteId={spriteId} alt="" size={32} className="-ml-1 first:ml-0" />
                       ))}
                     </span>
-                    <span className="min-w-0 flex-1 truncate font-semibold">{team.name}</span>
-                    {!team.valid ? <span className="rounded bg-danger/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-danger">No válido</span> : null}
+                    <span className="font-display min-w-0 flex-1 truncate font-semibold">{team.name}</span>
+                    {!team.valid ? <span className="rounded-full bg-danger/15 px-2 py-0.5 text-[10px] font-bold uppercase text-danger">No válido</span> : null}
                   </button>
                   {!team.valid ? (
                     <Link href={`/teams/${team.id}`} className="font-display min-h-11 self-start px-1 text-sm font-semibold uppercase text-accent-2">
@@ -222,7 +224,7 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
   return (
     <div className="pb-28 lg:pb-0">
       <PageHeader eyebrow="Entra en la arena" title="Jugar contra la CPU" subtitle="Elige cómo quieres combatir." />
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="stagger grid gap-3 sm:grid-cols-2">
         {(["gen9ou", "gen9randombattle"] as const).map((id) => {
           const selected = formatId === id;
           return (
@@ -234,24 +236,28 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
                 setFormatId(id);
                 setError(null);
               }}
-              className={cx(
-                "format-option p-5 text-left hover:border-line-strong",
-              )}
+              className="format-option type-card press p-5 pr-28 text-left"
+              style={{ "--card-color": id === "gen9ou" ? "#4a63e8" : "#f0613f" } as CSSProperties}
             >
-              <span className="mb-3 flex items-center justify-between text-accent-2"><Icon name={id === "gen9ou" ? "team" : "spark"} /><span className="text-xs">{id === "gen9ou" ? "Tu estrategia" : "Listo para jugar"}</span></span>
-              <span className="font-display block text-xl font-semibold">{formatName(id)}</span>
-              <span className="mt-1 block text-sm text-text-dim">{formatBlurb(id)}</span>
+              <PokeballDeco className="-bottom-10 -right-8 w-36" />
+              <span className="animate-float pointer-events-none absolute bottom-2 right-3 w-28">
+                <PokemonSprite spriteId={id === "gen9ou" ? "gholdengo" : "zoroark"} facing="front" animated={false} scale={1.5} alt="" className="drop-shadow-[0_6px_6px_rgb(0_0_0/0.2)]" />
+              </span>
+              <span className="soft-pill mb-3 gap-1.5 px-2.5 py-0.5 text-xs"><Icon name={id === "gen9ou" ? "team" : "spark"} className="size-3.5" />{id === "gen9ou" ? "Tu estrategia" : "Listo para jugar"}</span>
+              <span className="card-title font-display block text-2xl font-bold">{formatName(id)}</span>
+              <span className="mt-1 block text-sm font-semibold text-white/90">{formatBlurb(id)}</span>
+              {selected ? <span className="soft-pill animate-pop-in mt-3 px-2.5 py-0.5 text-xs">✓ Seleccionado</span> : null}
             </button>
           );
         })}
       </div>
 
       {formatId === "gen9randombattle" ? (
-        <p className="glass mt-5 rounded-[var(--radius-panel)] p-5 text-sm leading-relaxed text-text-dim">Seis Pokémon sorpresa para cada lado. Entra directamente al combate, sin preparar equipos.</p>
+        <p className="card animate-fade-up mt-5 rounded-[var(--radius-panel)] p-5 text-sm leading-relaxed text-text-dim">Seis Pokémon sorpresa para cada lado. Entra directamente al combate, sin preparar equipos.</p>
       ) : null}
 
       {formatId === "gen9ou" ? (
-        <div className="mt-6">
+        <div className="animate-fade-up mt-6">
           <div className="mb-3 lg:hidden">
             <SegmentedControl
               label="Lado a configurar"
@@ -299,8 +305,8 @@ export function PlaySetup({ initialFormat }: { initialFormat: FormatId | null })
       ) : null}
 
       <div className="setup-footer">
-        <div className="glass-light flex items-center gap-4">
-        <p className="hidden flex-1 text-sm text-text-dim sm:block">{formatId ? formatName(formatId) : "Selecciona un formato"}</p>
+        <div className="card flex items-center gap-4">
+        <p className="font-display hidden flex-1 pl-3 text-sm font-semibold text-text-dim sm:block">{formatId ? formatName(formatId) : "Selecciona un formato"}</p>
         <GameButton size="lg" className="w-full sm:w-auto" disabled={!formatId || previewing !== null} loading={starting} onClick={() => void start()}>
           Comenzar combate
         </GameButton>

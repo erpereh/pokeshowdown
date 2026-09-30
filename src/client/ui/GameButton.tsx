@@ -8,25 +8,25 @@ export type GameButtonSize = "sm" | "md" | "lg";
 
 const VARIANTS: Record<GameButtonVariant, string> = {
   primary:
-    "rounded-[var(--radius-card)] border border-[#ffe4a8] bg-[linear-gradient(135deg,#ffe3a6,#ffd479)] text-bg-0 shadow-[inset_0_1px_0_#ffffff60,0_6px_20px_#ffd47918] hover:brightness-110 active:brightness-95",
+    "is-primary rounded-full bg-accent text-white shadow-[0_10px_20px_-10px_#dc2f3ccc,inset_0_-3px_0_#00000026] hover:brightness-105 active:brightness-95",
   secondary:
-    "rounded-[var(--radius-card)] border border-line-strong bg-white/5 text-text shadow-[inset_0_1px_0_#ffffff0c] hover:border-accent-2 hover:bg-white/10",
-  ghost: "rounded-[var(--radius-card)] text-text-dim hover:bg-white/5 hover:text-text",
+    "rounded-full border-2 border-line bg-surface text-text shadow-[0_6px_16px_-12px_#28345466] hover:border-accent-2 hover:text-accent-2",
+  ghost: "rounded-full text-text-dim hover:bg-surface-2 hover:text-text",
   danger:
-    "rounded-[var(--radius-card)] border border-danger/60 bg-danger/15 text-danger hover:bg-danger/25 hover:shadow-[0_0_18px_#f0544f44]",
+    "rounded-full border-2 border-danger/30 bg-danger/10 text-danger hover:bg-danger hover:text-white",
 };
 
 const SIZES: Record<GameButtonSize, string> = {
-  sm: "min-h-12 px-3 text-sm",
-  md: "min-h-12 px-4 text-sm",
+  sm: "min-h-12 px-4 text-sm",
+  md: "min-h-12 px-5 text-base",
   lg: "min-h-14 px-7 text-lg",
 };
 
 function classes(variant: GameButtonVariant, size: GameButtonSize, extra?: string) {
   return [
     "game-button font-display inline-flex select-none items-center justify-center gap-2 text-center font-semibold",
-    "transition-[filter,box-shadow,background-color,border-color,color,transform] duration-[var(--dur-fast)] ease-[var(--ease-out-game)]",
-    "disabled:pointer-events-none disabled:opacity-45 active:translate-y-px",
+    "transition-[filter,box-shadow,background-color,border-color,color,transform] duration-[var(--dur-fast)] ease-[var(--ease-spring)]",
+    "disabled:pointer-events-none disabled:opacity-45 active:scale-[0.96]",
     VARIANTS[variant],
     SIZES[size],
     extra ?? "",

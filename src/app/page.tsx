@@ -6,7 +6,7 @@ export default async function HomePage() {
   const user = await readShellUser();
   return (
     <ScreenShell mode="hero" user={user}>
-      <HomeHero loggedIn={user !== null} />
+      <HomeHero loggedIn={user !== null} name={user?.displayName} />
     </ScreenShell>
   );
 }

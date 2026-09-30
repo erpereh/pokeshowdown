@@ -130,11 +130,13 @@ test("Revival Blessing, cambio forzado, Tera, autosave, cerrar/reabrir y victori
   await page.goto(`/battle/${created.id}`);
   await page.getByRole("button", { name: /^Forretress/ }).click();
   await uiAction(page, created.id, () => page.getByRole("button", { name: "Confirmar liderato", exact: true }).click());
+  await page.getByRole("button", { name: "Luchar", exact: true }).click();
   let result = await uiAction(page, created.id, () => page.getByRole("button", { name: "Explosion", exact: true }).click());
   expect(result.view.request?.kind).toBe("switch");
   expect(result.view.state.sides.p1.team.find((mon) => mon.species === "Forretress")?.fainted).toBe(true);
   await screenshot(page, info, "07-forced-switch");
   result = await uiAction(page, created.id, () => page.getByRole("button", { name: /^Pawmot/ }).click());
+  await page.getByRole("button", { name: "Luchar", exact: true }).click();
   result = await uiAction(page, created.id, () => page.getByRole("button", { name: "Revival Blessing", exact: true }).click());
   expect(result.view.request?.reviving).toBe(true);
   await screenshot(page, info, "08-revival-choice");
@@ -242,6 +244,7 @@ test("Pérdida real de respuesta recupera el mismo turno con Reintentar", async 
       await route.continue();
     }
   });
+  await page.getByRole("button", { name: "Luchar", exact: true }).click();
   await page.getByRole("button", { name: move.name, exact: true }).click();
   await expect(page.getByRole("button", { name: "Reintentar", exact: true })).toBeVisible();
   const durable = await current(page, view.id);

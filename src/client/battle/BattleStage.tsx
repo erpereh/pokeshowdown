@@ -3,8 +3,8 @@
 import { useState, type ReactNode, type RefObject } from "react";
 import type { PublicBattleState } from "@/shared/contract";
 import { Sheet } from "@/client/ui/Modal.tsx";
-import { Icon } from "@/client/ui/Icon.tsx";
 import { Arena } from "./Arena.tsx";
+import { BattleDialog } from "./BattleDialog.tsx";
 import { BattleLog } from "./BattleLog.tsx";
 import type { LogLine } from "./log.ts";
 
@@ -14,6 +14,7 @@ export function BattleStage({
   bannerTurn,
   arenaRef,
   lines,
+  prompt,
   muted,
   top,
   bottom,
@@ -24,6 +25,8 @@ export function BattleStage({
   bannerTurn: number | null;
   arenaRef: RefObject<HTMLDivElement | null>;
   lines: LogLine[];
+  /** Narration shown while the game waits for the player (replaces the last log line). */
+  prompt?: string | null;
   muted?: boolean;
   top: ReactNode;
   bottom: ReactNode;
@@ -31,19 +34,23 @@ export function BattleStage({
 }) {
   const [logOpen, setLogOpen] = useState(false);
   const last = lines[lines.length - 1];
+  const text = prompt ?? last?.text ?? "¡Empieza el combate!";
+  const lineKey = prompt ? `prompt:${prompt}` : (last?.id ?? "start");
 
   return (
     <div className="battle-stage relative flex min-h-0 flex-1 flex-col overflow-hidden overflow-x-hidden">
       {top}
-      <div className={`flex min-h-0 flex-1 flex-col lg:flex-row ${muted ? "saturate-50" : ""}`}>
+      <div className={`flex min-h-0 flex-1 flex-col lg:flex-row lg:gap-4 lg:px-4 ${muted ? "saturate-50" : ""}`}>
         <div className="battle-workspace flex min-h-0 min-w-0 flex-1 flex-col">
           <Arena ref={arenaRef} state={state} background={background} bannerTurn={bannerTurn} />
-          <button type="button" aria-label="Abrir registro del combate" onClick={() => setLogOpen(true)} className="battle-log-trigger flex min-h-12 w-full shrink-0 items-center gap-3 border-y border-line px-4 text-left text-xs lg:hidden">
-            <Icon name="history" className="size-4 shrink-0 text-accent-2" /><span className="flex-1 truncate text-text-dim">{last?.text ?? "Registro del combate"}</span><span className="text-accent-2">Ver</span>
-          </button>
-          <div className="battle-controls min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">{bottom}</div>
+          <div className="battle-controls min-h-0 flex-1 overflow-y-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
+            <div className="mx-auto w-full max-w-3xl px-3 pt-4 sm:px-4">
+              <BattleDialog text={text} lineKey={lineKey} onOpen={() => setLogOpen(true)} />
+            </div>
+            {bottom}
+          </div>
         </div>
-        <aside className="hidden w-80 shrink-0 overflow-y-auto border-l border-line p-3 lg:block">
+        <aside className="card my-3 hidden w-80 shrink-0 overflow-y-auto rounded-[24px] p-4 lg:block">
           <BattleLog lines={lines} className="min-h-full" />
         </aside>
       </div>

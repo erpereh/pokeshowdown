@@ -25,6 +25,14 @@ function assertSavedFormat(formatId: SaveTeamBody["formatId"]): "gen9ou" {
   return formatId;
 }
 
+function leadTypeFor(species: string): string | null {
+  try {
+    return getSpeciesDetail(toID(species)).species.types[0] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function spriteIdFor(species: string): string {
   try {
     return getSpeciesDetail(toID(species)).species.spriteId;
@@ -82,6 +90,7 @@ export async function listTeams(db: DbClient, userId: string): Promise<TeamSumma
       formatId: "gen9ou",
       species: sets.map((set) => set.species),
       spriteIds: sets.map((set) => spriteIdFor(set.species)),
+      leadType: sets[0] ? leadTypeFor(sets[0].species) : null,
       valid: row.valid,
       updatedAt: new Date(row.updated_at).toISOString(),
     };

@@ -25,4 +25,5 @@ Fuentes: [Pokémon Showdown](https://github.com/smogon/pokemon-showdown) · [Pok
 - `src/server/pokemon-data/` lee ese JSON local. Si el archivo no está, la consulta devuelve null y el simulador sigue disponible.
 - Sincronizaciones deterministas y versionadas; caché para metadatos estáticos, no para el estado autoritativo de partidas activas.
 - No duplicar manualmente fórmulas, learnsets, bans, clauses, prioridades, estados o interacciones entre items/abilities.
+- El resumen de equipos (`TeamSummary.leadType`) incluye el tipo principal del primer Pokémon según el `Dex` de Showdown; solo sirve para colorear la tarjeta del equipo.
 - Los archivos de sprites siguen un pipeline diferente descrito en [ASSET-INVENTORY.md](ASSET-INVENTORY.md).

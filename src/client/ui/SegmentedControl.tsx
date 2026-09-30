@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { cx } from "./cx.ts";
 
 interface Option<T extends string> {
@@ -7,6 +8,7 @@ interface Option<T extends string> {
   label: string;
 }
 
+/** Pokédex-style tabs (radiogroup) with an animated underline. */
 export function SegmentedControl<T extends string>({
   value,
   onChange,
@@ -20,8 +22,10 @@ export function SegmentedControl<T extends string>({
   label: string;
   className?: string;
 }) {
+  const current = Math.max(0, options.findIndex((option) => option.value === value));
+  const width = 100 / Math.max(options.length, 1);
   return (
-    <div role="radiogroup" aria-label={label} className={cx("grid rounded-[var(--radius-card)] border border-line bg-bg-0/50 p-1", className)} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div role="radiogroup" aria-label={label} className={cx("tab-underline", className)} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -46,15 +50,17 @@ export function SegmentedControl<T extends string>({
               onChange(next.value);
               event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("[role='radio']")[nextIndex]?.focus();
             }}
-            className={cx(
-              "font-display min-h-12 rounded-[14px] px-2 text-sm font-semibold transition-colors duration-[var(--dur-fast)]",
-              selected ? "bg-accent-2/15 text-accent-2 shadow-[inset_0_1px_0_#80e3f330]" : "text-text-dim hover:text-text",
-            )}
+            className="px-2 text-sm"
           >
             {option.label}
           </button>
         );
       })}
+      <span
+        aria-hidden="true"
+        className="tab-indicator"
+        style={{ width: `${width}%`, transform: `translateX(${current * 100}%)` } as CSSProperties}
+      />
     </div>
   );
 }

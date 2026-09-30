@@ -1,37 +1,40 @@
 # Diseño
 
-PokeShowdown usa una identidad de videojuego oscura y premium con liquid glass. El diseño prioriza jugar en móvil vertical; desktop conserva más espacio para arena, editor y registro.
+PokeShowdown se presenta como una Pokédex moderna y clara con identidad de juego Pokémon, no como una web. El diseño prioriza jugar en móvil vertical con el pulgar; desktop conserva más espacio para arena, editor y registro.
 
 ## Sistema visual
 
-Outfit para marca, títulos y acciones; Manrope para texto/formularios, mediante next/font. Tokens en globals.css: negro azulado, blanco, gris frío, cian para selección y dorado para la acción principal. HP, tipos y estados mantienen colores semánticos y etiquetas. Radios de 18 px en controles y 28 px en paneles; transiciones de interfaz de 140–220 ms.
+Fredoka (redondeada) para marca, títulos, botones y HUD; Nunito para texto y formularios, mediante next/font. Tokens en globals.css: fondo gris azulado muy claro, superficies blancas, texto pizarra, rojo Poké Ball para la acción principal, azul para selección/foco y un azul marino (`battle-frame`) para los marcos del combate. HP, tipos y estados mantienen colores semánticos y etiquetas. Radios de 16 px en controles, 24–32 px en tarjetas y hojas; sombras suaves difusas, sin cristal ni desenfoque.
 
-GameButton, GlassPanel, SegmentedControl, Modal/Sheet, chips, HP, Icon, notificaciones y estados de carga/error/vacío son patrones compartidos. El cristal combina transparencia, reflejo superior, bordes suaves y desenfoque estático. Formularios, HUD y datos densos usan mayor opacidad. Sin backdrop-filter o con prefers-reduced-transparency, las superficies son opacas.
+Cada tipo tiene dos paletas en `TypeChip.tsx`: la oficial para chips sólidos (texto AA) y `TYPE_CARD_COLORS` para fondos de tarjeta con título blanco (contraste ≥3:1 de texto grande, cubierto por test). Las tarjetas de color (`type-card`, `Card type=…`) llevan una Poké Ball decorativa (máscara CSS `pokeball-deco`), chips translúcidos (`soft-pill`, `TypeChip tone="soft"`) y sprite oficial grande; las hojas blancas (`sheet-surface`) se solapan sobre la cabecera de color como la ficha de Pokédex.
+
+Patrones compartidos: GameButton (píldoras), Card/PokeballDeco/Pokeball, SegmentedControl como pestañas subrayadas con indicador animado, Modal/Sheet (renderizados en body), chips, HpBar con etiqueta PS, Icon, toasts y estados de carga/error/vacío con Poké Ball.
 
 ## Navegación y pantallas
 
-- Inicio es un lobby con estadio original, sprites oficiales separados y menú compacto. Jugar domina con sesión; Continuar partida aparece cuando corresponde. Sin sesión muestra Entrar y Crear cuenta. El fondo tiene variantes vertical/horizontal y respaldo CSS.
-- Cinco destinos: Inicio, Jugar, Equipos, Partidas e Historial. Navbar flotante con iconos y etiquetas por debajo de 1024 px; navegación superior desde 1024 px. Marca y cuenta permanecen accesibles. Safe areas y espacio inferior reservan la navbar.
-- Preparación mantiene formato y selección independiente de equipos OU, con pestañas para cada lado en móvil. Random Battle tiene explicación breve. El botón de inicio está fijado sobre la navbar en móvil/tablet; el contenido reserva espacio adicional. En desktop la acción usa un footer sticky.
-- Equipos muestra sprites y legalidad. El editor tiene seis ranuras y, en móvil, un diálogo con secciones Pokémon, Set y Entrenamiento. Los campos permanecen montados y el borrador conserva los valores. Guardar/validar tienen prioridad; otras operaciones están agrupadas en opciones. El diálogo ofrece guardar y volver a las ranuras.
-- Acceso, registro y recuperación usan el mismo sistema con fondo CSS, campos legibles y mensajes de validación. Los campos de texto usan 16 px para evitar zoom automático en móvil.
-- Partidas e historial usan listas compactas con formato, sprites, turno, fecha y resultado; continuar/reproducir son enlaces reales.
+- Cinco destinos: Inicio, Jugar, Equipos, Partidas e Historial. Por debajo de 1024 px, barra inferior blanca anclada con safe area; Jugar es una Poké Ball central elevada y el destino activo se marca en rojo con indicador. Desde 1024 px, pestañas en píldora en la cabecera. Marca y cuenta permanecen accesibles.
+- Inicio: saludo, tarjeta roja principal con Garchomp vs Dragapult y acción ¡A combatir! (o Entrar/Crear cuenta), y accesos en rejilla 2 columnas como tarjetas por tipo (Continuar partida cuando existe, Equipos, Partidas, Historial).
+- Jugar: formatos como tarjetas grandes de color con sprite; selección de equipos OU por lado con pestañas en móvil; Comenzar combate fijo sobre la navbar en móvil/tablet y sticky en desktop.
+- Equipos: tarjetas coloreadas por el tipo del primer Pokémon con sprite líder, formato, legalidad y bandeja blanca con los seis sprites y acciones; botón flotante azul + en móvil.
+- Editor: ranuras como mini tarjetas por tipo; ficha de Pokémon con cabecera de color (nombre, número, tipos, tier, sprite) y hoja blanca con pestañas Pokémon, Set y Entrenamiento en móvil. Los campos permanecen montados y el borrador conserva valores. Estadísticas finales en barras estilo Pokédex coloreadas por naturaleza.
+- Partidas/Historial: tarjetas blancas con sprites enfrentados (VS), formato, turno, fecha y chip de resultado.
+- Acceso y recuperación: tarjeta blanca sobre fondo claro con Poké Balls decorativas; campos de 16 px para evitar zoom.
 
 ## Combate y replay
 
-Shell de altura 100dvh sin navbar inferior. Arena oscura con rival de frente, jugador de espalda, fondos locales de combate, HP/estado, clima/campo y efectos. Arena móvil entre 170 y 360 px, ajustada al viewport; controles tienen scroll interno. En landscape bajo, arena y controles se colocan lado a lado. Desktop añade registro lateral y limita la altura del panel de acciones.
+Shell de altura 100dvh sin navbar inferior. Barra superior con píldora de turno, clima/campo, velocidad y bandera de rendición. Arena con fondos locales de combate, plataformas elípticas, rival de frente y jugador de espalda; cajas HP blancas con marco marino y esquinas asimétricas (nombre, género, nivel, barra PS, PS exactos solo propios, estado, Tera, cambios y Poké Balls del equipo). Arena móvil `clamp(210px, 44dvh, 400px)`; el panel de controles es una hoja blanca que se solapa sobre la arena con scroll interno. En landscape bajo, arena y controles lado a lado. Desktop añade el registro en una tarjeta lateral.
 
-Movimientos en cuadrícula 2×2 con nombre, tipo, categoría y PP. Un botón independiente abre detalles en Sheet, sin enviar elección; no requiere hover ni pulsación prolongada. Registro móvil abre otro Sheet. Cambio y Tera usan controles separados. Resultado presenta Pokémon, resultado y nueva partida/replay; replay ofrece play/pause, anterior/siguiente, velocidad y turno.
+La caja de narración (borde doble estilo juego) muestra con efecto máquina de escribir la última línea del registro o «¿Qué debería hacer X?» cuando se espera una elección; al tocarla abre el registro completo en Sheet.
 
-- La request vigente determina preview, movimiento, cambio o espera.
-- Preview respeta slots reales y tamaño requerido; cambios forzados ocultan movimientos; Revival explica selección de debilitados.
-- Tera refleja disponibilidad oficial. Envío/reproducción bloquean elecciones; fallo de respuesta reintenta la misma acción.
-- Rendición pide confirmación y comunica el resultado persistido. Nunca se presentan datos ocultos del rival.
+- Menú raíz 2×2: Luchar (rojo), Pokémon (verde), Teracristalizar (color del tipo Tera, deshabilitado si no aplica; activa Tera y abre los movimientos) y Huir (abre la confirmación de rendición). Cada submenú tiene botón Atrás; la request nueva vuelve al menú.
+- Movimientos en cuadrícula 2×2 con tarjeta del color del tipo, nombre, tipo, categoría y PP; botón ⓘ independiente abre detalles en Sheet sin enviar elección. Con Tera activo los movimientos se resaltan y un conmutador permite desactivarlo.
+- La request vigente determina preview, menú, cambio forzado o espera; Revival explica la selección de debilitados. Envío/reproducción bloquean elecciones; fallo de respuesta reintenta la misma acción.
+- Rendición pide confirmación. El resultado es una ficha con cabecera verde/roja/azul/gris, sprite, confeti en victoria y Revancha/Ver repetición/Inicio. Replay ofrece anterior/reproducir/siguiente, velocidad y turno. Nunca se presentan datos ocultos del rival.
 
 ## Animación, accesibilidad y validación
 
-El director reproduce eventos confirmados; la autoridad no depende de terminar animaciones. Se mantienen 1×/2× y omitir reproducción; ocultar pestaña detiene reproducción. prefers-reduced-motion reduce transiciones y usa sprites estáticos en arena/lobby. Sprites conservan índice local y fallbacks recuperables.
+Movimiento solo con transform/opacity: entrada de página por opacidad (no atrapa elementos fijos), entradas escalonadas en listas, pop-in de tarjetas y movimientos, hojas que suben con resorte, indicador de pestañas deslizante, Poké Balls decorativas girando lento, rebote de la Poké Ball de Jugar, flotación de sprites decorativos, barras de estadísticas que crecen, sprites y cajas HP que entran deslizándose, transición lateral entre submenús, confeti en victoria y sacudida en errores/derrota. Las animaciones de entrada usan `fill-mode: backwards` para no bloquear los estados :hover/:active. El director reproduce eventos confirmados; la autoridad no depende de animaciones. Se mantienen 1×/2× y omitir; ocultar pestaña detiene reproducción. prefers-reduced-motion anula animaciones CSS, la máquina de escribir y usa sprites estáticos.
 
-Navegación y controles compartidos tienen área táctil mínima de 48 px, nombre accesible, foco visible y disabled correcto. Modales/sheets contienen foco, lo restauran y permiten Escape. Selectores soportan teclado; iconos decorativos no repiten nombres. Información no depende solo del color.
+Controles táctiles de al menos 48 px, nombre accesible, foco visible azul y disabled correcto. Modales/sheets contienen foco, lo restauran y permiten Escape. Selectores soportan teclado (combate: F, 1–4, T, S, Esc). Iconos decorativos no repiten nombres. La información no depende solo del color.
 
-Validar 320, 390 y 430 px, tablet, desktop, landscape, formularios con teclado móvil y viewports cortos. Revisar composición, interacción y acabado con capturas de lobby, setup, editor, combate, cambios/Revival, resultado y replay. Comprobar imágenes, consola, red y ausencia de overflow horizontal y controles solapados. E2E cubre foco, persistencia de campos entre secciones y consulta de detalles sin resolver turnos.
+Validar 320, 390 y 430 px, tablet, desktop, landscape, formularios con teclado móvil y viewports cortos. Revisar capturas de inicio, setup, equipos, editor, combate (menú, movimientos, cambio, Revival, resultado) y replay. Comprobar imágenes, consola, red y ausencia de overflow horizontal y controles solapados. E2E cubre foco, persistencia de campos entre secciones y consulta de detalles sin resolver turnos.

@@ -42,7 +42,7 @@ La reconstrucción compara turno y request crudo p1 con checkpoint. Se filtran c
 
 create_request_id hace idempotente el inicio. Cada decisión incluye revision/clientActionId. commit_battle_turn bloquea la fila y comprueba revisión, inserta la acción, actualiza secretos antes de partida y crea replay al terminar. Constraints impiden duplicados. Una carrera recupera la vista vigente; una respuesta perdida se reintenta con el mismo ID y elección. El frontend hidrata la vista actual en respuestas repetidas.
 
-Partidas finalizadas son inmutables. Una versión de motor distinta rechaza nuevas elecciones y permite rendición sin reconstruir. Replays históricos usan frames y versión almacenados. Las listas no cargan los frames completos.
+Partidas finalizadas son inmutables. Una versión de motor distinta rechaza nuevas elecciones y permite rendición sin reconstruir. Replays históricos usan frames y versión almacenados. Las listas no cargan los frames completos: solo extraen con rutas JSON la especie y el spriteId del Pokémon activo de cada lado en los frames 0 y 1 (estado público; con team preview los líderes aparecen en el frame 1).
 
 ## Requests especiales
 

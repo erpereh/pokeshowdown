@@ -12,11 +12,11 @@ export function resultBadge(
   result: BattleResult | null,
   endReason: "normal" | "forfeit" | null,
 ): { text: string; className: string } {
-  if (endReason === "forfeit") return { text: "Rendición", className: "border-line-strong text-text-dim" };
-  if (result === "win") return { text: "Victoria", className: "border-success/50 text-success" };
-  if (result === "loss") return { text: "Derrota", className: "border-danger/50 text-danger" };
-  if (result === "tie") return { text: "Empate", className: "border-accent-2/50 text-accent-2" };
-  return { text: "En curso", className: "border-accent/40 text-accent" };
+  if (endReason === "forfeit") return { text: "Rendición", className: "border-line-strong bg-surface-2 text-text-dim" };
+  if (result === "win") return { text: "Victoria", className: "border-success/30 bg-success/10 text-success" };
+  if (result === "loss") return { text: "Derrota", className: "border-danger/30 bg-danger/10 text-danger" };
+  if (result === "tie") return { text: "Empate", className: "border-accent-2/30 bg-accent-2/10 text-accent-2" };
+  return { text: "En curso", className: "border-accent/30 bg-accent/10 text-accent" };
 }
 
 export function formatWhen(iso: string): string {

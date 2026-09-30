@@ -36,13 +36,13 @@ export function HpBar({
   return (
     <div className={cx("min-w-0", className)}>
       <div className="flex items-center justify-between gap-2 text-[11px]">
-        <span className="font-display uppercase tracking-wider text-text-dim">PS</span>
+        <span className="font-display rounded bg-[#f5b82e] px-1 text-[10px] font-bold leading-4 text-[#3a2a00]">PS</span>
         <span className="tabular font-semibold">{label}</span>
       </div>
-      <div className="mt-0.5 h-2 overflow-hidden rounded-full bg-black/50" role="meter" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Puntos de salud ${label}`}>
+      <div className="mt-0.5 h-2 overflow-hidden rounded-full bg-[#3b4455] p-px" role="meter" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`Puntos de salud ${label}`}>
         <div
           className={cx("h-full rounded-full", tone(ratio), ratio > 0 && ratio <= 0.2 && "animate-pulse")}
-          style={{ width: `${pct}%`, transition: `width ${duration}ms var(--ease-out-game)` }}
+          style={{ width: `${pct}%`, transition: `width ${duration}ms var(--ease-out-game), background-color 300ms` }}
         />
       </div>
     </div>

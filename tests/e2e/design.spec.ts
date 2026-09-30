@@ -79,6 +79,7 @@ test("Detalles de movimiento y registro se abren sin enviar turnos y el combate 
   const confirmed = page.waitForResponse((r) => r.url().endsWith(`/api/battles/${view.id}/actions`) && r.request().method() === "POST");
   await page.getByRole("button", { name: "Confirmar liderato", exact: true }).click();
   await confirmed;
+  await page.getByRole("button", { name: "Luchar", exact: true }).click();
   const detail = page.getByRole("button", { name: "Detalles de Explosion", exact: true });
   await expect(detail).toBeVisible();
   const before = await api<GetBattleResponse>(page.request, "get", `/api/battles/${view.id}`);
@@ -103,10 +104,12 @@ test("Detalles de movimiento y registro se abren sin enviar turnos y el combate 
   await expect(page.getByRole("dialog", { name: "Registro", exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Abrir registro del combate", exact: true })).toBeFocused();
-  await page.getByRole("radio", { name: "Pokémon", exact: true }).click();
+  await page.getByRole("button", { name: "Atrás", exact: true }).click();
+  await page.getByRole("button", { name: "Pokémon", exact: true }).click();
   const switched = page.waitForResponse((r) => r.url().endsWith(`/api/battles/${view.id}/actions`) && r.request().method() === "POST");
   await page.getByRole("button", { name: /^Pawmot/ }).click();
   expect((await switched).status()).toBe(200);
+  await page.getByRole("button", { name: "Luchar", exact: true }).click();
   await expect(page.locator(".move-choice")).toHaveCount(4);
   for (const [width, height] of [[390, 844], [430, 932], [844, 390]]) {
     await page.setViewportSize({ width: width!, height: height! });

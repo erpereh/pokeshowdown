@@ -231,6 +231,12 @@ export interface BattleView {
   updatedAt: string;
 }
 
+/** First Pokémon each side sent out, taken from the public battle state. */
+export interface BattleLead {
+  species: string;
+  spriteId: string;
+}
+
 export interface BattleSummary {
   id: string;
   formatId: FormatId;
@@ -238,8 +244,8 @@ export interface BattleSummary {
   result: BattleResult | null;
   endReason: "normal" | "forfeit" | null;
   turn: number;
-  playerLead: string | null;
-  cpuLead: string | null;
+  playerLead: BattleLead | null;
+  cpuLead: BattleLead | null;
   createdAt: string;
   updatedAt: string;
 }

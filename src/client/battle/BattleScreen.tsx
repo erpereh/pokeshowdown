@@ -7,6 +7,7 @@ import { pushToast } from "@/client/ui/Toast.tsx";
 import { ErrorState } from "@/client/ui/ErrorState.tsx";
 import { GameButton, Spinner } from "@/client/ui/GameButton.tsx";
 import { Modal } from "@/client/ui/Modal.tsx";
+import { Icon } from "@/client/ui/Icon.tsx";
 import type { ActionResponse, BattleView, GetBattleResponse, PlayerChoice } from "@/shared/contract";
 import { ActionPanel } from "./ActionPanel.tsx";
 import { BattleStage } from "./BattleStage.tsx";
@@ -165,6 +166,8 @@ export function BattleScreen({ battleId }: { battleId: string }) {
   const display = playback.state ?? view?.state ?? null;
   const locked = sending || playback.playing || netError;
   const showEnd = Boolean(view && view.status === "finished" && !playback.playing && !sending);
+  const activeName = display?.sides.p1.active?.name;
+  const prompt = !locked && view?.request?.kind === "move" && activeName ? `¿Qué debería hacer ${activeName}?` : null;
 
   if (error) {
     return (
@@ -191,6 +194,7 @@ export function BattleScreen({ battleId }: { battleId: string }) {
         bannerTurn={playback.bannerTurn}
         arenaRef={playback.arenaRef}
         lines={playback.lines}
+        prompt={prompt}
         muted={showEnd && view.result !== "win"}
         top={
           <FieldBar
@@ -199,9 +203,16 @@ export function BattleScreen({ battleId }: { battleId: string }) {
               <>
                 <SpeedSkip speed={playback.speed} playing={playback.playing} onSpeed={playback.toggleSpeed} onSkip={playback.skip} />
                 {view.status === "active" ? (
-                  <GameButton type="button" variant="danger" size="md" onClick={() => setForfeitOpen(true)} disabled={locked}>
-                    Rendirse
-                  </GameButton>
+                  <button
+                    type="button"
+                    aria-label="Rendirse"
+                    title="Rendirse"
+                    onClick={() => setForfeitOpen(true)}
+                    disabled={locked}
+                    className="flex size-12 items-center justify-center rounded-full text-text-dim hover:bg-danger/10 hover:text-danger disabled:opacity-45"
+                  >
+                    <Icon name="flag" />
+                  </button>
                 ) : null}
               </>
             }
@@ -210,7 +221,7 @@ export function BattleScreen({ battleId }: { battleId: string }) {
         bottom={
           <div>
             {netError ? (
-              <div className="mx-2 mb-2 flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-card)] border border-danger/50 bg-danger/10 px-3 py-2" role="alert">
+              <div className="animate-shake mx-3 mt-3 flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-card)] border-2 border-danger/30 bg-danger/5 px-3 py-2" role="alert">
                 <p className="text-sm">No se pudo confirmar la acción. Reintentar recupera el mismo turno guardado.</p>
                 <GameButton type="button" size="md" onClick={() => void retry()} loading={sending}>
                   Reintentar
@@ -218,7 +229,14 @@ export function BattleScreen({ battleId }: { battleId: string }) {
               </div>
             ) : null}
             {showEnd ? null : (
-              <ActionPanel request={view.request} you={display.sides.p1} foe={display.sides.p2} locked={locked} onChoice={(choice) => void submit(choice)} />
+              <ActionPanel
+                request={view.request}
+                you={display.sides.p1}
+                foe={display.sides.p2}
+                locked={locked}
+                onChoice={(choice) => void submit(choice)}
+                onForfeit={view.status === "active" ? () => setForfeitOpen(true) : undefined}
+              />
             )}
           </div>
         }

@@ -4,9 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { createBrowserSupabase } from "@/lib/supabase/browser.ts";
 import { GameButton } from "@/client/ui/GameButton.tsx";
-import { GlassPanel } from "@/client/ui/GlassPanel.tsx";
+import { Card, Pokeball, PokeballDeco } from "@/client/ui/Card.tsx";
 import { SegmentedControl } from "@/client/ui/SegmentedControl.tsx";
-import { Icon } from "@/client/ui/Icon.tsx";
 
 type Mode = "login" | "signup" | "recovery" | "password";
 
@@ -123,15 +122,18 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
   }
 
   return (
-    <section className="relative min-h-dvh bg-[radial-gradient(ellipse_at_50%_15%,#233c4c,transparent_65%)]">
-      <div className="app-content relative mx-auto flex min-h-dvh max-w-5xl items-center justify-center gap-20 px-4 pt-24 lg:px-8">
+    <section className="relative isolate overflow-hidden">
+      <PokeballDeco spinning className="-left-40 top-10 w-[28rem] text-accent opacity-[0.07]" />
+      <PokeballDeco spinning className="-right-24 bottom-24 w-72 text-accent-2 opacity-[0.07]" />
+      <div className="app-content relative mx-auto flex min-h-[calc(100dvh-64px)] max-w-5xl items-center justify-center gap-20 px-4 pt-4 lg:px-8">
         <div className="hidden max-w-sm lg:block">
-          <div className="glass-light mb-8 flex size-20 items-center justify-center rounded-3xl text-accent-2"><Icon name="spark" className="size-10" /></div>
+          <Pokeball className="animate-float mb-8 size-20" />
           <p className="section-kicker mb-4">Tu estadio te espera</p>
-          <p className="font-display text-5xl font-semibold leading-tight">Prepara tu próxima victoria.</p>
+          <p className="font-display text-5xl font-bold leading-tight">Prepara tu próxima victoria.</p>
           <p className="mt-5 leading-relaxed text-text-dim">Tus equipos, tus partidas y tu estrategia. Todo a tu ritmo.</p>
         </div>
-        <GlassPanel className="my-6 w-full max-w-md p-6 sm:p-8">
+        <Card className="animate-pop-in my-6 w-full max-w-md p-6 sm:p-8">
+          <Pokeball className="mb-3 size-12 lg:hidden" />
           <p className="section-kicker">PokeShowdown</p>
           <h1 className="font-display mt-1 text-3xl font-bold">{mode === "password" ? "Nueva contraseña" : mode === "recovery" ? "Recupera tu cuenta" : "Tu entrenador"}</h1>
           {mode === "login" || mode === "signup" ? <p className="mt-2 text-sm text-text-dim">Entra y guarda tu progreso.</p> : null}
@@ -153,40 +155,40 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
           <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-3" noValidate>
             {mode === "signup" ? (
               <label className="block text-sm">
-                <span className="mb-1 block text-text-dim">Nombre de entrenador</span>
+                <span className="font-display mb-1 block font-semibold text-text-dim">Nombre de entrenador</span>
                 <input
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
                   autoComplete="nickname"
                   maxLength={20}
-                  className="min-h-11 w-full rounded-[var(--radius-card)] border border-line-strong bg-bg-0/70 px-3"
+                  className="min-h-11 w-full rounded-[var(--radius-card)] border-2 border-line bg-surface-2 px-4 transition-colors focus:border-accent-2 focus:bg-surface"
                 />
               </label>
             ) : null}
             {mode !== "password" ? <label className="block text-sm">
-              <span className="mb-1 block text-text-dim">Correo</span>
+              <span className="font-display mb-1 block font-semibold text-text-dim">Correo</span>
               <input
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 autoComplete="email"
                 inputMode="email"
-                className="min-h-11 w-full rounded-[var(--radius-card)] border border-line-strong bg-bg-0/70 px-3"
+                className="min-h-11 w-full rounded-[var(--radius-card)] border-2 border-line bg-surface-2 px-4 transition-colors focus:border-accent-2 focus:bg-surface"
               />
             </label> : null}
             {mode !== "recovery" ? <label className="block text-sm">
-              <span className="mb-1 block text-text-dim">Contraseña</span>
+              <span className="font-display mb-1 block font-semibold text-text-dim">Contraseña</span>
               <input
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
-                className="min-h-11 w-full rounded-[var(--radius-card)] border border-line-strong bg-bg-0/70 px-3"
+                className="min-h-11 w-full rounded-[var(--radius-card)] border-2 border-line bg-surface-2 px-4 transition-colors focus:border-accent-2 focus:bg-surface"
               />
             </label> : null}
             {mode === "password" ? <label className="block text-sm">
-              <span className="mb-1 block text-text-dim">Confirmar contraseña</span>
-              <input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} autoComplete="new-password" className="min-h-11 w-full rounded-[var(--radius-card)] border border-line-strong bg-bg-0/70 px-3" />
+              <span className="font-display mb-1 block font-semibold text-text-dim">Confirmar contraseña</span>
+              <input type="password" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} autoComplete="new-password" className="min-h-11 w-full rounded-[var(--radius-card)] border-2 border-line bg-surface-2 px-4 transition-colors focus:border-accent-2 focus:bg-surface" />
             </label> : null}
             {error ? (
               <p role="alert" className="text-sm text-danger">
@@ -205,7 +207,7 @@ export function AuthCard({ initialMode, nextPath, confirmError }: { initialMode:
               {mode === "recovery" ? "Volver al acceso" : "He olvidado mi contraseña"}
             </GameButton> : null}
           </form>
-        </GlassPanel>
+        </Card>
       </div>
     </section>
   );

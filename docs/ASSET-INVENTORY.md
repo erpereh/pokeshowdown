@@ -1,19 +1,10 @@
 # Assets y sincronización
 
-Showdown es la fuente principal de assets Pokémon y combate; PokéAPI Sprites es fallback del perfil full. Las rutas public/assets/generated son locales y se regeneran; source indica procedencia. El lobby añade arte original generado, separado del pipeline de Showdown.
+Showdown es la fuente principal de assets Pokémon y combate; PokéAPI Sprites es fallback del perfil full. Las rutas public/assets/generated son locales y se regeneran; source indica procedencia.
 
-## Arte original de marca
+## Elementos de marca
 
-El estadio del inicio se generó con la herramienta integrada imagegen. No contiene Pokémon, texto ni interfaz; los sprites oficiales se presentan por separado. El arte se versiona en public/assets/brand y no depende de sync:assets ni forma parte de runtime-index/manifest.
-
-- stadium-desktop.webp: 1672 × 941 px, 179.054 bytes.
-- stadium-mobile.webp: recorte central vertical de 900 × 1600 px, 89.000 bytes.
-- WebP calidad 86, codificado con sharp ya disponible en el entorno. Original generado: exec-0204f151-3a41-4ddc-92bf-fafa4cb6091b.png.
-- picture selecciona la variante móvil hasta 767 px. La carga tiene prioridad solo en el lobby; un gradiente CSS permite mostrar los controles si falla la imagen. Acceso y recuperación utilizan un fondo CSS, sin descargar el estadio.
-
-Prompt de generación:
-
-> Create original premium cinematic video game lobby background, widescreen horizontal 16:9 composition, high resolution clean polished 3D game environment. A futuristic open roof monster battle stadium at night, dark navy architecture, cyan light strips circling the arena, restrained warm golden lights, atmospheric depth, dark sky with subtle stars, monumental symmetrical curved stands. Camera at arena floor looking toward distant stands, horizon upper third, clean central arena floor and generous quiet dark space in lower half for overlaid UI. Futuristic but elegant and minimal, realistic refined materials, smooth lighting, crisp detailed environment, no people, no creatures, no Pokemon, no text, no logos, no interface, no watermark. Center composition should remain strong when cropped to mobile portrait. Colors midnight black blue, cool silver, cyan with a small gold accent. Background must be attractive and readable without heavy black overlay.
+La interfaz no usa imágenes de marca propias. La Poké Ball del logo, la navegación y los estados de carga es un SVG inline (`Pokeball` en `src/client/ui/Card.tsx`) y la Poké Ball decorativa de tarjetas y cabeceras es una máscara CSS (`--pokeball-mask` en `globals.css`). Ninguno forma parte de sync:assets, runtime-index ni manifest.
 
 ## Perfil runtime
 

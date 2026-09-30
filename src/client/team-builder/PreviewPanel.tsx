@@ -1,6 +1,6 @@
 "use client";
 
-import { GlassPanel } from "@/client/ui/GlassPanel";
+import { Card } from "@/client/ui/Card";
 import { TypeChip } from "@/client/ui/TypeChip";
 import type { NatureEntry, PokemonSetData, ValidationProblem } from "@/shared/contract";
 import type { SpeciesBundle } from "./hooks";
@@ -35,7 +35,7 @@ export function ProblemList({
       ) : (
         <ul className="mt-2 flex flex-col gap-2">
           {problems.map((problem, index) => (
-            <li key={`${problem.setIndex ?? "team"}-${index}`} className="rounded-[var(--radius-card)] border border-danger/40 bg-danger/10 px-3 py-2">
+            <li key={`${problem.setIndex ?? "team"}-${index}`} className="animate-fade-up rounded-[var(--radius-card)] border-2 border-danger/25 bg-danger/5 px-3 py-2">
               <p className="font-display text-xs font-semibold uppercase text-danger">Detalle del validador</p>
               <p className="mt-1 whitespace-pre-wrap break-words text-sm">{problem.message}</p>
             </li>
@@ -59,9 +59,9 @@ export function TeamProblems({
 }) {
   const team = teamProblems(problems);
   return (
-    <GlassPanel as="section" aria-label="Legalidad del equipo" className="p-4">
+    <Card as="section" aria-label="Legalidad del equipo" className="p-5">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h2 className="font-display text-lg font-semibold">Legalidad</h2>
+        <h2 className="font-display text-lg font-bold">Legalidad</h2>
         {checking ? <p className="text-xs text-text-dim">Comprobando legalidad…</p> : null}
       </div>
       {error ? <p className="mb-2 text-sm text-danger">{error}</p> : null}
@@ -70,7 +70,7 @@ export function TeamProblems({
         problems={team}
         empty={hasSets ? "Sin problemas generales. Revisa las ranuras marcadas." : "Añade Pokémon para comprobar el equipo."}
       />
-    </GlassPanel>
+    </Card>
   );
 }
 
@@ -83,10 +83,10 @@ interface PreviewPanelProps {
 export function PreviewPanel({ set, bundle, natures }: PreviewPanelProps) {
   if (!set) {
     return (
-      <GlassPanel as="section" aria-label="Vista previa" className="p-4">
-        <h2 className="font-display text-lg font-semibold">Vista previa</h2>
+      <Card as="section" aria-label="Vista previa" className="p-5">
+        <h2 className="font-display text-lg font-bold">Vista previa</h2>
         <p className="mt-3 text-sm text-text-dim">Elige una especie para ver el sprite, los tipos y las estadísticas.</p>
-      </GlassPanel>
+      </Card>
     );
   }
 
@@ -95,8 +95,8 @@ export function PreviewPanel({ set, bundle, natures }: PreviewPanelProps) {
   const abilities = bundle?.species.abilities ?? (set.ability ? [set.ability] : []);
 
   return (
-    <GlassPanel as="section" aria-label="Vista previa" className="p-4">
-      <h2 className="font-display text-lg font-semibold">Vista previa</h2>
+    <Card as="section" aria-label="Vista previa" className="p-5">
+      <h2 className="font-display text-lg font-bold">Vista previa</h2>
       <div className="mt-3">
         <PokemonSprite
           spriteId={bundle?.species.spriteId ?? ""}
@@ -147,22 +147,22 @@ export function PreviewPanel({ set, bundle, natures }: PreviewPanelProps) {
           <ul className="mt-2 flex flex-col gap-1.5">
             {STAT_IDS.map((stat) => {
               const effect = natureMod(nature, stat);
-              const tone = effect > 1 ? "var(--color-success)" : effect < 1 ? "var(--color-danger)" : "var(--color-accent-2)";
+              const tone = effect > 1 ? "#3ccf6e" : effect < 1 ? "#fb6c6c" : "var(--color-accent-2)";
               const scale = stat === "hp" ? 720 : 420;
               const width = Math.max(8, Math.min(100, Math.round((stats[stat] / scale) * 100)));
               const mark = effect > 1 ? " +" : effect < 1 ? " −" : "";
               return (
-                <li key={stat} className="grid grid-cols-[5.25rem_minmax(0,1fr)_2.75rem] items-center gap-2 text-sm">
-                  <span>
+                <li key={stat} className="grid grid-cols-[5.25rem_2.75rem_minmax(0,1fr)] items-center gap-2 text-sm">
+                  <span className="text-text-dim">
                     {STAT_LABEL[stat]}
                     {mark}
                     <span className="sr-only">: {stats[stat]}</span>
                   </span>
-                  <span className="h-2 overflow-hidden rounded-full bg-white/10" aria-hidden>
-                    <span className="block h-full rounded-full" style={{ width: `${width}%`, background: tone }} />
-                  </span>
-                  <span className="tabular text-right" aria-hidden>
+                  <span className="tabular font-bold" aria-hidden>
                     {stats[stat]}
+                  </span>
+                  <span className="stat-bar" aria-hidden>
+                    <span style={{ width: `${width}%`, background: tone }} />
                   </span>
                 </li>
               );
@@ -172,6 +172,6 @@ export function PreviewPanel({ set, bundle, natures }: PreviewPanelProps) {
           <p className="mt-2 text-sm text-text-dim">Las estadísticas finales aparecen al cargar la especie.</p>
         )}
       </div>
-    </GlassPanel>
+    </Card>
   );
 }

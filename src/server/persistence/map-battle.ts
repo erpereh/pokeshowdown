@@ -1,5 +1,6 @@
 import type {
   BattleFrame,
+  BattleLead,
   BattleResult,
   BattleStatus,
   BattleSummary,
@@ -79,10 +80,32 @@ export function toBattleView(row: BattleRow): BattleView {
   };
 }
 
+/**
+ * Public lead fields read straight from the frames JSON. Frame 0 already shows the leads in
+ * formats without team preview; with team preview they appear in frame 1, after the lead choice.
+ */
+export const BATTLE_LEAD_COLUMNS = (["p1", "p2"] as const)
+  .flatMap((side) => [0, 1].flatMap((frame) => [
+    `${side}_species_${frame}:frames->${frame}->state->sides->${side}->active->>species`,
+    `${side}_sprite_${frame}:frames->${frame}->state->sides->${side}->active->>spriteId`,
+  ]))
+  .join(", ");
+
+type LeadFields = Partial<Record<`${"p1" | "p2"}_${"species" | "sprite"}_${0 | 1}`, string | null>>;
+
 type BattleListRow = Pick<
   BattleRow,
   "id" | "format_id" | "status" | "winner" | "end_reason" | "turn" | "created_at" | "updated_at"
->;
+> & LeadFields;
+
+function leadOf(row: LeadFields, side: "p1" | "p2"): BattleLead | null {
+  for (const frame of [0, 1] as const) {
+    const species = row[`${side}_species_${frame}`];
+    const spriteId = row[`${side}_sprite_${frame}`];
+    if (species && spriteId) return { species, spriteId };
+  }
+  return null;
+}
 
 export function toBattleSummary(row: BattleListRow): BattleSummary {
   return {
@@ -92,8 +115,8 @@ export function toBattleSummary(row: BattleListRow): BattleSummary {
     result: resultFromWinner(row.winner),
     endReason: (row.end_reason as BattleSummary["endReason"]) ?? null,
     turn: row.turn,
-    playerLead: null,
-    cpuLead: null,
+    playerLead: leadOf(row, "p1"),
+    cpuLead: leadOf(row, "p2"),
     createdAt: toIso(row.created_at),
     updatedAt: toIso(row.updated_at),
   };

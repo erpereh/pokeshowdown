@@ -180,7 +180,7 @@ export function ReplayScreen({ replayId }: { replayId: string }) {
         lines={lines}
         top={<FieldBar state={state} />}
         bottom={
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-3 py-4">
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 px-3 py-3 sm:px-4">
             <div className="grid grid-cols-[1fr_1.2fr_1fr] gap-2">
               <GameButton type="button" variant="secondary" onClick={() => stepTurn(-1)} disabled={cursor === 0}>
                 Anterior
@@ -193,7 +193,7 @@ export function ReplayScreen({ replayId }: { replayId: string }) {
               </GameButton>
             </div>
             <label className="flex min-h-11 items-center gap-3 text-sm">
-              <span className="font-display text-text-dim">Turno {state.turn}</span>
+              <span className="font-display shrink-0 rounded-full bg-text px-3 py-1 text-xs font-semibold text-white">Turno {state.turn}</span>
               <input
                 type="range"
                 min={0}

@@ -1,19 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Outfit } from "next/font/google";
+import { Fredoka, Nunito } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 
-const outfit = Outfit({
+const fredoka = Fredoka({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
-  variable: "--font-outfit",
+  variable: "--font-fredoka",
   display: "swap",
 });
 
-const manrope = Manrope({
+const nunito = Nunito({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-manrope",
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-nunito",
   display: "swap",
 });
 
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#080d16",
+  themeColor: "#f4f6fb",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -31,7 +31,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${outfit.variable} ${manrope.variable}`}>
+    <html lang="es" className={`${fredoka.variable} ${nunito.variable}`}>
       <body>{children}</body>
     </html>
   );

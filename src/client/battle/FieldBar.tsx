@@ -6,7 +6,7 @@ import { fieldLabel, sideConditionLabel } from "./labels.ts";
 import type { PublicBattleState } from "@/shared/contract";
 
 function Chip({ children }: { children: ReactNode }) {
-  return <span className="inline-flex min-h-7 items-center rounded-full border border-line bg-black/35 px-2 text-[11px] font-semibold">{children}</span>;
+  return <span className="animate-pop-in inline-flex min-h-7 items-center rounded-full bg-surface-2 px-2.5 text-[11px] font-bold">{children}</span>;
 }
 
 export function FieldBar({
@@ -19,14 +19,14 @@ export function FieldBar({
   const weather = state.field.weather;
   const terrain = state.field.terrain;
   return (
-    <div className="shrink-0 border-b border-line bg-bg-0/80 px-2 py-1.5 sm:px-3">
+    <div className="shrink-0 bg-surface px-3 py-1.5 shadow-[0_6px_16px_-14px_#1b2230]">
       <div className="flex items-center justify-between gap-2">
-        <p className="font-display shrink-0 text-sm font-semibold">
-          Turno <span className="tabular text-accent">{state.turn}</span>
+        <p className="font-display shrink-0 rounded-full bg-text px-3 py-1 text-sm font-semibold text-white">
+          Turno <span className="tabular">{state.turn}</span>
         </p>
-        <div className="flex min-w-0 flex-wrap justify-end gap-1">{trailing}</div>
+        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1">{trailing}</div>
       </div>
-      <div className="mt-1 flex max-w-full flex-wrap gap-1">
+      <div className="flex max-w-full flex-wrap gap-1 empty:hidden [&:not(:empty)]:mt-1">
         {weather ? <Chip>{fieldLabel("weather", weather)}</Chip> : null}
         {terrain ? <Chip>{fieldLabel("terrain", terrain)}</Chip> : null}
         {state.field.pseudoWeather.map((effect) => (

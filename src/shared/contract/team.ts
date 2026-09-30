@@ -36,6 +36,8 @@ export interface TeamSummary {
   formatId: FormatId;
   species: string[];
   spriteIds: string[];
+  /** Primary type of the first Pokémon, used to colour the team card. */
+  leadType: string | null;
   valid: boolean;
   updatedAt: string;
 }

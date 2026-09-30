@@ -1,6 +1,7 @@
 "use client";
 
 import { GameButton, GameLink } from "@/client/ui/GameButton";
+import { Icon } from "@/client/ui/Icon";
 import { Modal, useDialog } from "@/client/ui/Modal";
 import { pushToast } from "@/client/ui/Toast";
 import type { NatureEntry, SpeciesSummary, TeamRecord, ValidationResult } from "@/shared/contract";
@@ -227,7 +228,7 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
   }
 
   const editorClass = sheet
-    ? "editor-sheet fixed inset-0 z-50 block overflow-y-auto overscroll-contain bg-bg-0 p-3 pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:z-auto md:overflow-visible md:bg-transparent md:p-0"
+    ? "editor-sheet animate-sheet-up fixed inset-0 z-50 block overflow-y-auto overscroll-contain bg-bg-0 p-3 pb-[max(1rem,env(safe-area-inset-bottom))] md:static md:z-auto md:animate-none md:overflow-visible md:bg-transparent md:p-0"
     : "hidden md:block";
 
   const bundle = selectedSet ? species.get(selectedSet.species) : null;
@@ -237,19 +238,20 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
       <header className="flex min-w-0 flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {showTeamsLink ? (
-            <GameLink href="/teams" variant="ghost" size="md">
+            <GameLink href="/teams" variant="ghost" size="md" className="-ml-3">
+              <Icon name="back" />
               Equipos
             </GameLink>
           ) : null}
           <FormatBadge />
           <ValidityBadge valid={validation ? validation.valid : null} />
-          <p className="text-sm text-text-dim" aria-live="polite">
+          <p className="font-display text-sm font-semibold text-text-dim" aria-live="polite">
             {saving ? "Guardando…" : dirty ? "Cambios sin guardar" : state.id ? "Guardado" : "Equipo nuevo"}
           </p>
         </div>
         <div className="flex min-w-0 flex-col gap-3">
           <div className="min-w-0 w-full">
-            <h1 className="font-display text-3xl font-bold">Editor de equipo</h1>
+            <h1 className="font-display text-[2rem] font-bold leading-tight">Editor de equipo</h1>
             <div className="mt-3 w-full max-w-xl">
               <Field label="Nombre del equipo" htmlFor="team-name" hint={state.name.trim() ? `${state.name.trim().length}/${TEAM_NAME_MAX}` : "El equipo necesita un nombre para guardarse."}>
                 <input
@@ -304,7 +306,8 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
           aria-labelledby={sheet && mobile ? "slot-editor-title" : undefined}
           tabIndex={sheet && mobile ? -1 : undefined}
         >
-          <GameButton type="button" variant="secondary" size="md" className="mb-3 md:hidden" data-sheet-back onClick={() => setSheet(false)}>
+          <GameButton type="button" variant="ghost" size="md" className="mb-2 md:hidden" data-sheet-back onClick={() => setSheet(false)}>
+            <Icon name="back" />
             Volver a las ranuras
           </GameButton>
           <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(220px,280px)]">
@@ -339,7 +342,7 @@ export function TeamEditor({ initial, initialValidation = null, onSaved, showTea
               </div>
             </div>
           </div>
-          <div className="sticky bottom-0 mt-4 bg-bg-0/95 py-3 md:hidden">
+          <div className="sticky bottom-0 mt-4 bg-gradient-to-t from-bg-0 via-bg-0/95 to-transparent pb-1 pt-4 md:hidden">
             <GameButton type="button" className="w-full" loading={saving} disabled={!state.name.trim()} onClick={() => void save()}>Guardar equipo</GameButton>
           </div>
         </div>

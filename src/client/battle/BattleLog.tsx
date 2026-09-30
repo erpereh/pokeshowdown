@@ -23,7 +23,7 @@ export function BattleLog({ lines, className }: { lines: LogLine[]; className?: 
       <ol className="flex flex-col gap-3">
         {groups.map((group) => (
           <li key={`${group.turn}-${group.lines[0]?.id ?? "g"}`}>
-            <h3 className="font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">{group.turn > 0 ? `Turno ${group.turn}` : "Comienzo"}</h3>
+            <h3 className="font-display inline-flex rounded-full bg-surface-2 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-dim">{group.turn > 0 ? `Turno ${group.turn}` : "Comienzo"}</h3>
             <ul className="mt-1 flex flex-col gap-1">
               {group.lines.map((line) => (
                 <li key={line.id} className={`text-sm leading-snug ${logLineClass(line)}`}>

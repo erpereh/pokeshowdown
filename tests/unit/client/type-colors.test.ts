@@ -1,5 +1,10 @@
 import { expect, test } from "vitest";
-import { TYPE_COLORS, typeTextColor } from "../../../src/client/ui/TypeChip.tsx";
+import { TYPE_CARD_COLORS, TYPE_COLORS, typeTextColor } from "../../../src/client/ui/TypeChip.tsx";
+
+function contrast(a: string, b: string) {
+  const values = [luminance(a), luminance(b)].sort((x, y) => x - y);
+  return (values[1]! + 0.05) / (values[0]! + 0.05);
+}
 
 function luminance(hex: string) {
   const linear = [1, 3, 5].map((offset) => {
@@ -15,4 +20,11 @@ test("Every official type colour keeps WCAG AA contrast for its label", () => {
     const ratio = (values[1]! + 0.05) / (values[0]! + 0.05);
     expect(ratio, `${type} text contrast`).toBeGreaterThanOrEqual(4.5);
   }
+});
+
+test("Every Pokédex card colour keeps large-text contrast for white titles", () => {
+  for (const [type, background] of Object.entries(TYPE_CARD_COLORS)) {
+    expect(contrast(background, "#ffffff"), `${type} card contrast`).toBeGreaterThanOrEqual(3);
+  }
+  expect(Object.keys(TYPE_CARD_COLORS).sort()).toEqual(Object.keys(TYPE_COLORS).sort());
 });

@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiRequestError, apiFetch } from "@/client/api.ts";
 import { MiniSprite } from "@/client/sprites/MiniSprite.tsx";
+import { Pokeball } from "@/client/ui/Card.tsx";
 import { GameLink } from "@/client/ui/GameButton.tsx";
 import { EmptyState } from "@/client/ui/EmptyState.tsx";
 import { ErrorState } from "@/client/ui/ErrorState.tsx";
 import { PageHeader } from "@/client/ui/PageHeader.tsx";
 import { Spinner } from "@/client/ui/GameButton.tsx";
-import { formatName, formatWhen, resultBadge, toSpriteId } from "@/client/ui/format.ts";
+import { formatName, formatWhen, resultBadge } from "@/client/ui/format.ts";
 import type { BattleSummary, ListBattlesResponse } from "@/shared/contract";
 
 export function BattleList({ status }: { status: "active" | "finished" }) {
@@ -47,26 +48,26 @@ export function BattleList({ status }: { status: "active" | "finished" }) {
         />
       ) : null}
       {battles && battles.length > 0 ? (
-        <ul className="flex flex-col gap-3">
+        <ul className="stagger flex flex-col gap-3">
           {battles.map((battle) => {
             const badge = resultBadge(battle.result, battle.endReason);
             return (
-              <li key={battle.id} className="battle-list-row glass rounded-[var(--radius-panel)]">
+              <li key={battle.id} className="battle-list-row card rounded-[24px]">
                 <div className="flex min-w-0 flex-col gap-3">
                 <div className="flex items-start justify-between gap-2">
-                  <h2 className="font-display text-lg font-semibold">{formatName(battle.formatId)}</h2>
-                  {status === "finished" ? <span className={`rounded-full border px-2 py-1 text-xs font-semibold ${badge.className}`}>{badge.text}</span> : null}
+                  <h2 className="font-display text-lg font-bold">{formatName(battle.formatId)}</h2>
+                  {status === "finished" ? <span className={`font-display rounded-full border-2 px-2.5 py-0.5 text-xs font-semibold ${badge.className}`}>{badge.text}</span> : null}
                 </div>
                 <div className="flex items-center gap-3">
-                  {battle.playerLead ? <MiniSprite spriteId={toSpriteId(battle.playerLead)} alt={battle.playerLead} size={48} /> : <span className="size-12" />}
-                  <span className="font-display text-xs uppercase tracking-widest text-text-dim">vs</span>
-                  {battle.cpuLead ? <MiniSprite spriteId={toSpriteId(battle.cpuLead)} alt={battle.cpuLead} size={48} /> : <span className="size-12" />}
+                  <span className="flex size-16 items-center justify-center rounded-full bg-accent-2/10">{battle.playerLead ? <MiniSprite spriteId={battle.playerLead.spriteId} alt={battle.playerLead.species} size={56} /> : <Pokeball className="size-9" />}</span>
+                  <span className="font-display rounded-full bg-text px-2 py-0.5 text-xs font-bold text-white">VS</span>
+                  <span className="flex size-16 items-center justify-center rounded-full bg-accent/10">{battle.cpuLead ? <MiniSprite spriteId={battle.cpuLead.spriteId} alt={battle.cpuLead.species} size={56} /> : <Pokeball className="size-9" />}</span>
                 </div>
                 <p className="text-sm text-text-dim">
                   Turno {battle.turn} · {formatWhen(battle.updatedAt)}
                 </p>
                 </div>
-                <GameLink href={status === "active" ? `/battle/${battle.id}` : `/replay/${battle.id}`} variant="secondary" className="w-full md:w-auto">
+                <GameLink href={status === "active" ? `/battle/${battle.id}` : `/replay/${battle.id}`} variant={status === "active" ? "primary" : "secondary"} className="w-full md:w-auto">
                   {status === "active" ? "Continuar" : "Ver repetición"}
                 </GameLink>
               </li>

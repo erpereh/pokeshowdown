@@ -28,7 +28,7 @@ import { ApiException } from "../http/error.ts";
 import { createAdminSupabase, type DbClient } from "../supabase/admin.ts";
 import type { Database, Json } from "../supabase/database.types.ts";
 import { backgroundForBattle } from "./backgrounds.ts";
-import { emptyBattleState, frameAt, toBattleSummary, toBattleView, toReplayView } from "./map-battle.ts";
+import { BATTLE_LEAD_COLUMNS, emptyBattleState, frameAt, toBattleSummary, toBattleView, toReplayView } from "./map-battle.ts";
 import type { ReplayView } from "../../shared/contract/battle.ts";
 
 type BattleRow = Database["public"]["Tables"]["battles"]["Row"];
@@ -215,7 +215,7 @@ export async function listBattles(userId: string, status?: BattleStatus): Promis
   const admin = createAdminSupabase();
   let query = admin
     .from("battles")
-    .select("id, format_id, status, winner, end_reason, turn, created_at, updated_at")
+    .select(`id, format_id, status, winner, end_reason, turn, created_at, updated_at, ${BATTLE_LEAD_COLUMNS}`)
     .eq("owner_id", userId)
     .order("updated_at", { ascending: false })
     .limit(50);
@@ -225,7 +225,7 @@ export async function listBattles(userId: string, status?: BattleStatus): Promis
     console.error("[battle] list", error.code);
     throw new ApiException(500, "internal", "Error interno");
   }
-  return (data ?? []).map((row) => toBattleSummary(row));
+  return ((data ?? []) as unknown as Parameters<typeof toBattleSummary>[0][]).map((row) => toBattleSummary(row));
 }
 
 export async function submitAction(userId: string, battleId: string, body: SubmitActionBody) {

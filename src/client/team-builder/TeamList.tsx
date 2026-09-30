@@ -2,7 +2,11 @@
 
 import { ApiRequestError } from "@/client/api";
 import { GameButton, GameLink, Spinner } from "@/client/ui/GameButton";
-import { GlassPanel } from "@/client/ui/GlassPanel";
+import { PokeballDeco } from "@/client/ui/Card";
+import { Icon } from "@/client/ui/Icon";
+import { typeCardColor } from "@/client/ui/TypeChip";
+import { PokemonSprite } from "@/client/sprites/PokemonSprite";
+import Link from "next/link";
 import { EmptyState } from "@/client/ui/EmptyState";
 import { ErrorState } from "@/client/ui/ErrorState";
 import { Modal } from "@/client/ui/Modal";
@@ -10,9 +14,9 @@ import { PageHeader } from "@/client/ui/PageHeader";
 import { pushToast } from "@/client/ui/Toast";
 import type { TeamSummary } from "@/shared/contract";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { copyText, deleteTeam, duplicateTeam, errorMessage, exportTeam, getTeam, importTeam, listTeams } from "./api";
-import { controlClass, EmptySlotMark, Field, FormatBadge, ValidityBadge } from "./controls";
+import { controlClass, EmptySlotMark, Field } from "./controls";
 import { TeamScreen } from "./frame";
 import { MiniSprite } from "./media";
 import { formatUpdated, IMPORTED_SETS_KEY } from "./model";
@@ -117,8 +121,8 @@ export function TeamListPage() {
         title="Tus equipos"
         subtitle="Prepara tu equipo de Gen 9 OU para entrar en la arena."
         action={
-          <div className="grid grid-cols-2 gap-2 sm:flex">
-            <GameLink href="/teams/new" size="md" className="w-full sm:w-auto">
+          <div className="flex gap-2">
+            <GameLink href="/teams/new" size="md" className="hidden sm:inline-flex">
               Nuevo equipo
             </GameLink>
             <GameButton type="button" variant="secondary" size="md" onClick={() => setImportOpen(true)}>
@@ -149,7 +153,7 @@ export function TeamListPage() {
       ) : null}
 
       {teams && teams.length > 0 ? (
-        <ul data-testid="team-list" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <ul data-testid="team-list" className="stagger grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {teams.map((team) => (
             <li key={team.id}>
               <TeamCard
@@ -163,6 +167,14 @@ export function TeamListPage() {
           ))}
         </ul>
       ) : null}
+
+      <Link
+        href="/teams/new"
+        aria-label="Crear equipo nuevo"
+        className="press fixed bottom-[calc(var(--nav-clearance)+4px)] right-4 z-30 flex size-14 items-center justify-center rounded-full bg-accent-2 text-white shadow-[0_12px_24px_-8px_#4a63e8] sm:hidden"
+      >
+        <Icon name="plus" className="size-7" />
+      </Link>
 
       <Modal open={importOpen} title="Importar equipo" onClose={() => setImportOpen(false)}>
         <Field label="Texto de Showdown" htmlFor="list-import-text">
@@ -253,15 +265,26 @@ function TeamCard({
   }));
 
   return (
-    <GlassPanel as="article" data-testid="team-card" className="flex h-full flex-col gap-4 p-4">
-      <div className="flex min-w-0 items-start justify-between gap-2">
-        <h2 className="min-w-0 truncate font-display text-xl font-semibold">{team.name}</h2>
-        <ValidityBadge valid={team.valid} />
+    <article
+      data-testid="team-card"
+      className="type-card flex h-full flex-col gap-3 rounded-[28px] p-4"
+      style={{ "--card-color": typeCardColor(team.leadType) } as CSSProperties}
+    >
+      <PokeballDeco className="-right-8 -top-8 w-40" />
+      {slots[0]?.spriteId ? (
+        <span className="animate-float pointer-events-none absolute right-2 top-1 w-24">
+          <PokemonSprite spriteId={slots[0].spriteId} facing="front" animated={false} alt="" className="drop-shadow-[0_6px_6px_rgb(0_0_0/0.2)]" />
+        </span>
+      ) : null}
+      <div className="min-w-0 pr-24">
+        <h2 className="card-title min-w-0 truncate font-display text-xl font-bold">{team.name}</h2>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="soft-pill px-2.5 py-0.5 text-xs">Gen 9 OU</span>
+          <span className="soft-pill px-2.5 py-0.5 text-xs">{team.valid ? "✓ Válido" : "✕ No válido"}</span>
+        </div>
+        <p className="mt-2 text-xs font-semibold text-white/85">Actualizado {formatUpdated(team.updatedAt)}</p>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <FormatBadge />
-        <p className="text-xs text-text-dim">Actualizado {formatUpdated(team.updatedAt)}</p>
-      </div>
+      <div className="flex flex-col gap-3 rounded-[22px] bg-surface p-3 text-text">
       <ul className="grid grid-cols-6 gap-0.5" aria-label={`Pokémon de ${team.name}`}>
         {slots.map((slot, index) => (
           <li key={index} className="flex justify-center">
@@ -274,7 +297,7 @@ function TeamCard({
         ))}
       </ul>
       <div className="mt-auto grid grid-cols-2 gap-2">
-        <GameLink href={`/teams/${team.id}`} variant="secondary" size="md" className="col-span-2 w-full">
+        <GameLink href={`/teams/${team.id}`} variant="primary" size="md" className="col-span-2 w-full">
           Editar
         </GameLink>
         <details className="editor-tools col-span-2">
@@ -292,6 +315,7 @@ function TeamCard({
           </div>
         </details>
       </div>
-    </GlassPanel>
+      </div>
+    </article>
   );
 }

@@ -6,7 +6,7 @@ import type { MoveCategory } from "@/shared/contract";
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 export const controlClass =
-  "min-h-12 w-full min-w-0 rounded-[var(--radius-card)] border border-line-strong bg-bg-0/60 px-3 text-base text-text placeholder:text-text-dim/80 disabled:cursor-not-allowed disabled:opacity-50";
+  "min-h-12 w-full min-w-0 rounded-[var(--radius-card)] border-2 border-line bg-surface-2 px-3 text-base text-text placeholder:text-text-dim/80 transition-colors focus:border-accent-2 focus:bg-surface disabled:cursor-not-allowed disabled:opacity-50";
 
 export function Field({
   label,
@@ -21,7 +21,7 @@ export function Field({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-medium text-text-dim">
+      <label htmlFor={htmlFor} className="font-display text-sm font-semibold text-text-dim">
         {label}
       </label>
       {children}
@@ -32,7 +32,7 @@ export function Field({
 
 export function FormatBadge() {
   return (
-    <span className="font-display inline-flex min-h-7 items-center rounded-md border border-accent/40 bg-accent/15 px-2 text-xs font-semibold uppercase tracking-wide text-accent">
+    <span className="font-display inline-flex min-h-7 items-center rounded-full bg-accent-2/10 px-2.5 text-xs font-semibold uppercase tracking-wide text-accent-2">
       Gen 9 OU
     </span>
   );
@@ -41,9 +41,9 @@ export function FormatBadge() {
 export function ValidityBadge({ valid }: { valid: boolean | null }) {
   const label = valid === null ? "Sin comprobar" : valid ? "Válido" : "No válido";
   const tone =
-    valid === null ? "bg-white/5 text-text-dim" : valid ? "bg-success/15 text-success" : "bg-danger/15 text-danger";
+    valid === null ? "bg-surface-2 text-text-dim" : valid ? "bg-success/10 text-success" : "bg-danger/10 text-danger";
   return (
-    <span className={`font-display inline-flex min-h-7 items-center rounded-md px-2 text-xs font-semibold uppercase ${tone}`}>
+    <span className={`font-display inline-flex min-h-7 items-center rounded-full px-2.5 text-xs font-semibold uppercase ${tone}`}>
       {label}
     </span>
   );
@@ -53,7 +53,7 @@ export function EmptySlotMark({ size = 48 }: { size?: number }) {
   return (
     <span
       aria-hidden
-      className="inline-flex shrink-0 items-center justify-center rounded-lg border border-dashed border-line-strong font-display text-xl text-accent"
+      className="inline-flex shrink-0 items-center justify-center rounded-full border-2 border-dashed border-line-strong font-display text-xl text-accent"
       style={{ width: size, height: size }}
     >
       +
@@ -194,7 +194,7 @@ export function Combobox<T>({
         />
       </Field>
       {open && !disabled ? (
-        <div className="mt-2 overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface-solid">
+        <div className="animate-pop-in mt-2 overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface shadow-[var(--shadow-soft)]">
           <p className="sr-only">Flechas para recorrer, Enter para elegir.</p>
           {loading ? <p className="px-3 py-3 text-sm text-text-dim">Buscando…</p> : null}
           {!loading && visible.length === 0 ? <p className="px-3 py-3 text-sm text-text-dim">{emptyLabel}</p> : null}
@@ -213,7 +213,7 @@ export function Combobox<T>({
                       aria-disabled={blocked || undefined}
                       disabled={blocked}
                       className={`flex min-h-11 w-full items-center gap-2 px-3 py-2 text-left ${
-                        selected ? "bg-white/10" : "hover:bg-white/5"
+                        selected ? "bg-accent-2/10" : "hover:bg-surface-2"
                       } disabled:opacity-45`}
                       onMouseDown={(event) => event.preventDefault()}
                       onMouseEnter={() => setActive(index)}

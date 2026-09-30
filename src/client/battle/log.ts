@@ -29,9 +29,9 @@ export function linesFromFrames(frames: BattleFrame[]): LogLine[] {
 
 export function logLineClass(line: LogLine): string {
   if (line.kind === "crit") return "font-semibold text-accent";
-  if (line.effectiveness === "super") return "font-semibold text-accent-2";
+  if (line.effectiveness === "super") return "font-bold text-accent-2";
   if (line.effectiveness === "resisted" || line.effectiveness === "immune") return "text-text-dim";
   if (line.kind === "faint") return "text-danger";
   if (line.kind === "win") return "font-display font-bold uppercase tracking-wide text-accent";
-  return "text-text/95";
+  return "text-text";
 }

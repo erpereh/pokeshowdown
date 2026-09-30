@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { cx } from "./cx.ts";
 import { Icon } from "./Icon.tsx";
 
@@ -63,6 +64,11 @@ export function useDialog(open: boolean, onClose?: () => void) {
   return ref;
 }
 
+/** Dialogs render on <body> so transformed or clipped ancestors (animated cards) never trap them. */
+function portal(node: ReactNode) {
+  return typeof document === "undefined" ? node : createPortal(node, document.body);
+}
+
 export function Modal({
   open,
   title,
@@ -78,22 +84,22 @@ export function Modal({
   const titleId = useId();
   if (!open) return null;
 
-  return (
+  return portal(
     <div data-modal-root className="fixed inset-0 z-50 flex items-end justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] sm:items-center">
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="animate-overlay-in absolute inset-0 bg-[#1b2230]/45" onClick={onClose} />
       <div
         ref={ref}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className="glass relative z-10 max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-[var(--radius-panel)] p-5 shadow-[0_24px_80px_#000000aa]"
+        className="animate-pop-in relative z-10 max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-[var(--radius-panel)] bg-surface p-5 text-left text-text shadow-[0_24px_60px_-20px_#1b2230aa]"
       >
         <div className="flex items-center justify-between gap-3">
         <h2 id={titleId} className="font-display text-xl font-semibold">
           {title}
         </h2>
-        <button type="button" aria-label={`Cerrar ${title}`} onClick={onClose} className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line hover:bg-white/5"><Icon name="close" /></button>
+        <button type="button" aria-label={`Cerrar ${title}`} onClick={onClose} className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-2 text-text-dim hover:text-text"><Icon name="close" /></button>
         </div>
         <div className="mt-3">{children}</div>
       </div>
@@ -116,9 +122,9 @@ export function Sheet({
   const titleId = useId();
   if (!open) return null;
 
-  return (
+  return portal(
     <div className="fixed inset-0 z-50 flex items-end">
-      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="animate-overlay-in absolute inset-0 bg-[#1b2230]/45" onClick={onClose} />
       <div
         ref={ref}
         role="dialog"
@@ -126,16 +132,16 @@ export function Sheet({
         aria-labelledby={titleId}
         tabIndex={-1}
         className={cx(
-          "glass relative z-10 mx-auto flex max-h-[85dvh] w-full max-w-2xl flex-col rounded-t-[var(--radius-panel)] shadow-[0_-20px_60px_#000000aa]",
+          "animate-sheet-up relative z-10 mx-auto flex max-h-[85dvh] w-full max-w-2xl flex-col rounded-t-[32px] bg-surface text-left text-text shadow-[0_-20px_60px_-20px_#1b2230aa]",
           "pb-[env(safe-area-inset-bottom)]",
         )}
       >
-        <div aria-hidden="true" className="mx-auto mt-3 h-1 w-10 shrink-0 rounded-full bg-line-strong" />
+        <div aria-hidden="true" className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-line-strong" />
         <div className="flex items-center justify-between gap-3 px-5 pt-2">
           <h2 id={titleId} className="font-display text-xl font-bold">
             {title}
           </h2>
-          <button type="button" aria-label="Cerrar" onClick={onClose} className="flex size-12 shrink-0 items-center justify-center rounded-full border border-line text-text-dim hover:text-text">
+          <button type="button" aria-label="Cerrar" onClick={onClose} className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-2 text-text-dim hover:text-text">
             <Icon name="close" />
           </button>
         </div>

@@ -20,12 +20,12 @@ const SHORT: Record<StatusId, string> = {
 };
 
 const TONE: Record<StatusId, string> = {
-  brn: "bg-status-brn text-bg-0",
-  par: "bg-status-par text-bg-0",
+  brn: "bg-status-brn text-[#1f2630]",
+  par: "bg-status-par text-[#1f2630]",
   psn: "bg-status-psn text-white",
   tox: "bg-status-tox text-white",
-  slp: "bg-status-slp text-bg-0",
-  frz: "bg-status-frz text-bg-0",
+  slp: "bg-status-slp text-[#1f2630]",
+  frz: "bg-status-frz text-[#1f2630]",
 };
 
 export function StatusChip({ status, className }: { status: StatusId; className?: string }) {

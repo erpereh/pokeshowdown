@@ -35,7 +35,7 @@ export function ToastViewport() {
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[var(--nav-clearance)] z-[70] flex flex-col items-center gap-2 px-4 lg:bottom-6" aria-live="polite">
       {toasts.map((toast) => (
-        <p key={toast.id} role="status" className="glass pointer-events-auto max-w-md rounded-[var(--radius-card)] px-4 py-3 text-sm shadow-[0_12px_40px_#00000066]">
+        <p key={toast.id} role="status" className="animate-pop-in pointer-events-auto max-w-md rounded-full bg-[#303943] px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_-10px_#00000080]">
           {toast.message}
         </p>
       ))}

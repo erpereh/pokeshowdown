@@ -30,10 +30,11 @@ export function SwitchCard({
       disabled={blocked}
       onClick={() => onPick(option.slot)}
       className={cx(
-        "flex min-h-16 w-full items-center gap-3 rounded-[var(--radius-card)] border border-line bg-bg-0/50 px-3 py-2 text-left hover:border-accent-2",
-        "disabled:opacity-45",
+        "press flex min-h-[72px] w-full items-center gap-3 rounded-[20px] border-2 border-line bg-surface px-3 py-2 text-left shadow-[var(--shadow-soft)] hover:border-accent-2",
+        "disabled:opacity-45 disabled:shadow-none",
       )}
     >
+      <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-surface-2">
       <MiniSprite
         spriteId={mon?.spriteId ?? toSpriteId(option.species)}
         alt=""
@@ -42,8 +43,9 @@ export function SwitchCard({
         gender={mon?.gender}
         fainted={option.disabled && option.reason === "fainted"}
       />
+      </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-display font-semibold">{option.name}</span>
+        <span className="block truncate font-display text-base font-semibold">{option.name}</span>
         {mon ? <HpBar hp={mon.hp} maxHp={mon.maxHp} reveal="exact" /> : null}
         {reason ? <span className="text-xs text-text-dim">{reason}</span> : null}
       </span>

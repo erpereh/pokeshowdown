@@ -1,12 +1,33 @@
+import Link from "next/link";
 import type { ReactNode } from "react";
+import { PokeballDeco } from "./Card.tsx";
+import { Icon } from "./Icon.tsx";
 
-export function PageHeader({ eyebrow, title, subtitle, action }: { eyebrow?: string; title: string; subtitle?: string; action?: ReactNode }) {
+export function PageHeader({
+  eyebrow,
+  title,
+  subtitle,
+  action,
+  backHref,
+}: {
+  eyebrow?: string;
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+  backHref?: string;
+}) {
   return (
-    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <header className="relative isolate mb-6 flex flex-wrap items-end justify-between gap-4">
+      <PokeballDeco spinning className="-right-16 -top-24 w-56 text-text opacity-[0.05] sm:-top-28 sm:w-64" />
       <div className="min-w-0">
-        {eyebrow ? <p className="section-kicker mb-2">{eyebrow}</p> : null}
-        <h1 className="font-display text-3xl font-semibold leading-tight sm:text-4xl">{title}</h1>
-        {subtitle ? <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-dim">{subtitle}</p> : null}
+        {backHref ? (
+          <Link href={backHref} aria-label="Volver" className="-ml-3 mb-2 flex size-12 items-center justify-center rounded-full text-text hover:bg-surface">
+            <Icon name="back" className="size-6" />
+          </Link>
+        ) : null}
+        {eyebrow ? <p className="section-kicker mb-1">{eyebrow}</p> : null}
+        <h1 className="font-display text-[2rem] font-bold leading-tight sm:text-4xl">{title}</h1>
+        {subtitle ? <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-text-dim">{subtitle}</p> : null}
       </div>
       {action}
     </header>

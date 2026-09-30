@@ -18,11 +18,11 @@ function SpriteSlot({ side, state, reduced }: { side: SideId; state: PublicBattl
       className={
         foe
           ? "arena-foe absolute right-[3%] top-[8%] z-10 flex justify-center"
-          : "arena-player absolute bottom-[4%] left-[2%] z-10 flex justify-center"
+          : "arena-player absolute bottom-[8%] left-[2%] z-10 flex justify-center lg:bottom-[4%]"
       }
     >
-      <div className="relative flex w-full justify-center">
-        <div className="absolute bottom-1 left-1/2 h-3 w-[72%] -translate-x-1/2 rounded-[100%] bg-black/55 blur-[2px]" />
+      <div className="enter-sprite relative flex w-full justify-center">
+        <div className="arena-platform" />
         {mon ? (
           <PokemonSprite
             spriteId={mon.spriteId}
@@ -54,11 +54,10 @@ export const Arena = forwardRef<HTMLDivElement, { state: PublicBattleState; back
         <SpriteSlot side="p2" state={state} reduced={reduced} />
         <SpriteSlot side="p1" state={state} reduced={reduced} />
         <div data-fx-layer className="pointer-events-none absolute inset-0 z-[15]" />
-        <div className="pointer-events-none absolute inset-0 z-[16] bg-gradient-to-b from-black/45 via-transparent to-black/50 shadow-[inset_0_0_72px_16px_rgba(0,0,0,0.45)]" />
-        <div className="absolute left-[2%] top-[2%] z-20 w-[min(46%,220px)]">
+        <div className="absolute left-[3%] top-[4%] z-20 w-[min(48%,230px)]">
           <HudCard sideId="p2" side={state.sides.p2} />
         </div>
-        <div className="absolute bottom-[2%] right-[2%] z-20 w-[min(48%,230px)]">
+        <div className="absolute bottom-[9%] right-[3%] z-20 w-[min(50%,240px)] lg:bottom-[4%]">
           <HudCard sideId="p1" side={state.sides.p1} />
         </div>
         {bannerTurn !== null ? <TurnBanner turn={bannerTurn} /> : null}

@@ -1,14 +1,14 @@
 "use client";
 
 import { GameButton } from "@/client/ui/GameButton";
-import { GlassPanel } from "@/client/ui/GlassPanel";
+import { PokeballDeco } from "@/client/ui/Card";
 import { SegmentedControl } from "@/client/ui/SegmentedControl";
-import { TypeChip, TYPE_NAMES_ES } from "@/client/ui/TypeChip";
+import { TypeChip, typeCardColor, TYPE_NAMES_ES } from "@/client/ui/TypeChip";
 import type { NatureEntry, PokemonSetData, SpeciesSummary, StatId, ValidationProblem } from "@/shared/contract";
-import { useEffect, useState, type Dispatch } from "react";
+import { useEffect, useState, type CSSProperties, type Dispatch } from "react";
 import { controlClass, Field } from "./controls";
 import type { BundleStatus, SpeciesBundle } from "./hooks";
-import { MiniSprite } from "./media";
+import { PokemonSprite } from "./media";
 import { findNature, natureCaption, SLOT_COUNT } from "./model";
 import type { DraftAction } from "./model";
 import { ItemField, MoveList, SpeciesField } from "./Pickers";
@@ -62,16 +62,39 @@ export function SetEditor({
   }
 
   return (
-    <GlassPanel id="slot-editor" as="section" role="tabpanel" aria-labelledby={`slot-tab-${index}`} className="min-w-0 p-4" data-testid="set-editor">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 id="slot-editor-title" className="font-display text-xl font-semibold">
-            Ranura {index + 1} de {SLOT_COUNT}
-          </h2>
-          <p className="text-sm text-text-dim">{set ? set.species : "Ranura vacía"}</p>
+    <section id="slot-editor" role="tabpanel" aria-labelledby={`slot-tab-${index}`} className="card min-w-0 overflow-hidden rounded-[var(--radius-panel)]" data-testid="set-editor">
+      <div
+        className="type-card px-4 pb-10 pt-4 transition-[background-color] duration-500"
+        style={{ "--card-color": typeCardColor(bundle?.species.types[0] ?? null) } as CSSProperties}
+      >
+        <PokeballDeco spinning className="-bottom-12 -right-10 w-44" />
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <span className="soft-pill px-2.5 py-0.5 text-xs">Ranura {index + 1} de {SLOT_COUNT}</span>
+            <h2 id="slot-editor-title" className="card-title font-display mt-2 truncate text-3xl font-bold">
+              {set ? set.name.trim() || set.species : "Ranura vacía"}
+            </h2>
+            {set && bundle ? (
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {bundle.species.types.map((type) => (
+                  <TypeChip key={type} type={type} tone="soft" />
+                ))}
+                <span className="soft-pill px-2.5 py-0.5 text-xs">{bundle.species.tier}</span>
+              </div>
+            ) : null}
+          </div>
+          {bundle ? <span className="font-display shrink-0 text-lg font-bold text-white/85">#{String(bundle.species.num).padStart(3, "0")}</span> : null}
         </div>
+        {set && bundle ? (
+          <div key={`${index}-${bundle.species.id}`} className="animate-pop-in relative mx-auto mt-1 flex h-32 w-40 items-end justify-center">
+            <PokemonSprite spriteId={bundle.species.spriteId} facing="front" animated shiny={set.shiny} gender={set.gender === "M" || set.gender === "F" ? set.gender : undefined} scale={1.4} alt={set.species} className="drop-shadow-[0_8px_8px_rgb(0_0_0/0.2)]" />
+          </div>
+        ) : null}
+      </div>
+      <div className="sheet-surface -mt-7 px-4 pb-4 pt-5">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         {set ? (
-          <details className="editor-tools w-full md:w-auto">
+          <details className="editor-tools w-full">
             <summary>Acciones de Pokémon</summary>
             <div className="flex flex-wrap gap-2 p-2">
             <GameButton type="button" variant="secondary" size="md" disabled={index === 0} onClick={() => dispatch({ type: "nudge", index, direction: -1 })}>
@@ -124,20 +147,6 @@ export function SetEditor({
       </div>
 
       <div className="mt-4 flex flex-col gap-4">
-        {set && bundle ? (
-          <div className="flex min-w-0 items-center gap-3">
-            <MiniSprite spriteId={bundle.species.spriteId} alt={set.species} size={48} shiny={set.shiny} gender={set.gender === "M" || set.gender === "F" ? set.gender : undefined} />
-            <div className="min-w-0">
-              <p className="truncate font-display text-lg font-semibold">{bundle.species.name}</p>
-              <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                {bundle.species.types.map((type) => (
-                  <TypeChip key={type} type={type} size="sm" />
-                ))}
-                <span className="text-xs text-text-dim">{bundle.species.tier}</span>
-              </div>
-            </div>
-          </div>
-        ) : null}
 
         {bundleStatus === "loading" && set ? <p className="text-sm text-text-dim">Cargando datos de la especie…</p> : null}
         {bundleStatus === "error" && set ? (
@@ -183,7 +192,7 @@ export function SetEditor({
 
             <GenderField idPrefix={base} gender={set.gender} fixed={fixedGender} onChange={(gender) => patch({ gender })} />
 
-            <div className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] border border-line px-3 py-2">
+            <div className="flex items-center justify-between gap-3 rounded-[var(--radius-card)] bg-surface-2 px-3 py-2">
               <label htmlFor={`${base}-shiny`} className="font-display text-sm font-semibold">
                 Variocolor
               </label>
@@ -193,7 +202,7 @@ export function SetEditor({
                 role="switch"
                 aria-checked={set.shiny}
                 onClick={() => patch({ shiny: !set.shiny })}
-                className={`min-h-12 min-w-16 rounded-full px-3 text-sm font-semibold ${set.shiny ? "bg-accent-2 text-bg-0" : "bg-surface-2 text-text-dim"}`}
+                className={`min-h-12 min-w-16 rounded-full px-3 text-sm font-semibold transition-colors ${set.shiny ? "bg-accent-2 text-white" : "bg-line text-text-dim"}`}
               >
                 {set.shiny ? "Sí" : "No"}
               </button>
@@ -290,7 +299,8 @@ export function SetEditor({
           <p className="text-sm text-text-dim">Busca una especie para ocupar esta ranura. Puedes dejar ranuras vacías y guardar el equipo igual.</p>
         )}
       </div>
-    </GlassPanel>
+      </div>
+    </section>
   );
 }
 
@@ -314,7 +324,7 @@ function GenderField({
   if (fixed === "N") {
     return (
       <fieldset className="min-w-0">
-        <legend className="text-sm font-medium text-text-dim">Género</legend>
+        <legend className="font-display text-sm font-semibold text-text-dim">Género</legend>
         <p className="mt-2 text-sm">Sin género</p>
         {gender !== "N" ? (
           <GameButton type="button" variant="secondary" size="md" className="mt-2" onClick={() => onChange("N")}>
@@ -333,14 +343,14 @@ function GenderField({
 
   return (
     <fieldset className="min-w-0">
-      <legend className="text-sm font-medium text-text-dim">Género</legend>
+      <legend className="font-display text-sm font-semibold text-text-dim">Género</legend>
       {fixed ? <p className="mt-1 text-xs text-text-dim">El género de esta especie es fijo.</p> : null}
       <div className="mt-2 grid grid-cols-3 gap-2">
         {options.map((option) => (
           <label
             key={option.label}
-            className={`flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-card)] border px-2 text-sm ${
-              gender === option.value ? "border-accent-2 bg-white/5" : "border-line"
+            className={`font-display flex min-h-12 items-center justify-center gap-2 rounded-[var(--radius-card)] border-2 px-2 text-sm font-semibold transition-colors ${
+              gender === option.value ? "border-accent-2 bg-accent-2/10 text-accent-2" : "border-line bg-surface-2"
             } ${option.disabled ? "opacity-45" : ""}`}
           >
             <input
