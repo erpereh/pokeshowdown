@@ -1,3 +1,4 @@
+import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -122,4 +123,27 @@ export async function finishBattle(request: APIRequestContext, initial: BattleVi
 export async function assertLayoutAndAssets(page: Page) {
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await expect.poll(() => page.evaluate(() => [...document.images].filter((img) => img.getAttribute("src") && (!img.complete || img.naturalWidth === 0)).map((img) => img.getAttribute("src")))).toEqual([]);
+}
+
+/**
+ * Signs in against Supabase from Node and returns the exact SSR auth cookies the app would set,
+ * so a remote deployment can be tested without typing credentials into its login form.
+ */
+export async function sessionCookies(baseURL: string, credentials: { email: string; password: string }) {
+  const { url, publicKey } = loadEnvironment();
+  const jar = new Map<string, string>();
+  const client = createServerClient(url, publicKey, {
+    cookies: {
+      getAll: () => [...jar].map(([name, value]) => ({ name, value })),
+      setAll: (cookies) => {
+        for (const cookie of cookies) jar.set(cookie.name, cookie.value);
+      },
+    },
+  });
+  const { error } = await client.auth.signInWithPassword(credentials);
+  if (error) throw new Error(`Cannot sign in QA user: ${error.message}`);
+  const { hostname, protocol } = new URL(baseURL);
+  return [...jar].map(([name, value]) => ({
+    name, value, domain: hostname, path: "/", httpOnly: false, secure: protocol === "https:", sameSite: "Lax" as const,
+  }));
 }

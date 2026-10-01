@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Browser, type BrowserContext, type Page, type TestInfo } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import type { BattleView, ChallengeResponse, GetBattleResponse, RandomTeamResponse, TeamResponse } from "../../src/shared/contract/index.ts";
-import { api, assertLayoutAndAssets, choiceFor, loadEnvironment, login } from "../support/real-backend.ts";
+import { api, assertLayoutAndAssets, choiceFor, loadEnvironment, login, sessionCookies } from "../support/real-backend.ts";
 
 /**
  * Two real accounts in two isolated browser contexts, against the real backend (Supabase Auth,
@@ -43,7 +43,14 @@ async function newPlayer(browser: Browser, info: TestInfo, name: string): Promis
   const page = await context.newPage();
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await login(page, { email, password });
+  if (process.env.E2E_BASE_URL) {
+    // Remote deployment: inject the SSR session instead of typing credentials into its form.
+    await context.addCookies(await sessionCookies(String(baseURL), { email, password }));
+    await page.goto("/play");
+    await expect(page).toHaveURL(/\/play$/);
+  } else {
+    await login(page, { email, password });
+  }
   return { name, email, password, userId: created.data.user.id, context, page, errors };
 }
 
