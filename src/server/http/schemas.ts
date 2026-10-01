@@ -105,6 +105,29 @@ export const randomTeamSchema = z.object({
   formatId: z.literal("gen9ou"),
 });
 
+export const friendRequestSchema = z.object({
+  code: z.string().trim().min(1).max(20),
+});
+
+export const createChallengeSchema = z.object({
+  clientRequestId: z.uuid(),
+  opponentId: z.uuid(),
+  formatId: z.enum(["gen9ou", "gen9randombattle"]),
+  timerSeconds: z.union([z.literal(60), z.literal(120), z.null()]),
+  ouTeamSource: z.enum(["saved", "saved_or_random"]),
+  inviteTtlMinutes: z.union([z.literal(2), z.literal(5), z.literal(10)]),
+});
+
+export const challengeReadySchema = z.object({
+  ready: z.boolean(),
+  team: z
+    .discriminatedUnion("kind", [
+      z.object({ kind: z.literal("saved"), teamId: z.uuid() }),
+      z.object({ kind: z.literal("random") }),
+    ])
+    .optional(),
+});
+
 export const battleStatusSchema = z.enum(["active", "finished"]);
 
 export async function readJson(request: Request): Promise<unknown> {

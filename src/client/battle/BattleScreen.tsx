@@ -13,6 +13,8 @@ import { ActionPanel } from "./ActionPanel.tsx";
 import { BattleStage } from "./BattleStage.tsx";
 import { EndOverlay } from "./EndOverlay.tsx";
 import { FieldBar, SpeedSkip } from "./FieldBar.tsx";
+import { OnlineHud } from "./OnlineHud.tsx";
+import { onMatchSignal } from "@/client/social/store.ts";
 import { SpriteWarmup } from "./SpriteWarmup.tsx";
 import { useBattlePlayback } from "./useBattlePlayback.ts";
 
@@ -30,6 +32,9 @@ export function BattleScreen({ battleId }: { battleId: string }) {
   const [forfeitOpen, setForfeitOpen] = useState(false);
   const pending = useRef<Pending | null>(null);
   const busy = useRef(false);
+  const viewRef = useRef<BattleView | null>(null);
+  viewRef.current = view;
+  const syncWanted = useRef(false);
 
   const load = useCallback(async () => {
     setError(null);
@@ -63,6 +68,44 @@ export function BattleScreen({ battleId }: { battleId: string }) {
     },
     [playback.hydrate, playback.playNew],
   );
+
+  /**
+   * Online: pulls the seat after the rival acted (Realtime signal, polling or an expired timer) and
+   * animates only the frames this client has not seen yet. Deferred while an own action is in flight.
+   */
+  const sync = useCallback(async () => {
+    if (busy.current || pending.current) {
+      syncWanted.current = true;
+      return;
+    }
+    syncWanted.current = false;
+    try {
+      const response = await apiFetch<GetBattleResponse>(`/api/battles/${battleId}`);
+      if (busy.current || pending.current) {
+        syncWanted.current = true;
+        return;
+      }
+      const current = viewRef.current;
+      const fresh = response.view;
+      if (current && fresh.revision < current.revision) return;
+      if (current && fresh.revision === current.revision && fresh.status === current.status) {
+        // Same frames: only refresh request/online data (rival chose, presence, deadlines).
+        setView(fresh);
+        return;
+      }
+      busy.current = true;
+      try {
+        setView(fresh);
+        const unseen = current ? fresh.frames.filter((frame) => frame.index >= current.revision) : [];
+        if (unseen.length > 0) await playback.playNew(unseen);
+        playback.hydrate(fresh);
+      } finally {
+        busy.current = false;
+      }
+    } catch {
+      // Transient; the next signal or poll retries.
+    }
+  }, [battleId, playback.hydrate, playback.playNew]);
 
   const fail = useCallback(
     (reason: unknown) => {
@@ -114,9 +157,10 @@ export function BattleScreen({ battleId }: { battleId: string }) {
       } finally {
         busy.current = false;
         setSending(false);
+        if (syncWanted.current) void sync();
       }
     },
-    [applyResponse, battleId, fail, playback.playing, view],
+    [applyResponse, battleId, fail, playback.playing, sync, view],
   );
 
   const forfeit = useCallback(async () => {
@@ -139,8 +183,9 @@ export function BattleScreen({ battleId }: { battleId: string }) {
     } finally {
       busy.current = false;
       setSending(false);
+      if (syncWanted.current) void sync();
     }
-  }, [applyResponse, battleId, fail, playback.playing, view]);
+  }, [applyResponse, battleId, fail, playback.playing, sync, view]);
 
   const retry = useCallback(async () => {
     const job = pending.current;
@@ -159,8 +204,34 @@ export function BattleScreen({ battleId }: { battleId: string }) {
     } finally {
       busy.current = false;
       setSending(false);
+      if (syncWanted.current) void sync();
     }
-  }, [applyResponse, battleId, fail]);
+  }, [applyResponse, battleId, fail, sync]);
+
+  const matchId = view?.online?.matchId ?? null;
+  const onlineActive = Boolean(view?.online) && view?.status === "active";
+  const waitingRival = Boolean(view?.online?.opponentPending);
+  useEffect(() => {
+    if (!matchId) return;
+    return onMatchSignal((changed) => {
+      if (changed === matchId) void sync();
+    });
+  }, [matchId, sync]);
+  useEffect(() => {
+    if (!matchId || !onlineActive) return;
+    // Fallback when a Realtime message is lost: faster while the rival owes a choice.
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void sync();
+    }, waitingRival ? 4000 : 15000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void sync();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [matchId, onlineActive, sync, waitingRival]);
 
   const closeForfeit = useCallback(() => setForfeitOpen(false), []);
   const display = playback.state ?? view?.state ?? null;
@@ -201,6 +272,7 @@ export function BattleScreen({ battleId }: { battleId: string }) {
             state={display}
             trailing={
               <>
+                {view.online ? <OnlineHud online={view.online} active={view.status === "active"} onExpire={() => void sync()} /> : null}
                 <SpeedSkip speed={playback.speed} playing={playback.playing} onSpeed={playback.toggleSpeed} onSkip={playback.skip} />
                 {view.status === "active" ? (
                   <button
@@ -236,6 +308,7 @@ export function BattleScreen({ battleId }: { battleId: string }) {
                 locked={locked}
                 onChoice={(choice) => void submit(choice)}
                 onForfeit={view.status === "active" ? () => setForfeitOpen(true) : undefined}
+                waitingLabel={view.online ? `Esperando a ${view.online.opponentName}…` : undefined}
               />
             )}
           </div>
@@ -243,7 +316,9 @@ export function BattleScreen({ battleId }: { battleId: string }) {
         overlay={showEnd ? <EndOverlay view={view} state={display} /> : null}
       />
       <Modal open={forfeitOpen} title="¿Rendirse?" onClose={closeForfeit}>
-        <p className="text-sm text-text-dim">La partida contará como derrota y no podrás retomarla.</p>
+        <p className="text-sm text-text-dim">
+          {view.online ? `La partida contará como derrota y ${view.online.opponentName} ganará.` : "La partida contará como derrota y no podrás retomarla."}
+        </p>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <GameButton type="button" variant="danger" onClick={() => void forfeit()}>
             Rendirse

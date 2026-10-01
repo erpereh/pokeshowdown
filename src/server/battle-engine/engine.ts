@@ -1,5 +1,5 @@
 import "server-only";
-import type { FormatId, PlayerRequest, PublicBattleState } from "../../shared/contract/index.ts";
+import type { BattleEvent, FormatId, PlayerRequest, PublicBattleState, SideId } from "../../shared/contract/index.ts";
 import { CHOICE_PATTERN, type CpuInput } from "../cpu/contract.ts";
 import { ENGINE_VERSION } from "../showdown/index.ts";
 import { PRNG, Teams } from "../showdown/module.ts";
@@ -25,29 +25,29 @@ export interface EngineRunOptions {
 
 type ChooseCpu = (input: CpuInput) => string[];
 
-function invalidChoice(message: string): InvalidChoiceError {
+export function invalidChoice(message: string): InvalidChoiceError {
   const error = new InvalidChoiceError(message);
   error.name = "InvalidChoiceError";
   return error;
 }
 
-function desync(): EngineDesyncError {
+export function desync(): EngineDesyncError {
   const error = new EngineDesyncError("El estado de la partida no coincide con el motor.");
   error.name = "EngineDesyncError";
   return error;
 }
 
-function sanitizeShowdownMessage(message: string): string {
+export function sanitizeShowdownMessage(message: string): string {
   const cleaned = message.replace(/[\u0000-\u001f|>]/g, " ").replace(/\s+/g, " ").trim();
   return cleaned.slice(0, 300) || "Elección inválida.";
 }
 
-function asSeed(seed: string): ReturnType<typeof PRNG.generateSeed> {
+export function asSeed(seed: string): ReturnType<typeof PRNG.generateSeed> {
   if (!seed.startsWith("sodium,")) throw new Error("La semilla debe ser un seed sodium de Showdown.");
   return seed as ReturnType<typeof PRNG.generateSeed>;
 }
 
-function deriveSeed(base: ReturnType<typeof PRNG.generateSeed>, hops: number): ReturnType<typeof PRNG.generateSeed> {
+export function deriveSeed(base: ReturnType<typeof PRNG.generateSeed>, hops: number): ReturnType<typeof PRNG.generateSeed> {
   const prng = new PRNG(base);
   for (let hop = 0; hop < hops; hop += 1) prng.random();
   return prng.getSeed();
@@ -77,7 +77,7 @@ async function resolveCpu(options?: EngineRunOptions): Promise<ChooseCpu> {
   return loaded.chooseCpuActions;
 }
 
-function openingLines(input: CreateEngineBattleInput): { secrets: EngineSecrets; lines: string[] } {
+export function openingLines(input: CreateEngineBattleInput): { secrets: EngineSecrets; lines: string[] } {
   if (input.formatId !== "gen9ou" && input.formatId !== "gen9randombattle") {
     throw new Error("Formato no soportado.");
   }
@@ -109,6 +109,25 @@ function openingLines(input: CreateEngineBattleInput): { secrets: EngineSecrets;
   };
 }
 
+/** Events since `before` lines of that side's channel, plus its state and pending request. */
+export function projectSide(
+  session: BattleSession,
+  side: SideId,
+  formatId: FormatId,
+  before: number,
+): { events: BattleEvent[]; state: PublicBattleState; request: PlayerRequest | null; requestRaw: string | null } {
+  const sideLines = side === "p1" ? session.p1Lines : session.p2Lines;
+  const parsed = parseProtocol(sideLines, side, formatId);
+  const prefixCount = before === 0 ? 0 : parseProtocol(sideLines.slice(0, before), side, formatId).length;
+  const events = presentEvents(parsed.slice(prefixCount));
+  const ended = session.ended;
+  const requestRaw = ended ? null : session.requestRaw(side);
+  const requestParsed = requestRaw ? parseShowdownRequest(requestRaw) : null;
+  const state: PublicBattleState = projectState(parsed, side, requestParsed, ended);
+  const request: PlayerRequest | null = ended ? null : toPlayerRequest(requestParsed, formatId);
+  return { events, state, request, requestRaw };
+}
+
 function buildStep(
   session: BattleSession,
   formatId: FormatId,
@@ -116,15 +135,8 @@ function buildStep(
   lines: readonly string[],
   inputLogDelta: string[],
 ): EngineStep {
-  const p1Lines = session.p1Lines;
-  const parsed = parseProtocol(p1Lines, "p1", formatId);
-  const prefixCount = beforeP1 === 0 ? 0 : parseProtocol(p1Lines.slice(0, beforeP1), "p1", formatId).length;
-  const events = presentEvents(parsed.slice(prefixCount));
+  const { events, state, request, requestRaw } = projectSide(session, "p1", formatId, beforeP1);
   const ended = session.ended;
-  const requestRaw = ended ? null : session.requestRaw("p1");
-  const requestParsed = requestRaw ? parseShowdownRequest(requestRaw) : null;
-  const state: PublicBattleState = projectState(parsed, "p1", requestParsed, ended);
-  const request: PlayerRequest | null = ended ? null : toPlayerRequest(requestParsed, formatId);
   return {
     inputLogDelta,
     events,
@@ -180,7 +192,7 @@ async function advanceCpu(
   }
 }
 
-async function withSession<T>(run: (session: BattleSession) => Promise<T>): Promise<T> {
+export async function withSession<T>(run: (session: BattleSession) => Promise<T>): Promise<T> {
   const session = new BattleSession();
   try {
     return await run(session);

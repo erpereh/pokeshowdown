@@ -153,6 +153,7 @@ export function ActionPanel({
   locked,
   onChoice,
   onForfeit,
+  waitingLabel = "Esperando…",
 }: {
   request: PlayerRequest | null;
   you: SideView | null;
@@ -161,6 +162,8 @@ export function ActionPanel({
   onChoice: (choice: PlayerChoice) => void;
   /** Opens the forfeit confirmation (the "Huir" option of the battle menu). */
   onForfeit?: () => void;
+  /** Shown while the player has nothing to decide (online: the rival is choosing). */
+  waitingLabel?: string;
 }) {
   const [view, setView] = useState<View>("menu");
   const [tera, setTera] = useState(false);
@@ -211,7 +214,7 @@ export function ActionPanel({
   }, [locked, onChoice, request, view, tera]);
 
   if (locked) return <Waiting label="Resolviendo turno…" />;
-  if (!request || request.kind === "wait") return <Waiting label="Esperando…" />;
+  if (!request || request.kind === "wait") return <Waiting label={waitingLabel} />;
   if (request.kind === "teamPreview") {
     return (
       <div className="mx-auto w-full max-w-3xl px-3 py-3 sm:px-4">

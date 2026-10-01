@@ -10,13 +10,15 @@ export async function readShellUser(): Promise<ShellUser | null> {
     const metadata = data.user.user_metadata as { display_name?: unknown } | undefined;
     let displayName = typeof metadata?.display_name === "string" ? metadata.display_name.trim() : "";
 
-    if (!displayName) {
-      const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", data.user.id).maybeSingle();
-      if (profile && typeof profile.display_name === "string") displayName = profile.display_name.trim();
-    }
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name, friend_code")
+      .eq("user_id", data.user.id)
+      .maybeSingle();
+    if (!displayName && profile && typeof profile.display_name === "string") displayName = profile.display_name.trim();
 
     if (!displayName) displayName = data.user.email?.split("@")[0] || "Entrenador";
-    return { displayName, email: data.user.email ?? "" };
+    return { id: data.user.id, displayName, email: data.user.email ?? "", friendCode: profile?.friend_code ?? "" };
   } catch {
     return null;
   }

@@ -1,6 +1,9 @@
 export interface ShellUser {
+  id: string;
   displayName: string;
   email: string;
+  /** Permanent friend code (8 chars), shown and copied from the account menu. */
+  friendCode: string;
 }
 
 export type ShellMode = "app" | "hero" | "battle";

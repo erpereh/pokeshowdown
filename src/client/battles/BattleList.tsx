@@ -43,7 +43,7 @@ export function BattleList({ status }: { status: "active" | "finished" }) {
       {battles && battles.length === 0 ? (
         <EmptyState
           title={status === "active" ? "No tienes partidas en curso" : "Todavía no has terminado ningún combate"}
-          body={status === "active" ? "Empieza uno nuevo contra la CPU." : "Cuando termine un combate, aparecerá aquí."}
+          body={status === "active" ? "Empieza uno nuevo contra la CPU o desafía a un amigo." : "Cuando termine un combate, aparecerá aquí."}
           action={<GameLink href="/play">Jugar contra la CPU</GameLink>}
         />
       ) : null}
@@ -64,6 +64,7 @@ export function BattleList({ status }: { status: "active" | "finished" }) {
                   <span className="flex size-16 items-center justify-center rounded-full bg-accent/10">{battle.cpuLead ? <MiniSprite spriteId={battle.cpuLead.spriteId} alt={battle.cpuLead.species} size={56} /> : <Pokeball className="size-9" />}</span>
                 </div>
                 <p className="text-sm text-text-dim">
+                  {battle.mode === "online" ? <span className="font-semibold text-text">Online vs {battle.opponentName} · </span> : null}
                   Turno {battle.turn} · {formatWhen(battle.updatedAt)}
                 </p>
                 </div>

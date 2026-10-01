@@ -4,17 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { ApiRequestError, apiFetch, newClientId } from "@/client/api.ts";
-import { MiniSprite } from "@/client/sprites/MiniSprite.tsx";
-import { GameButton, GameLink } from "@/client/ui/GameButton.tsx";
-import { EmptyState } from "@/client/ui/EmptyState.tsx";
+import { GameButton } from "@/client/ui/GameButton.tsx";
 import { PageHeader } from "@/client/ui/PageHeader.tsx";
 import { SegmentedControl } from "@/client/ui/SegmentedControl.tsx";
-import { formatBlurb, formatName, toSpriteId } from "@/client/ui/format.ts";
-import { cx } from "@/client/ui/cx.ts";
+import { formatBlurb, formatName } from "@/client/ui/format.ts";
 import { Icon } from "@/client/ui/Icon.tsx";
 import { PokeballDeco } from "@/client/ui/Card.tsx";
 import { PokemonSprite } from "@/client/sprites/PokemonSprite.tsx";
 import { DuelHero } from "@/client/home/DuelHero.tsx";
+import { SavedTeamList, TeamPreviewGrid } from "./TeamPicker.tsx";
 import { typeCardColor } from "@/client/ui/TypeChip.tsx";
 import type { CreateBattleResponse, FormatId, ListBattlesResponse, ListTeamsResponse, PokemonSetData, RandomTeamResponse, TeamSource, TeamSummary } from "@/shared/contract";
 
@@ -35,25 +33,6 @@ function sourceOf(side: SideState): TeamSource | null {
   }
   if (side.sets) return { kind: "inline", sets: side.sets };
   return { kind: "random" };
-}
-
-function TeamPreviewGrid({ sets }: { sets: PokemonSetData[] }) {
-  return (
-    <ul className="stagger grid grid-cols-3 gap-2">
-      {sets.map((set, index) => (
-        <li key={`${set.species}-${index}`} className="min-w-0 rounded-[var(--radius-card)] bg-surface-2 p-2 text-center">
-          <MiniSprite
-            spriteId={toSpriteId(set.species)}
-            alt={set.species}
-            size={48}
-            shiny={set.shiny}
-            gender={set.gender === "M" || set.gender === "F" ? set.gender : undefined}
-          />
-          <p className="font-display truncate text-xs font-semibold">{set.name || set.species}</p>
-        </li>
-      ))}
-    </ul>
-  );
 }
 
 function SideEditor({
@@ -90,46 +69,13 @@ function SideEditor({
         />
       </div>
       {side.mode === "saved" ? (
-        <div className="mt-3 flex flex-col gap-2">
-          {loadingTeams ? <p className="text-sm text-text-dim">Cargando equipos…</p> : null}
-          {teamsError ? <p className="text-sm text-danger">{teamsError}</p> : null}
-          {!loadingTeams && !teamsError && teams.length === 0 ? (
-            <EmptyState title="Sin equipos" body="Guarda un equipo OU válido para usarlo aquí." action={<GameLink href="/teams/new">Crear equipo</GameLink>} />
-          ) : null}
-          <ul className="stagger flex flex-col gap-2">
-            {teams.map((team) => {
-              const selected = side.teamId === team.id;
-              return (
-                <li key={team.id} className="flex flex-col gap-1">
-                  <button
-                    type="button"
-                    disabled={!team.valid}
-                    aria-pressed={selected}
-                    onClick={() => onChange({ ...side, teamId: team.id })}
-                    className={cx(
-                      "press flex min-h-16 w-full items-center gap-2 rounded-[20px] border-2 px-3 py-2 text-left",
-                      selected ? "border-accent-2 bg-accent-2/10" : "border-line bg-surface-2",
-                      !team.valid && "opacity-60",
-                    )}
-                  >
-                    <span className="flex shrink-0">
-                      {team.spriteIds.slice(0, 6).map((spriteId, index) => (
-                        <MiniSprite key={`${team.id}-${index}`} spriteId={spriteId} alt="" size={32} className="-ml-1 first:ml-0" />
-                      ))}
-                    </span>
-                    <span className="font-display min-w-0 flex-1 truncate font-semibold">{team.name}</span>
-                    {!team.valid ? <span className="rounded-full bg-danger/15 px-2 py-0.5 text-[10px] font-bold uppercase text-danger">No válido</span> : null}
-                  </button>
-                  {!team.valid ? (
-                    <Link href={`/teams/${team.id}`} className="font-display min-h-11 self-start px-1 text-sm font-semibold uppercase text-accent-2">
-                      Editar
-                    </Link>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        <SavedTeamList
+          teams={teams}
+          error={teamsError}
+          loading={loadingTeams}
+          selectedId={side.teamId}
+          onSelect={(teamId) => onChange({ ...side, teamId })}
+        />
       ) : (
         <div className="mt-3 flex flex-col gap-3">
           <p className="text-sm text-text-dim">Se generará un equipo OU legal. Si lo previsualizas, jugarás exactamente esos seis Pokémon.</p>

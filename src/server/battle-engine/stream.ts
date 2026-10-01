@@ -77,6 +77,20 @@ export class BattleSession {
     return Boolean(request.active);
   }
 
+  /**
+   * True when Showdown already holds a complete choice for this side in the current request.
+   * Survives a rebuild from the input log, unlike `lock()`.
+   */
+  choiceDone(side: SideId): boolean {
+    const battleSide = this.stream.battle?.sides[side === "p1" ? 0 : 1];
+    return battleSide ? battleSide.isChoiceDone() : true;
+  }
+
+  /** Online battles: the side has a request it still has to answer. */
+  mustChoose(side: SideId): boolean {
+    return this.isActionable(side) && !this.choiceDone(side);
+  }
+
   winner(): "p1" | "p2" | "tie" | null {
     if (!this.ended) return null;
     const name = this.stream.battle?.winner;

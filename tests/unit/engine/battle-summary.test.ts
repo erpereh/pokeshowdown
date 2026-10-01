@@ -4,6 +4,8 @@ import { BATTLE_LEAD_COLUMNS, toBattleSummary } from "../../../src/server/persis
 const base = {
   id: "b1",
   format_id: "gen9ou",
+  mode: "singleplayer",
+  cpu_name: "CPU",
   status: "finished",
   winner: "p1",
   end_reason: "normal",
@@ -32,4 +34,10 @@ test("A battle still in team preview has no leads", () => {
   const summary = toBattleSummary({ ...base, status: "active", winner: null, end_reason: null, turn: 0 });
   expect(summary.playerLead).toBeNull();
   expect(summary.cpuLead).toBeNull();
+});
+
+test("Online summaries carry the mode and the rival name", () => {
+  const summary = toBattleSummary({ ...base, mode: "online", cpu_name: "Misty" });
+  expect(summary.mode).toBe("online");
+  expect(summary.opponentName).toBe("Misty");
 });

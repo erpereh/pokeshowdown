@@ -8,6 +8,9 @@ import { cx } from "@/client/ui/cx.ts";
 import { Icon } from "@/client/ui/Icon.tsx";
 import { GameLink } from "@/client/ui/GameButton.tsx";
 import { Pokeball } from "@/client/ui/Card.tsx";
+import { NotificationCenter } from "@/client/social/NotificationCenter.tsx";
+import { pendingBadge, useSocial } from "@/client/social/store.ts";
+import { copyFriendCode, formatFriendCode } from "@/client/social/time.ts";
 import { NAV_ITEMS, navActive, type ShellMode, type ShellUser } from "./types.ts";
 
 function Wordmark() {
@@ -64,6 +67,7 @@ function UserMenu({ user }: { user: ShellUser | null }) {
         <div id={menuId} className="card animate-pop-in absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-[20px] p-2">
           <p className="truncate px-2 py-1 text-sm font-semibold">{user.displayName}</p>
           {user.email ? <p className="truncate px-2 pb-2 text-xs text-text-dim">{user.email}</p> : null}
+          {user.friendCode ? <FriendCodeRow code={user.friendCode} /> : null}
           <form action="/auth/signout" method="post">
             <button type="submit" className="font-display min-h-12 w-full rounded-[14px] px-2 text-left text-sm font-semibold text-danger hover:bg-danger/10">
               Cerrar sesión
@@ -73,6 +77,27 @@ function UserMenu({ user }: { user: ShellUser | null }) {
       ) : null}
     </div>
   );
+}
+
+function FriendCodeRow({ code }: { code: string }) {
+  return (
+    <div className="mb-1 flex items-center justify-between gap-2 rounded-[14px] bg-surface-2 py-1 pl-3 pr-1">
+      <span className="min-w-0">
+        <span className="block text-[11px] font-semibold uppercase tracking-wide text-text-dim">Código de amigo</span>
+        <span className="font-display block text-base font-bold tracking-wider" data-friend-code={code}>{formatFriendCode(code)}</span>
+      </span>
+      <button type="button" aria-label="Copiar código de amigo" onClick={() => void copyFriendCode(code)} className="flex size-11 shrink-0 items-center justify-center rounded-full text-text-dim hover:bg-surface hover:text-text">
+        <Icon name="copy" className="size-5" />
+      </button>
+    </div>
+  );
+}
+
+function NavBadge() {
+  const { overview } = useSocial();
+  const count = pendingBadge(overview);
+  if (count === 0) return null;
+  return <span className="nav-badge" aria-label={`${count} avisos pendientes`}>{count > 9 ? "9+" : count}</span>;
 }
 
 function TopNav({ mode }: { mode: ShellMode }) {
@@ -88,11 +113,12 @@ function TopNav({ mode }: { mode: ShellMode }) {
             href={item.href}
             aria-current={active ? "page" : undefined}
             className={cx(
-              "font-display inline-flex min-h-12 items-center rounded-full px-4 text-sm font-semibold transition-colors duration-[var(--dur-fast)]",
+              "font-display relative inline-flex min-h-12 items-center rounded-full px-4 text-sm font-semibold transition-colors duration-[var(--dur-fast)]",
               active ? "bg-accent text-white shadow-[0_6px_14px_-8px_#dc2f3c]" : "text-text-dim hover:text-text",
             )}
           >
             {item.label}
+            {item.href === "/friends" ? <NavBadge /> : null}
           </Link>
         );
       })}
@@ -127,6 +153,7 @@ function BottomTabs() {
                   <Icon name={item.icon} className="size-6" />
                 )}
                 {item.label}
+                {item.href === "/friends" ? <NavBadge /> : null}
               </Link>
             </li>
           );
@@ -163,6 +190,7 @@ export function ShellFrame({ user, mode, children }: { user: ShellUser | null; m
         {children}
       </main>
       {mode === "battle" ? null : <BottomTabs />}
+      <NotificationCenter userId={user?.id ?? null} />
       <ToastViewport />
     </div>
   );

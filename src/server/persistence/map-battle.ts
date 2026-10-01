@@ -62,6 +62,7 @@ export function toBattleView(row: BattleRow): BattleView {
   return {
     id: row.id,
     formatId: row.format_id as FormatId,
+    mode: row.mode === "online" ? "online" : "singleplayer",
     status: row.status as BattleStatus,
     result: resultFromWinner(row.winner),
     endReason: (row.end_reason as BattleView["endReason"]) ?? null,
@@ -95,7 +96,7 @@ type LeadFields = Partial<Record<`${"p1" | "p2"}_${"species" | "sprite"}_${0 | 1
 
 type BattleListRow = Pick<
   BattleRow,
-  "id" | "format_id" | "status" | "winner" | "end_reason" | "turn" | "created_at" | "updated_at"
+  "id" | "format_id" | "mode" | "cpu_name" | "status" | "winner" | "end_reason" | "turn" | "created_at" | "updated_at"
 > & LeadFields;
 
 function leadOf(row: LeadFields, side: "p1" | "p2"): BattleLead | null {
@@ -111,6 +112,8 @@ export function toBattleSummary(row: BattleListRow): BattleSummary {
   return {
     id: row.id,
     formatId: row.format_id as FormatId,
+    mode: row.mode === "online" ? "online" : "singleplayer",
+    opponentName: row.cpu_name,
     status: row.status as BattleStatus,
     result: resultFromWinner(row.winner),
     endReason: (row.end_reason as BattleSummary["endReason"]) ?? null,

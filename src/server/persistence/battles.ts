@@ -30,12 +30,13 @@ import type { Database, Json } from "../supabase/database.types.ts";
 import { backgroundForBattle } from "./backgrounds.ts";
 import { BATTLE_LEAD_COLUMNS, emptyBattleState, frameAt, toBattleSummary, toBattleView, toReplayView } from "./map-battle.ts";
 import type { ReplayView } from "../../shared/contract/battle.ts";
+import { commitOnlineAction, getOnlineBattleView, resolveUserTimeouts } from "./online-battles.ts";
 
 type BattleRow = Database["public"]["Tables"]["battles"]["Row"];
 
 const CPU_NAME = "CPU";
 
-function invalidTeam(result: ValidationResult): ApiException {
+export function invalidTeam(result: ValidationResult): ApiException {
   const parts = result.problems.slice(0, 12).map((problem) => {
     const where = problem.setIndex === null ? "equipo" : `Pokémon ${problem.setIndex + 1}`;
     return `${where}: ${problem.message}`;
@@ -44,13 +45,13 @@ function invalidTeam(result: ValidationResult): ApiException {
   return new ApiException(422, "invalid_team", message);
 }
 
-function choiceMessage(error: InvalidChoiceError): string {
+export function choiceMessage(error: InvalidChoiceError): string {
   const message = error.message.replace(/\s+/g, " ").trim();
   if (!message || message.length > 300) return "Elección no válida";
   return message;
 }
 
-async function loadPlayerName(admin: DbClient, userId: string): Promise<string> {
+export async function loadPlayerName(admin: DbClient, userId: string): Promise<string> {
   const { data, error } = await admin.from("profiles").select("display_name").eq("user_id", userId).maybeSingle();
   if (error) {
     console.error("[battle] profile", error.code);
@@ -60,7 +61,7 @@ async function loadPlayerName(admin: DbClient, userId: string): Promise<string> 
   return name && name.length > 0 ? name.slice(0, 32) : "Player";
 }
 
-async function loadOwnedBattle(admin: DbClient, userId: string, battleId: string): Promise<BattleRow | null> {
+export async function loadOwnedBattle(admin: DbClient, userId: string, battleId: string): Promise<BattleRow | null> {
   const { data, error } = await admin.from("battles").select("*").eq("id", battleId).eq("owner_id", userId).maybeSingle();
   if (error) {
     console.error("[battle] load", error.code);
@@ -69,7 +70,7 @@ async function loadOwnedBattle(admin: DbClient, userId: string, battleId: string
   return data;
 }
 
-async function resolveOuTeam(admin: DbClient, userId: string, source: TeamSource): Promise<string> {
+export async function resolveOuTeam(admin: DbClient, userId: string, source: TeamSource): Promise<string> {
   if (source.kind === "random") {
     const sets = generateRandomOuTeam().map((set) => normalizeSet(set));
     const validation = validateTeam("gen9ou", sets);
@@ -206,16 +207,19 @@ async function persistCreatedBattle(
 }
 
 export async function getBattleView(userId: string, battleId: string): Promise<BattleView> {
-  const row = await loadOwnedBattle(createAdminSupabase(), userId, battleId);
+  const admin = createAdminSupabase();
+  const row = await loadOwnedBattle(admin, userId, battleId);
   if (!row) throw new ApiException(404, "not_found", "Partida no encontrada");
+  if (row.mode === "online") return getOnlineBattleView(admin, userId, row);
   return toBattleView(row);
 }
 
 export async function listBattles(userId: string, status?: BattleStatus): Promise<BattleSummary[]> {
   const admin = createAdminSupabase();
+  await resolveUserTimeouts(admin, userId);
   let query = admin
     .from("battles")
-    .select(`id, format_id, status, winner, end_reason, turn, created_at, updated_at, ${BATTLE_LEAD_COLUMNS}`)
+    .select(`id, format_id, mode, cpu_name, status, winner, end_reason, turn, created_at, updated_at, ${BATTLE_LEAD_COLUMNS}`)
     .eq("owner_id", userId)
     .order("updated_at", { ascending: false })
     .limit(50);
@@ -249,6 +253,7 @@ async function commitAction(
   const admin = createAdminSupabase();
   const battle = await loadOwnedBattle(admin, userId, battleId);
   if (!battle) throw new ApiException(404, "not_found", "Partida no encontrada");
+  if (battle.mode === "online") return commitOnlineAction(admin, userId, battle, clientActionId, revision, action);
 
   const replayed = await replayedAction(admin, battle, clientActionId, action);
   if (replayed) return replayed;
@@ -405,7 +410,7 @@ async function replayedAction(admin: DbClient, battle: BattleRow, clientActionId
   return { view, newFrames: frame ? [frame] : [], replayed: true as const };
 }
 
-function storedActionMatches(kind: string, storedChoice: Json | null, action: PlayerAction): boolean {
+export function storedActionMatches(kind: string, storedChoice: Json | null, action: PlayerAction): boolean {
   if (kind !== action.kind) return false;
   if (action.kind === "forfeit") return storedChoice == null;
   return choiceKey(storedChoice) === choiceKey(action.choice);

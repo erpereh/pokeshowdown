@@ -4,13 +4,15 @@ export class ApiException extends Error {
   readonly status: number;
   readonly code: ApiError["error"]["code"];
   readonly view?: BattleView;
+  readonly challengeId?: string;
 
-  constructor(status: number, code: ApiError["error"]["code"], message: string, view?: BattleView) {
+  constructor(status: number, code: ApiError["error"]["code"], message: string, view?: BattleView, challengeId?: string) {
     super(message);
     this.name = "ApiException";
     this.status = status;
     this.code = code;
     this.view = view;
+    this.challengeId = challengeId;
   }
 }
 
@@ -18,6 +20,7 @@ export function toErrorResponse(error: unknown): Response {
   if (error instanceof ApiException) {
     const body: ApiError = { error: { code: error.code, message: error.message } };
     if (error.view) body.view = error.view;
+    if (error.challengeId) body.challengeId = error.challengeId;
     return Response.json(body, { status: error.status });
   }
 

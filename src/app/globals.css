@@ -246,6 +246,25 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .nav-tab:active .nav-play-ball { transform: scale(0.9) rotate(-20deg); }
 .nav-tab[aria-current="page"] .nav-play-ball { animation: wobble 1.4s var(--ease-out-game) 1; }
 .nav-tab.is-play::before { display: none; }
+.nav-badge {
+  position: absolute;
+  top: 4px;
+  left: calc(50% + 6px);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  border: 2px solid var(--color-surface);
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  animation: pop-in var(--dur-base) var(--ease-spring) backwards;
+}
+.presence-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--color-line-strong); flex-shrink: 0; }
+.presence-dot.is-online { background: var(--color-success); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-success) 25%, transparent); }
 .app-content { padding-bottom: var(--nav-clearance); }
 /* Opacity only: a transform here would trap position: fixed footers and FABs. */
 .page-enter { animation: overlay-in var(--dur-slow) var(--ease-out-game) backwards; }

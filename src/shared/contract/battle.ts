@@ -206,12 +206,34 @@ export interface BattleFrame {
   state: PublicBattleState;
 }
 
+export type BattleEndReason = "normal" | "forfeit" | "timeout";
+
+export type BattleMode = "singleplayer" | "online";
+
+/** Live data of an online battle seen from the requesting player's seat. */
+export interface OnlineBattleInfo {
+  matchId: string;
+  opponentName: string;
+  opponentOnline: boolean;
+  /** The viewer still owes a choice for the current request. */
+  myPending: boolean;
+  /** The rival still owes a choice (never reveals what was chosen). */
+  opponentPending: boolean;
+  /** Per-decision deadlines (ISO); null without timer or when nothing is owed. */
+  myDeadline: string | null;
+  opponentDeadline: string | null;
+  timerSeconds: 60 | 120 | null;
+  /** Database clock when the view was read, to correct client clock skew. */
+  serverNow: string;
+}
+
 export interface BattleView {
   id: string;
   formatId: FormatId;
+  mode: BattleMode;
   status: BattleStatus;
   result: BattleResult | null;
-  endReason: "normal" | "forfeit" | null;
+  endReason: BattleEndReason | null;
   turn: number;
   /** Monotonic counter; must be echoed back when submitting a choice. Equals `frames.length`. */
   revision: number;
@@ -227,6 +249,8 @@ export interface BattleView {
   state: PublicBattleState;
   /** Pending decision for the player; null when finished. */
   request: PlayerRequest | null;
+  /** Present only for online battles. */
+  online?: OnlineBattleInfo;
   createdAt: string;
   updatedAt: string;
 }
@@ -240,9 +264,12 @@ export interface BattleLead {
 export interface BattleSummary {
   id: string;
   formatId: FormatId;
+  mode: BattleMode;
+  /** Rival display name ("CPU" in single player). */
+  opponentName: string;
   status: BattleStatus;
   result: BattleResult | null;
-  endReason: "normal" | "forfeit" | null;
+  endReason: BattleEndReason | null;
   turn: number;
   playerLead: BattleLead | null;
   cpuLead: BattleLead | null;
@@ -251,4 +278,4 @@ export interface BattleSummary {
 }
 
 /** Read-only copy stored when a battle finishes. */
-export type ReplayView = Omit<BattleView, "request" | "status" | "revision"> & { battleId: string };
+export type ReplayView = Omit<BattleView, "request" | "status" | "revision" | "mode" | "online"> & { battleId: string };

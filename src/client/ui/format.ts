@@ -1,4 +1,4 @@
-import type { BattleResult, FormatId } from "@/shared/contract";
+import type { BattleEndReason, BattleResult, FormatId } from "@/shared/contract";
 
 export function formatName(id: FormatId): string {
   return id === "gen9ou" ? "Gen 9 OU" : "Gen 9 Random Battle";
@@ -10,8 +10,14 @@ export function formatBlurb(id: FormatId): string {
 
 export function resultBadge(
   result: BattleResult | null,
-  endReason: "normal" | "forfeit" | null,
+  endReason: BattleEndReason | null,
 ): { text: string; className: string } {
+  if (endReason === "forfeit" && result === "win") return { text: "Victoria · rendición", className: "border-success/30 bg-success/10 text-success" };
+  if (endReason === "timeout") {
+    if (result === "win") return { text: "Victoria · tiempo", className: "border-success/30 bg-success/10 text-success" };
+    if (result === "loss") return { text: "Derrota · tiempo", className: "border-danger/30 bg-danger/10 text-danger" };
+    return { text: "Empate · tiempo", className: "border-accent-2/30 bg-accent-2/10 text-accent-2" };
+  }
   if (endReason === "forfeit") return { text: "Rendición", className: "border-line-strong bg-surface-2 text-text-dim" };
   if (result === "win") return { text: "Victoria", className: "border-success/30 bg-success/10 text-success" };
   if (result === "loss") return { text: "Derrota", className: "border-danger/30 bg-danger/10 text-danger" };

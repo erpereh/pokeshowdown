@@ -18,10 +18,16 @@ function spotlight(state: PublicBattleState): PokemonView | null {
 export function EndOverlay({ view, state }: { view: BattleView; state: PublicBattleState }) {
   const ref = useDialog(true);
   const mon = spotlight(state);
-  const forfeit = view.endReason === "forfeit";
+  const online = view.mode === "online";
+  const forfeit = view.endReason === "forfeit" && view.result !== "win";
   const win = view.result === "win" && !forfeit;
   const headline = forfeit ? "Te has rendido" : view.result === "win" ? "¡VICTORIA!" : view.result === "tie" ? "EMPATE" : "DERROTA";
   const color = forfeit ? "#5f6b7a" : view.result === "win" ? "#26a377" : view.result === "tie" ? "#4a63e8" : "#dc2f3c";
+  const rival = view.online?.opponentName ?? view.cpuName;
+  const reason =
+    view.endReason === "timeout"
+      ? view.result === "win" ? `A ${rival} se le acabó el tiempo` : view.result === "loss" ? "Se te acabó el tiempo" : "Se acabó el tiempo de ambos"
+      : view.endReason === "forfeit" && view.result === "win" ? `${rival} se rindió` : null;
 
   return (
     <div ref={ref} tabIndex={-1} className="animate-overlay-in absolute inset-0 z-40 flex items-end justify-center overflow-y-auto bg-[#1b2230]/55 p-3 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="end-title">
@@ -45,10 +51,11 @@ export function EndOverlay({ view, state }: { view: BattleView; state: PublicBat
           {mon ? <PokemonSprite spriteId={mon.spriteId} facing="front" shiny={mon.shiny} gender={mon.gender} animated alt={mon.name} className={`animate-float mx-auto mt-2 max-h-40 ${view.result === "loss" ? "grayscale" : ""}`} /> : null}
         </div>
         <div className="sheet-surface -mt-8 px-5 pb-5 pt-6">
-          <p className="text-sm font-semibold text-text-dim">{formatName(view.formatId)}</p>
+          <p className="text-sm font-semibold text-text-dim">{online ? `${formatName(view.formatId)} · contra ${rival}` : formatName(view.formatId)}</p>
+          {reason ? <p className="mt-1 text-sm font-bold" data-testid="end-reason">{reason}</p> : null}
           <div className="mt-4 flex flex-col gap-2">
-            <GameLink href={`/play?format=${view.formatId}`} size="lg" className="w-full">
-              Revancha
+            <GameLink href={online ? "/friends" : `/play?format=${view.formatId}`} size="lg" className="w-full">
+              {online ? "Volver a Amigos" : "Revancha"}
             </GameLink>
             <GameLink href={`/replay/${view.id}`} variant="secondary" className="w-full">
               Ver repetición

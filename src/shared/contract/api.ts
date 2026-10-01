@@ -17,9 +17,13 @@ export interface ApiError {
       | "invalid_choice"
       | "invalid_team"
       | "engine_version_mismatch"
+      | "conflict"
+      | "expired"
       | "internal";
     message: string;
   };
+  /** Present when a challenge already exists between both players (409 conflict). */
+  challengeId?: string;
   /** Present on 409 so the client can resync without another request. */
   view?: BattleView;
 }
