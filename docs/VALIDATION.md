@@ -1,6 +1,6 @@
-# Validación del MVP PvE
+# Validación
 
-Validación ejecutada el 27 de septiembre de 2026 sobre el trabajo existente de main, partiendo de 87da02e. No se recreó el proyecto ni se implementó multijugador.
+La validación PvE se ejecutó el 27 de septiembre de 2026 partiendo de 87da02e. La de amigos y combate online, el 1 de octubre de 2026; al final de este documento.
 
 ## Checkpoints
 
@@ -95,3 +95,25 @@ Los informes de los tres ciclos devuelven cero errores de consola/red, imágenes
 Binarios, credenciales, sesiones y assets generados están ignorados por Git. Las capturas se conservan localmente; el informe de validación sí se versiona.
 
 No quedan fallos bloqueantes conocidos del MVP. Para desplegar en otro dominio deben conservarse las variables de entorno y configurar Site URL/redirects de Supabase Auth. La entrega SMTP y la protección opcional de contraseñas filtradas son condiciones de operación externas, no verificaciones cubiertas por el E2E de OTP.
+
+## Amigos y combate online (1 de octubre de 2026)
+
+Migraciones aplicadas por MCP y copiadas en supabase/migrations con la misma versión: friends, challenges, online_battles, social_realtime y challenges_match_index. Tipos regenerados con generate_typescript_types. Advisors: performance sin avisos; security solo informa de las tablas server-only sin policies (battle_secrets, challenge_entries, online_match_secrets, user_presence), que es intencionado, y de la protección de contraseñas filtradas desactivada.
+
+| Comando | Resultado |
+| --- | --- |
+| pnpm typecheck | Correcto. |
+| pnpm test | 78/78 en 13 archivos: incluye el motor online (Team Preview de ambos lados, espera, Random Battle hasta el final, rendición, timeout simple y doble) y la integración online contra Supabase real. |
+| pnpm verify:engine | Correcto. |
+| pnpm build | Correcto; las rutas nuevas incluyen dist/data y dist/config de Showdown en su traza. |
+| pnpm test:e2e | 26 pruebas en desktop y Pixel 7. La primera corrida completa dio 25/26: el fallo era del propio test de timeout, no de la app. Un desmayo encadenó cambio forzado y turno nuevo, el test no volvió a elegir y el servidor declaró empate por tiempo de ambos, lo cual es correcto. Corregido el test, online.spec.ts pasó 6/6. |
+
+Integración real (tests/integration/online): código único e inmutable; código inválido, propio y duplicado; cancelar, rechazar y aceptar; autoaceptación de solicitudes cruzadas; RLS de solicitudes, amistades, presencia, perfiles, desafíos, entradas de equipo, partidas, secretos y asientos ajenos; reglas inmutables incluso para service_role; desafío solo entre amigos; desafíos simultáneos (uno abierto, el otro recibe 409 con su id); idempotencia por clientRequestId; invitación caducada (410); Ready concurrente con una sola partida; elecciones simultáneas con un solo turno resuelto; espera del rival, segunda elección rechazada y replay idempotente; plazo no vencido rechazado por la base de datos (P0005); timeout resuelto de forma perezosa desde la lista de partidas; resultados y replays opuestos; rendición; eliminar amigo cancela desafíos.
+
+E2E con dos cuentas reales en contextos de navegador aislados, sin mocks:
+
+1. Copiar el código (portapapeles verificado). Errores: código propio y código inexistente. B añade a A mientras A navega en Equipos; A recibe la notificación en tiempo real y acepta desde la tarjeta. Presencia En línea.
+2. A desafía a B con Gen 9 OU, 120 s, guardado o aleatorio y 5 min. B recibe la invitación en Historial con todos los detalles y la acepta. A entra solo en el lobby. Las reglas son de solo lectura y un segundo accept da 409. A usa un equipo guardado y B uno aleatorio legal; los dos pulsan Listo, se arranca automáticamente y hay Team Preview oficial por UI. Primer turno por UI: A ve «Esperando a B…» hasta que B elige. Combate completo hasta el final natural, con resultados opuestos, overlay en ambas pantallas por Realtime, historial «Online vs …» y replay propio. El replay y el asiento del rival dan 404.
+3. Random Battle a 60 s: el desafío cruzado devuelve 409 con el id abierto. B cierra la pestaña y A elige. B reabre y reanuda con el mismo plazo, sin pausa. La pantalla de A recibe el turno sin recargar. B vuelve a desconectarse y vence su tiempo: A ve «¡VICTORIA!» con el motivo y B, al volver, «DERROTA · Se te acabó el tiempo». Al final se elimina al amigo. Sin errores de página en ninguna de las dos sesiones.
+
+Las cuentas temporales de las pruebas online se crean en cada ejecución y se borran al terminar, junto con las partidas que quedan huérfanas. Las capturas de los dos viewports se revisaron: Amigos, notificaciones, lobby, combate con temporizador, espera, resultado e historial, sin overflow ni solapes.

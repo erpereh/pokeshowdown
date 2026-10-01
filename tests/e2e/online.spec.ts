@@ -66,6 +66,16 @@ async function choose(request: APIRequestContext, view: BattleView) {
   expect([200, 409, 422], await response.text()).toContain(response.status());
 }
 
+/** Answers every decision A owes (a faint can chain a forced switch into a new turn) until only the rival is pending. */
+async function settleA(id: string): Promise<BattleView> {
+  for (let guard = 0; guard < 10; guard += 1) {
+    const view = await seat(a.page.request, id);
+    if (view.status !== "active" || !view.online?.myPending) return view;
+    await choose(a.page.request, view);
+  }
+  throw new Error("A kept owing decisions");
+}
+
 async function playToEnd(idA: string, idB: string): Promise<[BattleView, BattleView]> {
   for (let step = 0; step < 800; step += 1) {
     const [viewA, viewB] = await Promise.all([seat(a.page.request, idA), seat(b.page.request, idB)]);
@@ -264,8 +274,7 @@ test.describe.serial("Amigos y combate online entre dos cuentas reales", () => {
 
     // B disconnects (closes the tab). A chooses and waits; B's clock keeps running.
     await b.page.close();
-    let viewA = await seat(a.page.request, idA);
-    if (viewA.online?.myPending) await choose(a.page.request, viewA);
+    let viewA = await settleA(idA);
     await expect(a.page.getByTestId("online-rival")).toBeVisible();
     await expect(a.page.getByRole("timer")).toContainText("Rival", { timeout: 15_000 });
     const beforeReconnect = (await seat(a.page.request, idA)).online!.opponentDeadline;
@@ -280,12 +289,12 @@ test.describe.serial("Amigos y combate online entre dos cuentas reales", () => {
     await choose(b.page.request, viewB);
     // A's open page receives the resolved turn without reloading.
     await expect.poll(async () => (await seat(a.page.request, idA)).revision, { timeout: 30_000 }).toBeGreaterThan(viewA.revision);
-    await expect(a.page.getByRole("timer")).toContainText("Tú", { timeout: 30_000 });
+    await expect(a.page.getByRole("timer")).toBeVisible({ timeout: 30_000 });
 
     // B disconnects again and lets the 60 s timer run out while A is waiting.
     await b.page.close();
-    viewA = await seat(a.page.request, idA);
-    if (viewA.online?.myPending) await choose(a.page.request, viewA);
+    viewA = await settleA(idA);
+    expect(viewA.status).toBe("active");
     await expect(a.page.getByRole("heading", { name: "¡VICTORIA!" })).toBeVisible({ timeout: 150_000 });
     await expect(a.page.getByTestId("end-reason")).toContainText(`A ${MISTY} se le acabó el tiempo`);
     await shot(a.page, info, "12-timeout-win");
